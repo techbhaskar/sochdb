@@ -82,6 +82,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: validate
     strategy:
+      fail-fast: false  # Continue building other platforms if one fails
       matrix:
         include:
           # Linux x86_64
@@ -285,6 +286,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: build-binaries
     strategy:
+      fail-fast: false  # Continue building other platforms if one fails
       matrix:
         include:
           - os: ubuntu-latest
@@ -437,6 +439,10 @@ jobs:
         run: |
           echo "=== Packages to upload ==="
           ls -la dist/
+          if [ -z "$(ls -A dist/)" ]; then
+            echo "ERROR: No Python packages found to publish!"
+            exit 1
+          fi
 
       - name: Validate packages
         run: |

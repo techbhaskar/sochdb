@@ -20,21 +20,31 @@ import { ConnectionError, DatabaseError } from './errors';
 
 /**
  * Find the toondb-server binary (provides IPC interface)
+ * 
+ * Note: toondb-server uses Unix domain sockets, not available on Windows.
+ * On Windows, use the gRPC client instead for cross-platform compatibility.
  */
 function findServerBinary(): string {
   const platform = process.platform;
   const arch = process.arch;
 
+  // Windows doesn't support Unix sockets, toondb-server is not available
+  if (platform === 'win32') {
+    throw new DatabaseError(
+      'toondb-server is not available on Windows (requires Unix domain sockets). ' +
+      'Use the gRPC client for cross-platform support: ' +
+      'const client = await GrpcClient.connect("localhost:50051")'
+    );
+  }
+
   let target: string;
   if (platform === 'darwin') {
     target = arch === 'arm64' ? 'aarch64-apple-darwin' : 'x86_64-apple-darwin';
-  } else if (platform === 'win32') {
-    target = 'x86_64-pc-windows-msvc';
   } else {
     target = arch === 'arm64' ? 'aarch64-unknown-linux-gnu' : 'x86_64-unknown-linux-gnu';
   }
 
-  const binaryName = platform === 'win32' ? 'toondb-server.exe' : 'toondb-server';
+  const binaryName = 'toondb-server';
 
   // Search paths - prioritize bundled binaries
   const searchPaths = [

@@ -86,6 +86,10 @@ pub use connection::DurableConnection;
 /// Type alias for the default connection - uses durable storage with WAL
 pub type Connection = DurableConnection;
 
+/// Type alias for Database (for users expecting `use toondb::Database`)
+/// This is the same as `Connection` - a durable database connection.
+pub type Database = DurableConnection;
+
 // For backwards compatibility and testing
 pub use connection::ToonConnection;
 /// Alias for in-memory connection (for testing)

@@ -77,6 +77,13 @@ class BulkBuildStats:
     rate: float  # vectors per second
     output_size_mb: float
     command: list[str]
+
+
+@dataclass
+class QueryResult:
+    """Result from a vector query."""
+    id: int
+    distance: float
     
     def __repr__(self) -> str:
         return (
@@ -446,11 +453,15 @@ def bulk_build_index(
 
 
 def bulk_query_index(
-    index_path: str | Path,
-    query: NDArray[np.float32],
+    index: str | Path | None = None,
+    query: NDArray[np.float32] = None,
     k: int = 10,
+    ef_search: int | None = None,
+    *,
+    # Legacy parameter names for backwards compatibility
+    index_path: str | Path | None = None,
     ef: int | None = None,
-) -> list[tuple[int, float]]:
+) -> list["QueryResult"]:
     """
     Query an HNSW index using the bulk CLI.
     
@@ -458,14 +469,27 @@ def bulk_query_index(
     This function is useful for testing or when FFI is unavailable.
     
     Args:
-        index_path: Path to the HNSW index file.
+        index: Path to the HNSW index file.
         query: 1D float32 query vector.
         k: Number of neighbors to return.
-        ef: Search expansion factor (default: k).
+        ef_search: Search expansion factor (default: k).
+        index_path: Deprecated, use `index` instead.
+        ef: Deprecated, use `ef_search` instead.
     
     Returns:
-        List of (id, distance) tuples.
+        List of QueryResult objects with .id and .distance attributes.
     """
+    # Handle legacy parameter names
+    if index is None and index_path is not None:
+        index = index_path
+    if ef_search is None and ef is not None:
+        ef_search = ef
+    
+    if index is None:
+        raise ValueError("index parameter is required")
+    if query is None:
+        raise ValueError("query parameter is required")
+    
     if query.ndim != 1:
         raise ValueError(f"Expected 1D query vector, got {query.ndim}D")
     if query.dtype != np.float32:
@@ -482,26 +506,34 @@ def bulk_query_index(
         cmd = [
             str(bulk_path),
             "query",
-            "--index", str(index_path),
+            "--index", str(index),
             "--query", query_file,
             "--k", str(k),
         ]
-        if ef is not None:
-            cmd.extend(["--ef", str(ef)])
+        if ef_search is not None:
+            cmd.extend(["--ef", str(ef_search)])
         
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         
+        # Parse output - check both stdout and stderr since binary may write to either
+        output = result.stdout.strip() or result.stderr.strip()
+        
         # Parse output
         results = []
-        for line in result.stdout.strip().split("\n"):
+        for line in output.split("\n"):
             if "ID:" in line and "Distance:" in line:
                 parts = line.split()
+                id_val = None
+                dist_val = None
                 for i, part in enumerate(parts):
-                    if part == "ID:":
-                        id_val = int(parts[i + 1])
-                    elif part == "Distance:":
+                    if part == "ID:" and i + 1 < len(parts):
+                        id_val = int(parts[i + 1].rstrip(","))
+                    elif part == "Distance:" and i + 1 < len(parts):
                         dist_val = float(parts[i + 1])
-                results.append((id_val, dist_val))
+                if id_val is not None and dist_val is not None:
+                    results.append(QueryResult(id=id_val, distance=dist_val))
+        
+        return results
         
         return results
         
@@ -599,5 +631,6 @@ __all__ = [
     "convert_embeddings_to_raw",
     "read_raw_embeddings",
     "BulkBuildStats",
+    "QueryResult",
     "get_toondb_bulk_path",
 ]

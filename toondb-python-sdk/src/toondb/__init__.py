@@ -41,7 +41,7 @@ except ImportError:
     bulk_build_index = None
     BulkBuildStats = None
 
-__version__ = "0.2.3"
+__version__ = "0.2.5"
 __all__ = [
     "Database",
     "Transaction", 

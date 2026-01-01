@@ -137,6 +137,8 @@ jobs:
         run: |
           cargo build --release --target ${{ matrix.target }} \
             -p toondb-tools \
+            -p toondb-storage \
+            -p toondb-index \
             -p toondb-grpc
 
       - name: Create artifact directory
@@ -144,15 +146,23 @@ jobs:
         run: |
           mkdir -p artifacts/${{ matrix.target }}
           
-          # Copy binaries
+          # Copy binaries and shared libraries
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            cp target/${{ matrix.target }}/release/toondb-bulk${{ matrix.binary_ext }} artifacts/${{ matrix.target }}/
-            cp target/${{ matrix.target }}/release/toondb-server${{ matrix.binary_ext }} artifacts/${{ matrix.target }}/
-            cp target/${{ matrix.target }}/release/toondb-grpc-server${{ matrix.binary_ext }} artifacts/${{ matrix.target }}/
+            # Binaries
+            cp target/${{ matrix.target }}/release/toondb-bulk.exe artifacts/${{ matrix.target }}/
+            cp target/${{ matrix.target }}/release/toondb-server.exe artifacts/${{ matrix.target }}/
+            cp target/${{ matrix.target }}/release/toondb-grpc-server.exe artifacts/${{ matrix.target }}/
+            # Shared libraries (DLLs)
+            cp target/${{ matrix.target }}/release/toondb_storage.dll artifacts/${{ matrix.target }}/
+            cp target/${{ matrix.target }}/release/toondb_index.dll artifacts/${{ matrix.target }}/
           else
-            cp target/${{ matrix.target }}/release/toondb-bulk${{ matrix.binary_ext }} artifacts/${{ matrix.target }}/
-            cp target/${{ matrix.target }}/release/toondb-server${{ matrix.binary_ext }} artifacts/${{ matrix.target }}/
-            cp target/${{ matrix.target }}/release/toondb-grpc-server${{ matrix.binary_ext }} artifacts/${{ matrix.target }}/
+            # Binaries
+            cp target/${{ matrix.target }}/release/toondb-bulk artifacts/${{ matrix.target }}/
+            cp target/${{ matrix.target }}/release/toondb-server artifacts/${{ matrix.target }}/
+            cp target/${{ matrix.target }}/release/toondb-grpc-server artifacts/${{ matrix.target }}/
+            # Shared libraries (.so or .dylib)
+            cp target/${{ matrix.target }}/release/libtoondb_storage${{ matrix.lib_ext }} artifacts/${{ matrix.target }}/
+            cp target/${{ matrix.target }}/release/libtoondb_index${{ matrix.lib_ext }} artifacts/${{ matrix.target }}/
             chmod +x artifacts/${{ matrix.target }}/*
           fi
 
@@ -301,19 +311,40 @@ jobs:
           name: binaries-${{ matrix.target }}
           path: binaries/
 
-      - name: Copy binaries to SDK
+      - name: Copy binaries and libraries to SDK
         shell: bash
         run: |
+          # Copy binaries to _bin/
           mkdir -p toondb-python-sdk/src/toondb/_bin/${{ matrix.target }}
-          cp -r binaries/${{ matrix.target }}/* toondb-python-sdk/src/toondb/_bin/${{ matrix.target }}/
           
-          # Make executables on non-Windows
-          if [ "${{ matrix.target }}" != "x86_64-pc-windows-msvc" ]; then
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-msvc" ]; then
+            cp binaries/${{ matrix.target }}/toondb-bulk.exe toondb-python-sdk/src/toondb/_bin/${{ matrix.target }}/
+            cp binaries/${{ matrix.target }}/toondb-server.exe toondb-python-sdk/src/toondb/_bin/${{ matrix.target }}/
+            cp binaries/${{ matrix.target }}/toondb-grpc-server.exe toondb-python-sdk/src/toondb/_bin/${{ matrix.target }}/
+          else
+            cp binaries/${{ matrix.target }}/toondb-bulk toondb-python-sdk/src/toondb/_bin/${{ matrix.target }}/
+            cp binaries/${{ matrix.target }}/toondb-server toondb-python-sdk/src/toondb/_bin/${{ matrix.target }}/
+            cp binaries/${{ matrix.target }}/toondb-grpc-server toondb-python-sdk/src/toondb/_bin/${{ matrix.target }}/
             chmod +x toondb-python-sdk/src/toondb/_bin/${{ matrix.target }}/*
           fi
           
-          echo "=== Binary structure ==="
+          # Copy shared libraries to lib/
+          mkdir -p toondb-python-sdk/src/toondb/lib/${{ matrix.target }}
+          
+          if [ "${{ matrix.target }}" = "x86_64-pc-windows-msvc" ]; then
+            cp binaries/${{ matrix.target }}/toondb_storage.dll toondb-python-sdk/src/toondb/lib/${{ matrix.target }}/
+            cp binaries/${{ matrix.target }}/toondb_index.dll toondb-python-sdk/src/toondb/lib/${{ matrix.target }}/
+          else
+            cp binaries/${{ matrix.target }}/libtoondb_storage* toondb-python-sdk/src/toondb/lib/${{ matrix.target }}/
+            cp binaries/${{ matrix.target }}/libtoondb_index* toondb-python-sdk/src/toondb/lib/${{ matrix.target }}/
+            chmod +x toondb-python-sdk/src/toondb/lib/${{ matrix.target }}/*
+          fi
+          
+          echo "=== SDK structure ==="
+          echo "Binaries:"
           find toondb-python-sdk/src/toondb/_bin -type f
+          echo "Libraries:"
+          find toondb-python-sdk/src/toondb/lib -type f
 
       - name: Update package version
         shell: bash

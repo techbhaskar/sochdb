@@ -266,6 +266,11 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Install dependencies
+        run: |
+          cd toondb-js
+          npm ci
+
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -528,6 +533,8 @@ jobs:
     name: Publish Go Module
     runs-on: ubuntu-latest
     needs: [build-binaries, build-npm, build-python, build-python-sdist]
+    permissions:
+      contents: write  # Required to push tags
     steps:
       - uses: actions/checkout@v4
         with:

@@ -350,7 +350,7 @@ jobs:
   build-python-sdist:
     name: Build Python sdist
     runs-on: ubuntu-latest
-    needs: validate
+    needs: build-binaries
     steps:
       - uses: actions/checkout@v4
 

@@ -40,11 +40,11 @@ The official JavaScript/TypeScript SDK for **ToonDB** — a high-performance emb
 ## Installation
 
 ```bash
-npm install sushanth-toondb@0.2.6
+npm install sushanth-toondb@0.2.7
 # or
-yarn add sushanth-toondb@0.2.6
+yarn add sushanth-toondb@0.2.7
 # or
-bun add sushanth-toondb@0.2.6
+bun add sushanth-toondb@0.2.7
 ```
 
 **Requirements:**
@@ -484,7 +484,7 @@ await db.open(); // Must call open() first!
 ```
 
 **"Path segment truncated" (v0.2.5):**
-- **Fixed in v0.2.6!** Upgrade: `npm install sushanth-toondb@0.2.6`
+- **Fixed in v0.2.6!** Upgrade: `npm install sushanth-toondb@0.2.7`
 
 **Server not found:**
 ```typescript
@@ -522,7 +522,7 @@ npm run build
 
 # Create tarball
 npm pack
-# Creates: sushanth-toondb-0.2.6.tgz
+# Creates: sushanth-toondb-0.2.7.tgz
 ```
 
 ## License

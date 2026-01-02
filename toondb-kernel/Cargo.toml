@@ -1,6 +1,6 @@
 [package]
 name = "toondb-kernel"
-version = "0.2.6"
+version = "0.2.7"
 edition = "2024"
 description = "ToonDB Kernel - Minimal ACID core with plugin architecture"
 license = "Apache-2.0"

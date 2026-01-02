@@ -1,6 +1,6 @@
 [package]
 name = "toondb-plugin-logging"
-version = "0.2.6"
+version = "0.2.7"
 edition = "2024"
 description = "JSON structured logging plugin for ToonDB"
 license = "Apache-2.0"

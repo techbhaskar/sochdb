@@ -545,7 +545,7 @@ if let Some(bytes) = value {
 ```
 
 **Performance:**
-- Regular `get()`: Allocates Vec<u8>
+- Regular `get()`: Allocates `Vec<u8>`
 - Zero-copy `get_zero_copy()`: Returns Bytes (shared buffer)
 - Best for: Large values, read-heavy workloads
 
@@ -596,7 +596,7 @@ txn.commit().await?;
 let blob = client.get_zero_copy(b"large_blob").await?;
 
 // ❌ Bad: Unnecessary allocation
-let blob = client.get(b"large_blob").await?; // Copies to Vec<u8>
+let blob = client.get(b"large_blob").await?; // Copies to `Vec<u8>`
 ```
 
 ### 6. Handle Errors Properly

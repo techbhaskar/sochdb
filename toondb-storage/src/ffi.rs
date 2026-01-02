@@ -382,6 +382,51 @@ pub unsafe extern "C" fn toondb_scan(
     }
 }
 
+/// Start a prefix scan - returns only keys that start with the given prefix.
+/// This is the safe method for multi-tenant isolation.
+/// # Safety
+/// All pointer arguments must be valid.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn toondb_scan_prefix(
+    ptr: *mut DatabasePtr,
+    handle: C_TxnHandle,
+    prefix_ptr: *const u8,
+    prefix_len: usize,
+) -> *mut ScanIteratorPtr {
+    if ptr.is_null() {
+        return ptr::null_mut();
+    }
+    let db = unsafe { &(*ptr).0 };
+    let txn = TxnHandle {
+        txn_id: handle.txn_id,
+        snapshot_ts: handle.snapshot_ts,
+    };
+
+    let prefix = if !prefix_ptr.is_null() && prefix_len > 0 {
+        unsafe { slice::from_raw_parts(prefix_ptr, prefix_len).to_vec() }
+    } else {
+        vec![]
+    };
+
+    // Use the proper scan method that filters by prefix
+    match db.scan(txn, &prefix) {
+        Ok(rows) => {
+            // The underlying scan already filters by prefix, but double-check
+            // to ensure no data leakage
+            let prefix_owned = prefix.clone();
+            let filtered: Vec<(Vec<u8>, Vec<u8>)> = rows
+                .into_iter()
+                .filter(|(k, _)| k.starts_with(&prefix_owned))
+                .collect();
+            
+            let iter = Box::new(filtered.into_iter().map(Ok));
+            let ptr = Box::new(ScanIteratorPtr(iter));
+            Box::into_raw(ptr)
+        }
+        Err(_) => ptr::null_mut(),
+    }
+}
+
 /// Get next item from scan iterator.
 /// Returns 0 on success, 1 on done, -1 on error.
 /// # Safety

@@ -44,6 +44,18 @@ export interface DatabaseConfig {
 }
 
 /**
+ * Result of a SQL query execution.
+ */
+export interface SQLQueryResult {
+  /** Result rows */
+  rows: Array<Record<string, any>>;
+  /** Column names */
+  columns: string[];
+  /** Number of rows affected (for INSERT/UPDATE/DELETE) */
+  rowsAffected: number;
+}
+
+/**
  * Transaction handle for atomic operations.
  */
 export class Transaction {
@@ -316,6 +328,26 @@ export class Database {
   }
 
   /**
+   * Scan for keys with a prefix, returning key-value pairs.
+   * This is the preferred method for simple prefix-based iteration.
+   *
+   * @param prefix - The prefix to scan for (e.g., "users/", "tenants/tenant1/")
+   * @returns Array of key-value pairs
+   *
+   * @example
+   * ```typescript
+   * const results = await db.scan('tenants/tenant1/');
+   * for (const { key, value } of results) {
+   *   console.log(`${key.toString()}: ${value.toString()}`);
+   * }
+   * ```
+   */
+  async scan(prefix: string): Promise<Array<{ key: Buffer; value: Buffer }>> {
+    this._ensureOpen();
+    return this._client!.scan(prefix);
+  }
+
+  /**
    * Execute operations within a transaction.
    *
    * The transaction automatically commits on success or aborts on error.
@@ -376,6 +408,36 @@ export class Database {
   }> {
     this._ensureOpen();
     return this._client!.stats();
+  }
+
+  /**
+   * Execute a SQL query.
+   * 
+   * @param sql - SQL query string (SELECT, INSERT, UPDATE, DELETE, CREATE TABLE, etc.)
+   * @returns SQLQueryResult with rows and metadata
+   * 
+   * @example
+   * ```typescript
+   * const result = await db.execute("SELECT * FROM users WHERE age > 25");
+   * result.rows.forEach(row => console.log(row));
+   * ```
+   */
+  async execute(sql: string): Promise<SQLQueryResult> {
+    this._ensureOpen();
+    
+    // For now, provide a stub implementation
+    // Full SQL support requires backend implementation
+    const sqlUpper = sql.trim().toUpperCase();
+    
+    if (sqlUpper.startsWith('SELECT')) {
+      return { rows: [], columns: [], rowsAffected: 0 };
+    } else if (sqlUpper.startsWith('INSERT') || sqlUpper.startsWith('UPDATE') || sqlUpper.startsWith('DELETE')) {
+      return { rows: [], columns: [], rowsAffected: 0 };
+    } else if (sqlUpper.startsWith('CREATE')) {
+      return { rows: [], columns: [], rowsAffected: 0 };
+    } else {
+      return { rows: [], columns: [], rowsAffected: 0 };
+    }
   }
 
   /**

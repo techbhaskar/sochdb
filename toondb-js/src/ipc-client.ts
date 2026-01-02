@@ -22,28 +22,31 @@ import { Query } from './query';
  * Wire protocol opcodes.
  */
 export const OpCode = {
-  // Client → Server
-  Get: 0x01,
-  Put: 0x02,
+  // Client → Server (must match toondb-storage/src/ipc_server.rs)
+  Put: 0x01,
+  Get: 0x02,
   Delete: 0x03,
-  GetPath: 0x04,
-  PutPath: 0x05,
-  Query: 0x06,
-  BeginTxn: 0x10,
-  CommitTxn: 0x11,
-  AbortTxn: 0x12,
-  Checkpoint: 0x20,
-  Stats: 0x21,
+  BeginTxn: 0x04,
+  CommitTxn: 0x05,
+  AbortTxn: 0x06,
+  Query: 0x07,
+  CreateTable: 0x08,
+  PutPath: 0x09,
+  GetPath: 0x0A,
+  Scan: 0x0B,
+  Checkpoint: 0x0C,
+  Stats: 0x0D,
+  Ping: 0x0E,
 
   // Server → Client
   OK: 0x80,
   Error: 0x81,
-  NotFound: 0x82,
-  Value: 0x83,
-  TxnId: 0x84,
-  Row: 0x85,
-  EndStream: 0x86,
-  StatsResp: 0x87,
+  Value: 0x82,
+  TxnId: 0x83,
+  Row: 0x84,
+  EndStream: 0x85,
+  StatsResp: 0x86,
+  Pong: 0x87,
 } as const;
 
 // Internal OpCode map for backwards compatibility
@@ -57,9 +60,10 @@ const InternalOpCode = {
   QUERY: OpCode.Query,
   PUT_PATH: OpCode.PutPath,
   GET_PATH: OpCode.GetPath,
+  SCAN: OpCode.Scan,
   CHECKPOINT: OpCode.Checkpoint,
   STATS: OpCode.Stats,
-  PING: 0x22,
+  PING: OpCode.Ping,
   OK: OpCode.OK,
   ERROR: OpCode.Error,
   VALUE: OpCode.Value,
@@ -67,7 +71,7 @@ const InternalOpCode = {
   ROW: OpCode.Row,
   END_STREAM: OpCode.EndStream,
   STATS_RESP: OpCode.StatsResp,
-  PONG: 0x88,
+  PONG: OpCode.Pong,
 } as const;
 
 const MAX_MESSAGE_SIZE = 16 * 1024 * 1024; // 16 MB
@@ -305,26 +309,36 @@ export class IpcClient {
 
   /**
    * Get a value by path.
+   * Wire format: path_count(2 LE) + [path_len(2 LE) + path_segment]...
    */
   async getPath(path: string): Promise<Buffer | null> {
-    const response = await this._send(InternalOpCode.GET_PATH, Buffer.from(path, 'utf8'));
-    const { opcode, payload } = this._parseResponse(response);
+    // Encode path as single segment for now (could split on '/' for multi-segment)
+    const pathBuf = Buffer.from(path, 'utf8');
+    const payload = Buffer.alloc(2 + 2 + pathBuf.length);
+    payload.writeUInt16LE(1, 0); // path_count = 1
+    payload.writeUInt16LE(pathBuf.length, 2); // path_len
+    pathBuf.copy(payload, 4); // path
+    
+    const response = await this._send(InternalOpCode.GET_PATH, payload);
+    const { opcode, payload: responsePayload } = this._parseResponse(response);
 
     if (opcode === InternalOpCode.VALUE) {
-      return payload;
+      return responsePayload;
     }
     return null;
   }
 
   /**
    * Put a value at a path.
+   * Wire format: path_count(2 LE) + [path_len(2 LE) + path_segment]... + value
    */
   async putPath(path: string, value: Buffer): Promise<void> {
     const pathBuf = Buffer.from(path, 'utf8');
-    const payload = Buffer.alloc(4 + pathBuf.length + value.length);
-    payload.writeUInt32LE(pathBuf.length, 0);
-    pathBuf.copy(payload, 4);
-    value.copy(payload, 4 + pathBuf.length);
+    const payload = Buffer.alloc(2 + 2 + pathBuf.length + value.length);
+    payload.writeUInt16LE(1, 0); // path_count = 1
+    payload.writeUInt16LE(pathBuf.length, 2); // path_len
+    pathBuf.copy(payload, 4); // path
+    value.copy(payload, 4 + pathBuf.length); // value
 
     const response = await this._send(InternalOpCode.PUT_PATH, payload);
     this._parseResponse(response);
@@ -332,24 +346,108 @@ export class IpcClient {
 
   /**
    * Execute a query and return TOON-formatted results.
+   * 
+   * Wire format: path_len(2) + path + limit(4) + offset(4) + cols_count(2) + [col_len(2) + col]...
    */
   async query(
     pathPrefix: string,
     options?: { limit?: number; offset?: number; columns?: string[] }
   ): Promise<string> {
     const opts = options || {};
-    const queryObj = {
-      prefix: pathPrefix,
-      limit: opts.limit,
-      offset: opts.offset,
-      columns: opts.columns,
-    };
+    const pathBuf = Buffer.from(pathPrefix, 'utf8');
+    const columns = opts.columns || [];
+    
+    // Calculate payload size
+    let size = 2 + pathBuf.length + 4 + 4 + 2;
+    for (const col of columns) {
+      size += 2 + Buffer.byteLength(col, 'utf8');
+    }
+    
+    const payload = Buffer.alloc(size);
+    let offset = 0;
+    
+    // Path: path_len(2 LE) + path
+    payload.writeUInt16LE(pathBuf.length, offset);
+    offset += 2;
+    pathBuf.copy(payload, offset);
+    offset += pathBuf.length;
+    
+    // Limit (4 LE) - 0 means no limit
+    payload.writeUInt32LE(opts.limit || 0, offset);
+    offset += 4;
+    
+    // Offset (4 LE)
+    payload.writeUInt32LE(opts.offset || 0, offset);
+    offset += 4;
+    
+    // Columns: count(2 LE) + [col_len(2 LE) + col]...
+    payload.writeUInt16LE(columns.length, offset);
+    offset += 2;
+    for (const col of columns) {
+      const colBuf = Buffer.from(col, 'utf8');
+      payload.writeUInt16LE(colBuf.length, offset);
+      offset += 2;
+      colBuf.copy(payload, offset);
+      offset += colBuf.length;
+    }
 
-    const payload = Buffer.from(JSON.stringify(queryObj), 'utf8');
     const response = await this._send(InternalOpCode.QUERY, payload);
     const { payload: resultPayload } = this._parseResponse(response);
 
     return resultPayload.toString('utf8');
+  }
+
+  /**
+   * Scan for keys with a prefix, returning key-value pairs.
+   * This is the preferred method for simple prefix-based iteration.
+   * 
+   * Wire format: prefix string
+   * Response format: count(4 LE) + [key_len(2 LE) + key + val_len(4 LE) + val]...
+   */
+  async scan(prefix: string): Promise<Array<{ key: Buffer; value: Buffer }>> {
+    const prefixBuf = Buffer.from(prefix, 'utf8');
+    const response = await this._send(InternalOpCode.SCAN, prefixBuf);
+    const { opcode, payload } = this._parseResponse(response);
+
+    if (opcode !== InternalOpCode.VALUE && opcode !== InternalOpCode.OK) {
+      throw new ProtocolError(`Unexpected scan response opcode: 0x${opcode.toString(16)}`);
+    }
+
+    if (payload.length < 4) {
+      return []; // Empty result
+    }
+
+    // Parse response: count(4 LE) + [key_len(2 LE) + key + val_len(4 LE) + val]...
+    const count = payload.readUInt32LE(0);
+    const results: Array<{ key: Buffer; value: Buffer }> = [];
+    let offset = 4;
+
+    for (let i = 0; i < count; i++) {
+      if (offset + 2 > payload.length) {
+        throw new ProtocolError('Truncated scan response (key_len)');
+      }
+      const keyLen = payload.readUInt16LE(offset);
+      offset += 2;
+
+      if (offset + keyLen + 4 > payload.length) {
+        throw new ProtocolError('Truncated scan response (key+val_len)');
+      }
+      const key = payload.subarray(offset, offset + keyLen);
+      offset += keyLen;
+
+      const valLen = payload.readUInt32LE(offset);
+      offset += 4;
+
+      if (offset + valLen > payload.length) {
+        throw new ProtocolError('Truncated scan response (value)');
+      }
+      const value = payload.subarray(offset, offset + valLen);
+      offset += valLen;
+
+      results.push({ key, value });
+    }
+
+    return results;
   }
 
   /**

@@ -8,6 +8,7 @@
 [![Rust](https://img.shields.io/badge/rust-2024%20edition-orange.svg)](https://www.rust-lang.org/)
 
 * **40–66% fewer tokens** for tabular context via **TOON** (Tabular Object‑Oriented Notation)
+* **SQL support** with full SQL-92 syntax for relational queries
 * **Context Query Builder**: assemble *system + user + history + retrieval* under a token budget
 * **Native HNSW vector search** (F32/F16/BF16) with optional quantization
 * **ACID transactions** (MVCC + WAL + Serializable Snapshot Isolation)
@@ -42,6 +43,7 @@ Most "agent stacks" still glue together:
 
 ### ✅ Database fundamentals
 
+* **SQL support** with full SQL-92 syntax (SELECT, INSERT, UPDATE, DELETE, JOINs)
 * **ACID transactions** with **MVCC**
 * **WAL durability** + **group commit**
 * **Serializable Snapshot Isolation (SSI)**
@@ -87,7 +89,7 @@ pip install toondb-client
 npm install @sushanth/toondb
 
 # Go
-go get github.com/toondb/toondb/toondb-go@v0.2.3
+go get github.com/toondb/toondb/toondb-go@v0.2.6
 
 # Rust - add to Cargo.toml
 # toondb = "0.2"

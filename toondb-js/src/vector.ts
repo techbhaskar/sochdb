@@ -73,14 +73,19 @@ function findBulkBinary(): string {
 
   const binaryName = platform === 'win32' ? 'toondb-bulk.exe' : 'toondb-bulk';
 
-  // Search paths
+  // Search paths - check multiple levels for different build outputs (cjs, esm)
   const searchPaths = [
-    // Bundled in package
+    // Bundled in package - from dist/cjs or dist/esm
+    path.join(__dirname, '..', '..', '_bin', target, binaryName),
     path.join(__dirname, '..', '_bin', target, binaryName),
     path.join(__dirname, '_bin', target, binaryName),
-    // Development
+    // From package root
+    path.resolve(__dirname, '..', '..', '..', '_bin', target, binaryName),
+    // Development paths
     path.join(__dirname, '..', '..', '..', 'target', 'release', binaryName),
     path.join(__dirname, '..', '..', '..', 'target', 'debug', binaryName),
+    path.resolve(process.cwd(), '_bin', target, binaryName),
+    path.resolve(process.cwd(), 'target', 'release', binaryName),
   ];
 
   for (const p of searchPaths) {
@@ -155,7 +160,7 @@ export class VectorIndex {
 
     try {
       const args = [
-        'build',
+        'build-index',
         '--input', tempFile,
         '--output', options.output,
         '--dimension', options.dimension.toString(),

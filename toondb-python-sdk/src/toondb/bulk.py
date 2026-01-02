@@ -81,16 +81,22 @@ class BulkBuildStats:
 
 @dataclass
 class QueryResult:
-    """Result from a vector query."""
+    """Result from a vector query.
+    
+    Attributes:
+        id: The ID of the matched vector in the index.
+        distance: The distance from the query vector (lower = more similar for L2).
+    """
     id: int
     distance: float
     
     def __repr__(self) -> str:
-        return (
-            f"BulkBuildStats(vectors={self.vectors}, dim={self.dimension}, "
-            f"elapsed={self.elapsed_secs:.2f}s, rate={self.rate:.0f} vec/s, "
-            f"output={self.output_size_mb:.1f} MB)"
-        )
+        return f"QueryResult(id={self.id}, distance={self.distance:.4f})"
+    
+    def __iter__(self):
+        """Allow tuple unpacking: id, distance = result"""
+        yield self.id
+        yield self.distance
 
 
 # =============================================================================

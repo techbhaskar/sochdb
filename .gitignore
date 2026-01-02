@@ -25,6 +25,9 @@ wheels/
 .installed.cfg
 *.egg
 
+# Python compiled binaries (built during CI/CD)
+toondb-python-sdk/src/toondb/_bin/
+
 # IDE
 .idea/
 .vscode/
@@ -64,3 +67,4 @@ toondb_demo_db/
 toondb_demo_db_real/
 bench_sqlite.db*
 c-code.py
+demo_sql_db/

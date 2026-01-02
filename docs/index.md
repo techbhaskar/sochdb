@@ -151,6 +151,7 @@ Task-oriented guides for specific use cases.
 - [Go SDK](/guides/go-sdk) — Go client guide
 
 **Features:**
+- [SQL Guide](/guides/sql-guide) — Working with SQL queries
 - [Vector Search](/guides/vector-search) — HNSW indexing
 - [Bulk Operations](/guides/bulk-operations) — Batch processing
 - [Deployment](/guides/deployment) — Production setup
@@ -165,6 +166,7 @@ Deep dives into ToonDB's architecture and design.
 ### 📋 API Reference
 Complete technical specifications.
 
+- [SQL API](/api-reference/sql-api) — SQL query reference
 - [Rust API](/api-reference/rust-api) — Crate documentation
 - [Python API](/api-reference/python-api) — Full Python API docs
 - [Node.js API](/api-reference/nodejs-api) — TypeScript/JavaScript API
@@ -184,13 +186,14 @@ Recipes for common tasks.
 | I want to... | Go to... |
 |--------------|----------|
 | Get started in 5 minutes | [Quick Start](/getting-started/quickstart) |
+| Use SQL queries | [SQL Guide](/guides/sql-guide) |
 | Use the Rust SDK | [Rust Guide](/guides/rust-sdk) |
 | Use the Python SDK | [Python Guide](/guides/python-sdk) |
 | Use the Node.js SDK | [Node.js Guide](/guides/nodejs-sdk) |
 | Use the Go SDK | [Go Guide](/guides/go-sdk) |
 | Add vector search | [Vector Search](/guides/vector-search) |
 | Understand the architecture | [Architecture](/concepts/architecture) |
-| See the API reference | [Rust API](/api-reference/rust-api) |
+| See the SQL API reference | [SQL API](/api-reference/sql-api) |
 
 ---
 

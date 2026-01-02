@@ -25,7 +25,7 @@ Provides two modes of access:
 
 from .ipc_client import IpcClient
 from .database import Database, Transaction
-from .query import Query
+from .query import Query, SQLQueryResult
 from .errors import ToonDBError, ConnectionError, TransactionError, ProtocolError
 
 # Vector search (optional - requires libtoondb_index)
@@ -36,20 +36,25 @@ except ImportError:
 
 # Bulk operations (optional - requires toondb-bulk binary)
 try:
-    from .bulk import bulk_build_index, BulkBuildStats
+    from .bulk import bulk_build_index, bulk_query_index, BulkBuildStats, QueryResult
 except ImportError:
     bulk_build_index = None
+    bulk_query_index = None
     BulkBuildStats = None
+    QueryResult = None
 
-__version__ = "0.2.5"
+__version__ = "0.2.6"
 __all__ = [
     "Database",
     "Transaction", 
     "Query",
+    "SQLQueryResult",
     "IpcClient",
     "VectorIndex",
     "bulk_build_index",
+    "bulk_query_index",
     "BulkBuildStats",
+    "QueryResult",
     "ToonDBError",
     "ConnectionError",
     "TransactionError",

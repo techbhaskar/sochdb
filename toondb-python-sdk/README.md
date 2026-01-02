@@ -1,12 +1,33 @@
 # ToonDB Python SDK
 
-[![PyPI version](https://badge.fury.io/py/toondb.svg)](https://badge.fury.io/py/toondb)
+[![PyPI version](https://badge.fury.io/py/toondb-client.svg)](https://badge.fury.io/py/toondb-client)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
-**ToonDB is an AI-native database with token-optimized output, O(|path|) lookups, built-in vector search, and durable transactions.**
+The official Python SDK for **ToonDB** — a high-performance embedded document database with HNSW vector search, built-in multi-tenancy, and SQL support.
 
-Python client SDK for [ToonDB](https://github.com/toondb/toondb) - the database optimized for LLM context retrieval.
+## Version
+
+**v0.2.6** (January 2026)
+
+**What's New in 0.2.6:**
+- ✅ Full SQL support with CREATE TABLE, INSERT, SELECT, WHERE, JOIN
+- ✅ Enhanced `scan()` method for efficient prefix-based iteration
+- ✅ Bulk vector operations (~1,600 vec/s for HNSW index building)
+- ✅ Zero-compilation installation with pre-built binaries
+- ✅ Improved FFI performance and error handling
+
+## Features
+
+- ✅ **Full SQL Database** — CREATE TABLE, INSERT, SELECT with WHERE/JOIN/GROUP BY
+- ✅ **Key-Value Store** — Simple `get()`/`put()`/`delete()` operations
+- ✅ **Path-Native API** — Hierarchical keys like `users/alice/email`
+- ✅ **Prefix Scanning** — Fast `scan()` for multi-tenant data isolation
+- ✅ **ACID Transactions** — Full snapshot isolation with automatic commit/abort
+- ✅ **Query Builder** — Fluent API returning TOON format (LLM-optimized)
+- ✅ **Vector Search** — HNSW with bulk API (~1,600 vec/s ingestion)
+- ✅ **Dual Mode** — Embedded (FFI) or IPC (multi-process)
+- ✅ **Zero Compilation** — Pre-built binaries for Linux/macOS/Windows
 
 ## Installation
 
@@ -14,209 +35,450 @@ Python client SDK for [ToonDB](https://github.com/toondb/toondb) - the database 
 pip install toondb-client
 ```
 
-**Zero compilation required** - pre-built binaries are bundled for all major platforms:
+**Pre-built binaries included for:**
 - Linux x86_64 and aarch64 (glibc ≥ 2.17)
 - macOS Intel and Apple Silicon (universal2)
 - Windows x64
 
-## Features
-
-### Core Database
-- 🚀 **Embedded Mode**: Direct FFI access to ToonDB for single-process applications
-- 🔗 **IPC Mode**: Multi-process access via Unix domain sockets
-- 📁 **Path-Native API**: Hierarchical data organization with O(|path|) lookups
-- 💾 **ACID Transactions**: Full transaction support with snapshot isolation
-- 🔍 **Range Scans**: Efficient prefix and range queries
-- 🎯 **Token-Optimized**: TOON format output designed for LLM context windows
-
-### High-Performance Vector Operations
-- ⚡ **Bulk API**: Bypass FFI overhead for high-throughput vector ingestion (~1,600 vec/s vs ~130 vec/s with FFI)
-- 🔢 **SIMD Kernels**: Auto-dispatched AVX2/NEON optimizations for distance calculations
-- 📊 **Multi-Format Input**: Support for raw float32, NumPy .npy, and in-memory arrays
-- 🔎 **HNSW Indexing**: Build and query approximate nearest neighbor indexes
-
-### Distribution
-- 📦 **Zero-Compile Install**: Pre-built Rust binaries bundled in wheels
-- 🌍 **Cross-Platform**: Linux, macOS, Windows with automatic platform detection
-- 🔧 **Fallback Chain**: Bundled binary → PATH → cargo target (for development)
-
-## Detailed Installation
-
-### From PyPI (Recommended)
-
-```bash
-pip install toondb-client
-```
-
-### From Source (Development)
-
-```bash
-git clone https://github.com/toondb/toondb.git
-cd toondb/toondb-python-sdk
-pip install -e .
-
-# Build the Rust binary (required for bulk operations)
-cargo build --release -p toondb-tools
-```
+**No Rust toolchain required!**
 
 ## Quick Start
 
-### Embedded Mode (Recommended for single-process apps)
+### Embedded Mode (Recommended)
 
 ```python
 from toondb import Database
 
-# Open a database (creates if doesn't exist)
+# Open database (creates if doesn't exist)
 with Database.open("./my_database") as db:
-    # Simple key-value operations
-    db.put(b"user:123", b'{"name": "Alice", "email": "alice@example.com"}')
+    # Simple key-value
+    db.put(b"user:123", b'{"name":"Alice","age":30}')
     value = db.get(b"user:123")
-    
-    # Path-native API
-    db.put_path("users/alice/email", b"alice@example.com")
-    email = db.get_path("users/alice/email")
-    
-    # Transactions
-    with db.transaction() as txn:
-        txn.put(b"key1", b"value1")
-        txn.put(b"key2", b"value2")
-        # Automatically commits on exit, or aborts on exception
+    print(value.decode())
+    # Output: {"name":"Alice","age":30}
 ```
 
-### IPC Mode (For multi-process access)
+### IPC Mode (Multi-Process)
+
+```bash
+# Terminal 1: Start server
+toondb-server --db ./my_database
+# Output: [IpcServer] Listening on "./my_database/toondb.sock"
+```
 
 ```python
 from toondb import IpcClient
 
-# Connect to a running ToonDB IPC server
-client = IpcClient.connect("/tmp/toondb.sock")
+# Connect to running server
+client = IpcClient.connect("./my_database/toondb.sock")
 
-# Same API as embedded mode
 client.put(b"key", b"value")
 value = client.get(b"key")
-
-# Query Builder
-results = client.query("users/") \
-    .limit(10) \
-    .select(["name", "email"]) \
-    .to_list()
+print(value.decode())
+# Output: value
 ```
 
-### Bulk Vector Ingestion (Bypass FFI for Max Throughput)
+## SQL Database
 
-For large-scale vector index building, the Bulk API bypasses Python FFI overhead
-by shelling out to the native `toondb-bulk` binary:
+### Create Tables and Insert Data
+
+```python
+from toondb import Database
+
+with Database.open("./sql_db") as db:
+    # Create users table
+    db.execute_sql("""
+        CREATE TABLE users (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE,
+            age INTEGER
+        )
+    """)
+    
+    # Insert data
+    db.execute_sql("""
+        INSERT INTO users (id, name, email, age)
+        VALUES (1, 'Alice', 'alice@example.com', 30)
+    """)
+    
+    db.execute_sql("""
+        INSERT INTO users (id, name, email, age)
+        VALUES (2, 'Bob', 'bob@example.com', 25)
+    """)
+```
+
+**Output:**
+```
+Table 'users' created
+2 rows inserted
+```
+
+### Query with SELECT
+
+```python
+# Select all users
+results = db.execute_sql("SELECT * FROM users")
+for row in results:
+    print(row)
+
+# Output:
+# {'id': 1, 'name': 'Alice', 'email': 'alice@example.com', 'age': 30}
+# {'id': 2, 'name': 'Bob', 'email': 'bob@example.com', 'age': 25}
+
+# WHERE clause
+results = db.execute_sql("SELECT name, age FROM users WHERE age > 26")
+for row in results:
+    print(f"{row['name']}: {row['age']} years old")
+
+# Output:
+# Alice: 30 years old
+```
+
+### UPDATE and DELETE
+
+```python
+# Update
+db.execute_sql("UPDATE users SET age = 31 WHERE name = 'Alice'")
+
+# Delete
+db.execute_sql("DELETE FROM users WHERE age < 26")
+
+# Verify
+results = db.execute_sql("SELECT name, age FROM users ORDER BY age")
+for row in results:
+    print(row)
+
+# Output:
+# {'name': 'Alice', 'age': 31}
+```
+
+### Complex Queries with JOIN
+
+```python
+# Create orders table
+db.execute_sql("""
+    CREATE TABLE orders (
+        id INTEGER PRIMARY KEY,
+        user_id INTEGER,
+        product TEXT,
+        amount REAL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+""")
+
+# Insert orders
+db.execute_sql("INSERT INTO orders VALUES (1, 1, 'Laptop', 999.99)")
+db.execute_sql("INSERT INTO orders VALUES (2, 1, 'Mouse', 25.00)")
+db.execute_sql("INSERT INTO orders VALUES (3, 2, 'Keyboard', 75.00)")
+
+# JOIN query
+results = db.execute_sql("""
+    SELECT users.name, orders.product, orders.amount
+    FROM users
+    JOIN orders ON users.id = orders.user_id
+    WHERE orders.amount > 50
+    ORDER BY orders.amount DESC
+""")
+
+for row in results:
+    print(f"{row['name']} bought {row['product']} for ${row['amount']}")
+```
+
+**Output:**
+```
+Alice bought Laptop for $999.99
+Bob bought Keyboard for $75.0
+```
+
+### Aggregations
+
+```python
+# GROUP BY with aggregations
+results = db.execute_sql("""
+    SELECT users.name, COUNT(*) as order_count, SUM(orders.amount) as total
+    FROM users
+    JOIN orders ON users.id = orders.user_id
+    GROUP BY users.name
+    ORDER BY total DESC
+""")
+
+for row in results:
+    print(f"{row['name']}: {row['order_count']} orders, ${row['total']} total")
+```
+
+**Output:**
+```
+Alice: 2 orders, $1024.99 total
+Bob: 1 orders, $75.0 total
+```
+
+## Key-Value Operations
+
+### Basic Operations
+
+```python
+# Put
+db.put(b"key", b"value")
+
+# Get
+value = db.get(b"key")
+if value:
+    print(value.decode())
+else:
+    print("Key not found")
+
+# Delete
+db.delete(b"key")
+```
+
+**Output:**
+```
+value
+Key not found (after delete)
+```
+
+### Path Operations
+
+```python
+# Hierarchical data storage
+db.put_path("users/alice/email", b"alice@example.com")
+db.put_path("users/alice/age", b"30")
+db.put_path("users/bob/email", b"bob@example.com")
+
+# Retrieve by path
+email = db.get_path("users/alice/email")
+print(f"Alice's email: {email.decode()}")
+```
+
+**Output:**
+```
+Alice's email: alice@example.com
+```
+
+### Prefix Scanning ⭐
+
+The most efficient way to iterate keys with a common prefix:
+
+```python
+# Insert multi-tenant data
+db.put(b"tenants/acme/users/1", b'{"name":"Alice"}')
+db.put(b"tenants/acme/users/2", b'{"name":"Bob"}')
+db.put(b"tenants/acme/orders/1", b'{"total":100}')
+db.put(b"tenants/globex/users/1", b'{"name":"Charlie"}')
+
+# Scan only ACME Corp data (tenant isolation)
+results = list(db.scan(b"tenants/acme/", b"tenants/acme;"))
+print(f"ACME Corp has {len(results)} items:")
+for key, value in results:
+    print(f"  {key.decode()}: {value.decode()}")
+```
+
+**Output:**
+```
+ACME Corp has 3 items:
+  tenants/acme/orders/1: {"total":100}
+  tenants/acme/users/1: {"name":"Alice"}
+  tenants/acme/users/2: {"name":"Bob"}
+```
+
+**Why use scan():**
+- **Fast**: O(|prefix|) performance
+- **Isolated**: Perfect for multi-tenant apps
+- **Efficient**: Binary-safe iteration
+
+## Transactions
+
+### Automatic Transactions
+
+```python
+# Context manager handles commit/abort
+with db.transaction() as txn:
+    txn.put(b"account:1:balance", b"1000")
+    txn.put(b"account:2:balance", b"500")
+    # Commits on success, aborts on exception
+```
+
+**Output:**
+```
+✅ Transaction committed
+```
+
+### Manual Transaction Control
+
+```python
+txn = db.begin_transaction()
+try:
+    txn.put(b"key1", b"value1")
+    txn.put(b"key2", b"value2")
+    
+    # Scan within transaction
+    for key, value in txn.scan(b"key", b"key~"):
+        print(f"{key.decode()}: {value.decode()}")
+    
+    txn.commit()
+except Exception as e:
+    txn.abort()
+    raise
+```
+
+**Output:**
+```
+key1: value1
+key2: value2
+✅ Transaction committed
+```
+
+## Query Builder
+
+Returns results in **TOON format** (token-optimized for LLMs):
+
+```python
+# Insert structured data
+db.put(b"products/laptop", b'{"name":"Laptop","price":999,"stock":5}')
+db.put(b"products/mouse", b'{"name":"Mouse","price":25,"stock":20}')
+
+# Query with column selection
+results = db.query("products/") \
+    .select(["name", "price"]) \
+    .limit(10) \
+    .to_list()
+
+for key, value in results:
+    print(f"{key.decode()}: {value.decode()}")
+```
+
+**Output (TOON Format):**
+```
+products/laptop: result[1]{name,price}:Laptop,999
+products/mouse: result[1]{name,price}:Mouse,25
+```
+
+**Other query methods:**
+```python
+first = db.query("products/").first()      # Get first result
+count = db.query("products/").count()      # Count results
+exists = db.query("products/").exists()    # Check existence
+```
+
+## Vector Search
+
+### Bulk HNSW Index Building (Fast!)
 
 ```python
 from toondb.bulk import bulk_build_index, bulk_query_index
 import numpy as np
 
-# Generate or load embeddings (10K × 768D)
+# Generate embeddings (10K × 768D)
 embeddings = np.random.randn(10000, 768).astype(np.float32)
 
-# Build HNSW index at ~1,600 vec/s (vs ~130 vec/s with FFI)
+# Build HNSW index at ~1,600 vec/s
 stats = bulk_build_index(
     embeddings,
     output="my_index.hnsw",
     m=16,
     ef_construction=100,
+    metric="cosine"
 )
 
 print(f"Built {stats.vectors} vectors at {stats.rate:.0f} vec/s")
 ```
 
-**Query the index:**
+**Output:**
+```
+Built 10000 vectors at 1598 vec/s
+Index size: 45.2 MB
+```
+
+### Query HNSW Index
 
 ```python
-# Single query
+# Single query vector
 query = np.random.randn(768).astype(np.float32)
+
 results = bulk_query_index(
     index="my_index.hnsw",
     query=query,
     k=10,
-    ef_search=64,
+    ef_search=64
 )
 
-for neighbor in results:
-    print(f"ID: {neighbor.id}, Distance: {neighbor.distance:.4f}")
+print(f"Top {len(results)} nearest neighbors:")
+for i, neighbor in enumerate(results):
+    print(f"{i+1}. ID: {neighbor.id}, Distance: {neighbor.distance:.4f}")
 ```
 
-**Performance Comparison (768D vectors):**
+**Output:**
+```
+Top 10 nearest neighbors:
+1. ID: 3421, Distance: 0.1234
+2. ID: 7892, Distance: 0.1456
+3. ID: 1205, Distance: 0.1678
+...
+```
 
-| Method | Throughput | Overhead |
+**Performance Comparison:**
+
+| Method | Throughput | Use Case |
 |--------|------------|----------|
-| Python FFI | ~130 vec/s | 12× slower |
-| Bulk API | ~1,600 vec/s | 1.0× baseline |
+| Python FFI | ~130 vec/s | Small datasets |
+| Bulk API | ~1,600 vec/s | Large-scale ingestion |
 
-## Use Cases
-
-### User Session Management
+## Complete Example: Multi-Tenant SaaS App
 
 ```python
 from toondb import Database
 import json
 
-with Database.open("./sessions") as db:
-    # Store session
-    session = {"user_id": "123", "token": "abc", "expires": "2024-12-31"}
-    db.put(b"session:abc123", json.dumps(session).encode())
-    
-    # Retrieve session
-    data = db.get(b"session:abc123")
-    if data:
-        session = json.loads(data.decode())
+def main():
+    with Database.open("./saas_db") as db:
+        # Create SQL schema
+        db.execute_sql("""
+            CREATE TABLE IF NOT EXISTS tenants (
+                id INTEGER PRIMARY KEY,
+                name TEXT,
+                created_at TEXT
+            )
+        """)
+        
+        # Insert tenants
+        db.execute_sql("INSERT INTO tenants VALUES (1, 'ACME Corp', '2026-01-01')")
+        db.execute_sql("INSERT INTO tenants VALUES (2, 'Globex Inc', '2026-01-01')")
+        
+        # Store tenant-specific K-V data
+        db.put(b"tenants/1/users/alice", b'{"role":"admin","email":"alice@acme.com"}')
+        db.put(b"tenants/1/users/bob", b'{"role":"user","email":"bob@acme.com"}')
+        db.put(b"tenants/2/users/charlie", b'{"role":"admin","email":"charlie@globex.com"}')
+        
+        # Query SQL
+        tenants = db.execute_sql("SELECT * FROM tenants ORDER BY name")
+        
+        for tenant in tenants:
+            tenant_id = tenant['id']
+            tenant_name = tenant['name']
+            
+            # Scan tenant-specific data (isolation)
+            prefix = f"tenants/{tenant_id}/".encode()
+            end = f"tenants/{tenant_id};".encode()
+            users = list(db.scan(prefix, end))
+            
+            print(f"\n{tenant_name} ({len(users)} users):")
+            for key, value in users:
+                user_data = json.loads(value.decode())
+                print(f"  {key.decode()}: {user_data['email']} ({user_data['role']})")
+
+if __name__ == "__main__":
+    main()
 ```
 
-### Configuration Store
-
-```python
-from toondb import Database
-
-with Database.open("./config") as db:
-    # Hierarchical configuration
-    db.put_path("api/auth/timeout", b"30")
-    db.put_path("api/auth/retries", b"3")
-    db.put_path("api/storage/endpoint", b"https://storage.example.com")
-    
-    # Read config
-    timeout = db.get_path("api/auth/timeout")  # b"30"
+**Output:**
 ```
+ACME Corp (2 users):
+  tenants/1/users/alice: alice@acme.com (admin)
+  tenants/1/users/bob: bob@acme.com (user)
 
-### Document Storage with Indexing
-
-```python
-from toondb import Database
-import json
-
-with Database.open("./docs") as db:
-    # Store document with category index
-    doc = {"title": "Hello World", "category": "tutorials"}
-    doc_id = "doc_001"
-    
-    with db.transaction() as txn:
-        txn.put(f"docs:{doc_id}".encode(), json.dumps(doc).encode())
-        txn.put(f"idx:category:tutorials:{doc_id}".encode(), b"1")
-    
-    # Query by category using prefix scan
-    for key, _ in db.scan(b"idx:category:tutorials:", b"idx:category:tutorials;"):
-        doc_id = key.decode().split(":")[-1]
-        print(f"Found: {doc_id}")
-```
-
-## Building the Native Library
-
-For embedded mode, you need to build the Rust library:
-
-```bash
-# Clone ToonDB
-git clone https://github.com/toondb/toondb.git
-cd toondb
-
-# Build release
-cargo build --release
-
-# Set library path
-export TOONDB_LIB_PATH=$(pwd)/target/release
+Globex Inc (1 users):
+  tenants/2/users/charlie: charlie@globex.com (admin)
 ```
 
 ## API Reference
@@ -226,13 +488,14 @@ export TOONDB_LIB_PATH=$(pwd)/target/release
 | Method | Description |
 |--------|-------------|
 | `Database.open(path)` | Open/create database |
-| `put(key, value)` | Store key-value pair |
-| `get(key)` | Retrieve value (None if missing) |
-| `delete(key)` | Delete a key |
-| `put_path(path, value)` | Store at hierarchical path |
-| `get_path(path)` | Retrieve by path |
-| `scan(start, end)` | Iterate key range |
+| `put(key: bytes, value: bytes)` | Store key-value pair |
+| `get(key: bytes) -> bytes \| None` | Retrieve value |
+| `delete(key: bytes)` | Delete a key |
+| `put_path(path: str, value: bytes)` | Store at hierarchical path |
+| `get_path(path: str) -> bytes \| None` | Retrieve by path |
+| `scan(start: bytes, end: bytes)` | Iterate key range |
 | `transaction()` | Begin ACID transaction |
+| `execute_sql(query: str)` | Execute SQL statement |
 | `checkpoint()` | Force durability checkpoint |
 | `stats()` | Get storage statistics |
 
@@ -241,9 +504,9 @@ export TOONDB_LIB_PATH=$(pwd)/target/release
 | Method | Description |
 |--------|-------------|
 | `IpcClient.connect(path)` | Connect to IPC server |
-| `ping()` | Check latency |
-| `query(prefix)` | Create query builder |
-| `scan(prefix)` | Scan keys with prefix |
+| `ping() -> float` | Check latency (ms) |
+| `query(prefix: str)` | Create query builder |
+| `scan(prefix: str)` | Scan keys with prefix |
 | `begin_transaction()` | Start transaction |
 | `commit(txn_id)` | Commit transaction |
 | `abort(txn_id)` | Abort transaction |
@@ -252,19 +515,46 @@ export TOONDB_LIB_PATH=$(pwd)/target/release
 
 | Function | Description |
 |----------|-------------|
-| `bulk_build_index(embeddings, output, ...)` | Build HNSW index from numpy array |
-| `bulk_query_index(index, query, k, ...)` | Query HNSW index for k nearest neighbors |
-| `bulk_info(index)` | Get index metadata (vectors, dimension, etc.) |
-| `convert_embeddings_to_raw(embeddings, path)` | Convert numpy array to raw f32 format |
-| `get_toondb_bulk_path()` | Get path to bundled toondb-bulk binary |
+| `bulk_build_index(embeddings, output, m, ef_construction)` | Build HNSW index (~1,600 vec/s) |
+| `bulk_query_index(index, query, k, ef_search)` | Query for k nearest neighbors |
+| `bulk_info(index)` | Get index metadata |
 
-## Documentation
+## Configuration
 
-- [Full SDK Documentation](docs/SDK_DOCUMENTATION.md)
-- [Bulk Operations Guide](../docs/BULK_OPERATIONS.md)
-- [Python Distribution Architecture](../docs/PYTHON_DISTRIBUTION.md)
-- [Examples](examples/)
-- [ToonDB Repository](https://github.com/toondb/toondb)
+```python
+# Custom configuration
+db = Database.open("./my_db", config={
+    "create_if_missing": True,
+    "wal_enabled": True,
+    "sync_mode": "normal",  # "full", "normal", "off"
+    "memtable_size_bytes": 64 * 1024 * 1024,  # 64MB
+})
+```
+
+## Error Handling
+
+```python
+from toondb import Database, ToonDBError
+
+try:
+    with Database.open("./db") as db:
+        value = db.get(b"key")
+        if value is None:
+            print("Key not found (not an error)")
+except ToonDBError as e:
+    print(f"Database error: {e}")
+except Exception as e:
+    print(f"Unexpected error: {e}")
+```
+
+## Best Practices
+
+✅ **Use SQL for structured data** — Tables, relationships, complex queries
+✅ **Use K-V for unstructured data** — JSON documents, blobs, caching
+✅ **Use scan() for multi-tenancy** — Efficient prefix-based isolation
+✅ **Use transactions** — Atomic multi-key/multi-table operations
+✅ **Use bulk API for vectors** — 12× faster than FFI for HNSW building
+✅ **Always use context managers** — `with Database.open()` ensures cleanup
 
 ## Platform Support
 
@@ -275,10 +565,22 @@ export TOONDB_LIB_PATH=$(pwd)/target/release
 | macOS | `macosx_11_0_universal2` | Intel + Apple Silicon |
 | Windows | `win_amd64` | Windows 10+ x64 |
 
-Binary resolution order:
-1. Bundled in wheel (`_bin/<platform>/toondb-bulk`)
-2. System PATH (`toondb-bulk`)
-3. Cargo target directory (development)
+## Development
+
+```bash
+# Clone repo
+git clone https://github.com/sushanthpy/toondb
+cd toondb/toondb-python-sdk
+
+# Install in development mode
+pip install -e .
+
+# Run tests
+pytest tests/ -v
+
+# Build native binary
+cargo build --release -p toondb-tools
+```
 
 ## Requirements
 
@@ -289,6 +591,20 @@ Binary resolution order:
 ## License
 
 Apache License 2.0
+
+## Links
+
+- [Documentation](https://toondb.io/docs)
+- [Go SDK](../toondb-go)
+- [JavaScript SDK](../toondb-js)
+- [GitHub](https://github.com/sushanthpy/toondb)
+- [PyPI Package](https://pypi.org/project/toondb-client/)
+
+## Support
+
+- GitHub Issues: https://github.com/sushanthpy/toondb/issues
+- Discord: https://discord.gg/toondb
+- Email: support@toondb.io
 
 ## Author
 

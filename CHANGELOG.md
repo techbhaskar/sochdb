@@ -9,17 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.2.6] - 2026-01-01
+
 ### Added
-- Diátaxis-based documentation structure
-- Comprehensive contributor guide with one-command setup
-- Cookbook with deployment, logging, vector search guides
-- First-app tutorial for Python SDK
+- **Enhanced scan() method** across all SDKs for efficient prefix-based iteration and multi-tenant isolation
+- **Full SQL support** in Python SDK (CREATE TABLE, INSERT, SELECT, JOIN, WHERE, GROUP BY, aggregations)
+- **SQL integration** in Rust SDK via toondb-query crate with async IPC
+- **Bulk vector API** in Python SDK (~1,600 vec/s, 12× faster than FFI loop)
+- **Zero-copy reads** in Rust SDK for large value optimization
+- **Async IPC client** in Rust SDK with Tokio runtime
+- **SQL examples** in all SDK READMEs and examples/ directory
+- **Comprehensive SDK guides** in docs/guides/ for Go, Python, JavaScript/Node.js, and Rust
+- **SQL API documentation** in docs/api-reference/sql-api.md
 
 ### Changed
-- Improved CONTRIBUTING.md with directory structure and PR process
+- Updated all SDK READMEs with v0.2.6 features and complete examples
+- Improved documentation structure with consistent formatting across all guides
+- Enhanced TypeScript definitions in JavaScript SDK
+- Updated wire protocol documentation for Little Endian format
+- Improved error messages across all SDKs
 
 ### Fixed
-- (No fixes yet)
+- **Path operations** (putPath/getPath) in JavaScript SDK now use correct wire format
+- Binary encoding issues in Go SDK path operations
+- Python SDK _bin/ directory now properly excluded from git (built during CI/CD)
+- Scan range calculation simplified using semicolon trick (';' after '/' in ASCII)
 
 ---
 

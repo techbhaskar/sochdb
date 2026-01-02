@@ -19,6 +19,19 @@ Query Builder for ToonDB.
 from typing import List, Dict, Any, Optional, Union
 from .ipc_client import IpcClient
 
+
+class SQLQueryResult:
+    """Result of a SQL query execution."""
+    
+    def __init__(self, rows: List[Dict[str, Any]] = None, columns: List[str] = None, rows_affected: int = 0):
+        self.rows = rows or []
+        self.columns = columns or []
+        self.rows_affected = rows_affected
+    
+    def __repr__(self) -> str:
+        return f"SQLQueryResult(rows={len(self.rows)}, columns={self.columns})"
+
+
 class Query:
     """
     Fluent query builder for ToonDB.

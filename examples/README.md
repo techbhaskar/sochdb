@@ -20,6 +20,7 @@ Real-world examples showing how to use ToonDB for AI/LLM applications.
 
 | Example | Description | Key Features |
 |---------|-------------|--------------|
+| [06_sql_queries.py](python/06_sql_queries.py) | SQL query operations | CREATE TABLE, INSERT, SELECT, UPDATE, DELETE, JOINs |
 | [customer_support_rag.py](python/customer_support_rag.py) | Multi-tenant support system | ACL, time decay, OOD handling |
 | [ecommerce_search.py](python/ecommerce_search.py) | Product semantic search | Multi-vector, faceted filtering |
 | [semantic_dedup.py](python/semantic_dedup.py) | Near-duplicate detection | Threshold matching, clustering |
@@ -41,6 +42,7 @@ Real-world examples showing how to use ToonDB for AI/LLM applications.
 | [01_basic_database.rs](rust/01_basic_database.rs) | Basic KV operations | Put, Get, Delete, Path API |
 | [02_transactions.rs](rust/02_transactions.rs) | ACID transactions | with_transaction, rollback |
 | [03_vector_search.rs](rust/03_vector_search.rs) | Vector similarity search | HNSW, bulk indexing |
+| [04_sql_queries.rs](rust/04_sql_queries.rs) | SQL query examples | CREATE, INSERT, SELECT, UPDATE, DELETE, JOINs |
 
 ### Node.js/TypeScript (`examples/nodejs/`)
 
@@ -48,6 +50,7 @@ Real-world examples showing how to use ToonDB for AI/LLM applications.
 |---------|-------------|--------------|
 | [01_basic_database.ts](nodejs/01_basic_database.ts) | Basic KV operations | Put, Get, Delete, Path API |
 | [02_transactions.ts](nodejs/02_transactions.ts) | ACID transactions | withTransaction, rollback |
+| [04_sql_queries.ts](nodejs/04_sql_queries.ts) | SQL query examples | CREATE, INSERT, SELECT, UPDATE, DELETE, JOINs |
 | [03_vector_search.ts](nodejs/03_vector_search.ts) | Vector similarity search | HNSW, bulk indexing |
 
 ### Go (`examples/go/`)

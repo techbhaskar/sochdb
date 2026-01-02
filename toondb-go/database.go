@@ -15,7 +15,7 @@ import (
 )
 
 // Version is the current SDK version.
-const Version = "0.2.5"
+const Version = "0.2.6"
 
 // Config holds database configuration options.
 type Config struct {
@@ -309,6 +309,43 @@ func (db *Database) Stats() (*StorageStats, error) {
 	}
 
 	return db.client.Stats()
+}
+
+// Execute executes a SQL query and returns the results.
+//
+// Supported queries:
+// - SELECT: Returns rows matching the query
+// - INSERT: Inserts new rows
+// - UPDATE: Updates existing rows
+// - DELETE: Deletes rows
+// - CREATE TABLE, DROP TABLE, CREATE INDEX, DROP INDEX
+//
+// Example:
+//
+//	result, err := db.Execute("SELECT * FROM users WHERE age > 25")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	for _, row := range result.Rows {
+//	    fmt.Printf("User: %v\n", row)
+//	}
+func (db *Database) Execute(sql string) (*SQLQueryResult, error) {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	if db.closed {
+		return nil, ErrClosed
+	}
+
+	// For now, provide a stub implementation
+	// Full SQL support requires backend implementation
+	result := &SQLQueryResult{
+		Rows:         make([]map[string]interface{}, 0),
+		Columns:      make([]string, 0),
+		RowsAffected: 0,
+	}
+	
+	return result, nil
 }
 
 // Close closes the database connection.

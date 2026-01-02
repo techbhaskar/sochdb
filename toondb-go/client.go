@@ -18,26 +18,36 @@ import (
 )
 
 // OpCode represents the wire protocol operation codes.
+// Must match toondb-storage/src/ipc_server.rs opcodes exactly.
 type OpCode uint8
 
+// Client → Server opcodes
 const (
-	OpGet             OpCode = 0x01
-	OpPut             OpCode = 0x02
-	OpDelete          OpCode = 0x03
-	OpGetPath         OpCode = 0x04
-	OpPutPath         OpCode = 0x05
-	OpQuery           OpCode = 0x06
-	OpBeginTxn        OpCode = 0x10
-	OpCommitTxn       OpCode = 0x11
-	OpAbortTxn        OpCode = 0x12
-	OpCheckpoint      OpCode = 0x20
-	OpStats           OpCode = 0x21
-	OpVectorQuery     OpCode = 0x30
-	OpVectorBulkBuild OpCode = 0x31
-	OpVectorInfo      OpCode = 0x32
-	OpOK              OpCode = 0x80
-	OpError           OpCode = 0x81
-	OpNotFound        OpCode = 0x82
+	OpPut        OpCode = 0x01
+	OpGet        OpCode = 0x02
+	OpDelete     OpCode = 0x03
+	OpBeginTxn   OpCode = 0x04
+	OpCommitTxn  OpCode = 0x05
+	OpAbortTxn   OpCode = 0x06
+	OpQuery      OpCode = 0x07
+	OpPutPath    OpCode = 0x09
+	OpGetPath    OpCode = 0x0A
+	OpScan       OpCode = 0x0B
+	OpCheckpoint OpCode = 0x0C
+	OpStats      OpCode = 0x0D
+	OpPing       OpCode = 0x0E
+)
+
+// Server → Client response opcodes
+const (
+	OpOK        OpCode = 0x80
+	OpError     OpCode = 0x81
+	OpValue     OpCode = 0x82
+	OpTxnID     OpCode = 0x83
+	OpRow       OpCode = 0x84
+	OpEndStream OpCode = 0x85
+	OpStatsResp OpCode = 0x86
+	OpPong      OpCode = 0x87
 )
 
 // IPCClient handles low-level IPC communication with the ToonDB server.
@@ -102,7 +112,27 @@ func (c *IPCClient) PutPath(path string, value []byte) error {
 	return err
 }
 
+// Scan scans keys with a prefix, returning key-value pairs.
+// This is the preferred method for prefix-based iteration.
+func (c *IPCClient) Scan(prefix string) ([]KeyValue, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.closed {
+		return nil, ErrClosed
+	}
+
+	// SCAN payload is just the prefix string
+	prefixBytes := []byte(prefix)
+	if err := c.sendMessage(OpScan, prefixBytes); err != nil {
+		return nil, err
+	}
+
+	return c.readScanResponse()
+}
+
 // Query executes a prefix query.
+// Wire format: path_len(2 LE) + path + limit(4 LE) + offset(4 LE) + cols_count(2 LE)
 func (c *IPCClient) Query(prefix string, limit, offset int) ([]KeyValue, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -111,18 +141,19 @@ func (c *IPCClient) Query(prefix string, limit, offset int) ([]KeyValue, error) 
 		return nil, ErrClosed
 	}
 
-	// Build query message
+	// Build query payload
 	prefixBytes := []byte(prefix)
-	msgLen := 1 + 4 + len(prefixBytes) + 4 + 4 // op + prefix_len + prefix + limit + offset
-	msg := make([]byte, 4+msgLen)
-	binary.BigEndian.PutUint32(msg[0:4], uint32(msgLen))
-	msg[4] = byte(OpQuery)
-	binary.BigEndian.PutUint32(msg[5:9], uint32(len(prefixBytes)))
-	copy(msg[9:9+len(prefixBytes)], prefixBytes)
-	binary.BigEndian.PutUint32(msg[9+len(prefixBytes):13+len(prefixBytes)], uint32(limit))
-	binary.BigEndian.PutUint32(msg[13+len(prefixBytes):17+len(prefixBytes)], uint32(offset))
+	// Format: path_len(2) + path + limit(4) + offset(4) + cols_count(2)
+	payloadLen := 2 + len(prefixBytes) + 4 + 4 + 2
+	payload := make([]byte, payloadLen)
+	binary.LittleEndian.PutUint16(payload[0:2], uint16(len(prefixBytes)))
+	copy(payload[2:2+len(prefixBytes)], prefixBytes)
+	binary.LittleEndian.PutUint32(payload[2+len(prefixBytes):6+len(prefixBytes)], uint32(limit))
+	binary.LittleEndian.PutUint32(payload[6+len(prefixBytes):10+len(prefixBytes)], uint32(offset))
+	binary.LittleEndian.PutUint16(payload[10+len(prefixBytes):12+len(prefixBytes)], 0) // no columns
 
-	if _, err := c.conn.Write(msg); err != nil {
+	// Send message: opcode(1) + length(4 LE) + payload
+	if err := c.sendMessage(OpQuery, payload); err != nil {
 		return nil, err
 	}
 
@@ -139,32 +170,28 @@ func (c *IPCClient) BeginTransaction() (uint64, error) {
 		return 0, ErrClosed
 	}
 
-	msg := []byte{0, 0, 0, 1, byte(OpBeginTxn)}
-	if _, err := c.conn.Write(msg); err != nil {
+	if err := c.sendMessage(OpBeginTxn, nil); err != nil {
 		return 0, err
 	}
 
-	// Read response with transaction ID
-	header := make([]byte, 4)
-	if _, err := io.ReadFull(c.conn, header); err != nil {
+	// Read response
+	opcode, payload, err := c.readMessage()
+	if err != nil {
 		return 0, err
 	}
 
-	respLen := binary.BigEndian.Uint32(header)
-	resp := make([]byte, respLen)
-	if _, err := io.ReadFull(c.conn, resp); err != nil {
-		return 0, err
+	if opcode != OpTxnID {
+		if opcode == OpError {
+			return 0, c.parseErrorPayload(payload)
+		}
+		return 0, &ProtocolError{Message: fmt.Sprintf("expected TXN_ID, got opcode %#x", opcode)}
 	}
 
-	if resp[0] != byte(OpOK) {
-		return 0, c.parseError(resp)
-	}
-
-	if len(resp) < 9 {
+	if len(payload) < 8 {
 		return 0, &ProtocolError{Message: "invalid transaction response"}
 	}
 
-	txnID := binary.BigEndian.Uint64(resp[1:9])
+	txnID := binary.LittleEndian.Uint64(payload[0:8])
 	return txnID, nil
 }
 
@@ -187,8 +214,7 @@ func (c *IPCClient) Checkpoint() error {
 		return ErrClosed
 	}
 
-	msg := []byte{0, 0, 0, 1, byte(OpCheckpoint)}
-	if _, err := c.conn.Write(msg); err != nil {
+	if err := c.sendMessage(OpCheckpoint, nil); err != nil {
 		return err
 	}
 
@@ -204,36 +230,87 @@ func (c *IPCClient) Stats() (*StorageStats, error) {
 		return nil, ErrClosed
 	}
 
-	msg := []byte{0, 0, 0, 1, byte(OpStats)}
-	if _, err := c.conn.Write(msg); err != nil {
+	if err := c.sendMessage(OpStats, nil); err != nil {
 		return nil, err
 	}
 
 	// Read response
-	header := make([]byte, 4)
-	if _, err := io.ReadFull(c.conn, header); err != nil {
+	opcode, payload, err := c.readMessage()
+	if err != nil {
 		return nil, err
 	}
 
-	respLen := binary.BigEndian.Uint32(header)
-	resp := make([]byte, respLen)
-	if _, err := io.ReadFull(c.conn, resp); err != nil {
-		return nil, err
+	if opcode == OpError {
+		return nil, c.parseErrorPayload(payload)
 	}
 
-	if resp[0] != byte(OpOK) {
-		return nil, c.parseError(resp)
+	if opcode != OpStatsResp && opcode != OpOK {
+		return nil, &ProtocolError{Message: fmt.Sprintf("unexpected stats response opcode: %#x", opcode)}
 	}
 
-	if len(resp) < 21 {
-		return nil, &ProtocolError{Message: "invalid stats response"}
+	// Stats response format varies - handle both OK with data and STATS_RESP
+	if len(payload) < 20 {
+		// Minimal stats response
+		return &StorageStats{}, nil
 	}
 
 	return &StorageStats{
-		MemtableSizeBytes:  binary.BigEndian.Uint64(resp[1:9]),
-		WALSizeBytes:       binary.BigEndian.Uint64(resp[9:17]),
-		ActiveTransactions: int(binary.BigEndian.Uint32(resp[17:21])),
+		MemtableSizeBytes:  binary.LittleEndian.Uint64(payload[0:8]),
+		WALSizeBytes:       binary.LittleEndian.Uint64(payload[8:16]),
+		ActiveTransactions: int(binary.LittleEndian.Uint32(payload[16:20])),
 	}, nil
+}
+
+// ============================================================================
+// Low-level Wire Protocol Helpers
+// ============================================================================
+
+// sendMessage sends a message using the wire protocol format:
+// opcode(1) + length(4 LE) + payload
+func (c *IPCClient) sendMessage(op OpCode, payload []byte) error {
+	// Build message: [opcode:1][length:4 LE][payload:N]
+	msg := make([]byte, 5+len(payload))
+	msg[0] = byte(op)
+	binary.LittleEndian.PutUint32(msg[1:5], uint32(len(payload)))
+	if len(payload) > 0 {
+		copy(msg[5:], payload)
+	}
+
+	_, err := c.conn.Write(msg)
+	return err
+}
+
+// readMessage reads a message using the wire protocol format:
+// opcode(1) + length(4 LE) + payload
+func (c *IPCClient) readMessage() (OpCode, []byte, error) {
+	// Read opcode (1 byte)
+	opcodeBuf := make([]byte, 1)
+	if _, err := io.ReadFull(c.conn, opcodeBuf); err != nil {
+		return 0, nil, err
+	}
+
+	// Read length (4 bytes LE)
+	lenBuf := make([]byte, 4)
+	if _, err := io.ReadFull(c.conn, lenBuf); err != nil {
+		return 0, nil, err
+	}
+	payloadLen := binary.LittleEndian.Uint32(lenBuf)
+
+	// Read payload
+	payload := make([]byte, payloadLen)
+	if payloadLen > 0 {
+		if _, err := io.ReadFull(c.conn, payload); err != nil {
+			return 0, nil, err
+		}
+	}
+
+	return OpCode(opcodeBuf[0]), payload, nil
+}
+
+// parseErrorPayload parses an error payload (the payload part of an ERROR response)
+func (c *IPCClient) parseErrorPayload(payload []byte) error {
+	msg := string(payload)
+	return &ToonDBError{Op: "remote", Message: msg}
 }
 
 // Helper methods
@@ -246,16 +323,24 @@ func (c *IPCClient) sendKeyOp(op OpCode, key []byte) ([]byte, error) {
 		return nil, ErrClosed
 	}
 
-	// Message format: [len:4][op:1][key_len:4][key:...]
-	msgLen := 1 + 4 + len(key)
-	msg := make([]byte, 4+msgLen)
-	binary.BigEndian.PutUint32(msg[0:4], uint32(msgLen))
-	msg[4] = byte(op)
-	binary.BigEndian.PutUint32(msg[5:9], uint32(len(key)))
-	copy(msg[9:], key)
-
-	if _, err := c.conn.Write(msg); err != nil {
-		return nil, err
+	// For GET/DELETE: payload is just the raw key
+	// For GET_PATH: payload is path_count(2) + [seg_len(2) + seg]...
+	if op == OpGetPath {
+		// Path format: count(2) + [len(2) + segment]...
+		path := string(key)
+		payload := make([]byte, 2+2+len(path))
+		binary.LittleEndian.PutUint16(payload[0:2], 1) // 1 segment
+		binary.LittleEndian.PutUint16(payload[2:4], uint16(len(path)))
+		copy(payload[4:], path)
+		
+		if err := c.sendMessage(op, payload); err != nil {
+			return nil, err
+		}
+	} else {
+		// GET/DELETE: payload is just the raw key (no length prefix)
+		if err := c.sendMessage(op, key); err != nil {
+			return nil, err
+		}
 	}
 
 	return c.readValueResponse()
@@ -269,18 +354,28 @@ func (c *IPCClient) sendKeyValueOp(op OpCode, key, value []byte) ([]byte, error)
 		return nil, ErrClosed
 	}
 
-	// Message format: [len:4][op:1][key_len:4][key:...][value_len:4][value:...]
-	msgLen := 1 + 4 + len(key) + 4 + len(value)
-	msg := make([]byte, 4+msgLen)
-	binary.BigEndian.PutUint32(msg[0:4], uint32(msgLen))
-	msg[4] = byte(op)
-	binary.BigEndian.PutUint32(msg[5:9], uint32(len(key)))
-	copy(msg[9:9+len(key)], key)
-	binary.BigEndian.PutUint32(msg[9+len(key):13+len(key)], uint32(len(value)))
-	copy(msg[13+len(key):], value)
-
-	if _, err := c.conn.Write(msg); err != nil {
-		return nil, err
+	if op == OpPutPath {
+		// PUT_PATH: path_count(2) + [seg_len(2) + seg]... + value
+		path := string(key)
+		payload := make([]byte, 2+2+len(path)+len(value))
+		binary.LittleEndian.PutUint16(payload[0:2], 1) // 1 segment
+		binary.LittleEndian.PutUint16(payload[2:4], uint16(len(path)))
+		copy(payload[4:4+len(path)], path)
+		copy(payload[4+len(path):], value)
+		
+		if err := c.sendMessage(op, payload); err != nil {
+			return nil, err
+		}
+	} else {
+		// PUT: key_len(4 LE) + key + value (value is rest of payload)
+		payload := make([]byte, 4+len(key)+len(value))
+		binary.LittleEndian.PutUint32(payload[0:4], uint32(len(key)))
+		copy(payload[4:4+len(key)], key)
+		copy(payload[4+len(key):], value)
+		
+		if err := c.sendMessage(op, payload); err != nil {
+			return nil, err
+		}
 	}
 
 	return c.readValueResponse()
@@ -294,13 +389,11 @@ func (c *IPCClient) sendTxnOp(op OpCode, txnID uint64) error {
 		return ErrClosed
 	}
 
-	// Message format: [len:4][op:1][txn_id:8]
-	msg := make([]byte, 13)
-	binary.BigEndian.PutUint32(msg[0:4], 9) // 1 + 8
-	msg[4] = byte(op)
-	binary.BigEndian.PutUint64(msg[5:13], txnID)
+	// Transaction ops: txn_id(8 LE)
+	payload := make([]byte, 8)
+	binary.LittleEndian.PutUint64(payload[0:8], txnID)
 
-	if _, err := c.conn.Write(msg); err != nil {
+	if err := c.sendMessage(op, payload); err != nil {
 		return err
 	}
 
@@ -308,101 +401,88 @@ func (c *IPCClient) sendTxnOp(op OpCode, txnID uint64) error {
 }
 
 func (c *IPCClient) readValueResponse() ([]byte, error) {
-	header := make([]byte, 4)
-	if _, err := io.ReadFull(c.conn, header); err != nil {
+	opcode, payload, err := c.readMessage()
+	if err != nil {
 		return nil, err
 	}
 
-	respLen := binary.BigEndian.Uint32(header)
-	resp := make([]byte, respLen)
-	if _, err := io.ReadFull(c.conn, resp); err != nil {
-		return nil, err
-	}
-
-	switch OpCode(resp[0]) {
+	switch opcode {
 	case OpOK:
-		if len(resp) < 5 {
-			return nil, nil
-		}
-		valueLen := binary.BigEndian.Uint32(resp[1:5])
-		if len(resp) < int(5+valueLen) {
-			return nil, &ProtocolError{Message: "truncated value response"}
-		}
-		return resp[5 : 5+valueLen], nil
-	case OpNotFound:
+		// OK with no data
 		return nil, nil
+	case OpValue:
+		// VALUE response: payload is the value
+		return payload, nil
 	case OpError:
-		return nil, c.parseError(resp)
+		return nil, c.parseErrorPayload(payload)
 	default:
-		return nil, &ProtocolError{Message: fmt.Sprintf("unexpected opcode: %d", resp[0])}
+		return nil, &ProtocolError{Message: fmt.Sprintf("unexpected opcode: %#x", opcode)}
 	}
 }
 
 func (c *IPCClient) readSimpleResponse() error {
-	header := make([]byte, 4)
-	if _, err := io.ReadFull(c.conn, header); err != nil {
+	opcode, payload, err := c.readMessage()
+	if err != nil {
 		return err
 	}
 
-	respLen := binary.BigEndian.Uint32(header)
-	resp := make([]byte, respLen)
-	if _, err := io.ReadFull(c.conn, resp); err != nil {
-		return err
+	if opcode == OpError {
+		return c.parseErrorPayload(payload)
 	}
 
-	if resp[0] != byte(OpOK) {
-		return c.parseError(resp)
+	if opcode != OpOK {
+		return &ProtocolError{Message: fmt.Sprintf("expected OK, got opcode %#x", opcode)}
 	}
 
 	return nil
 }
 
 func (c *IPCClient) readQueryResponse() ([]KeyValue, error) {
-	header := make([]byte, 4)
-	if _, err := io.ReadFull(c.conn, header); err != nil {
+	opcode, payload, err := c.readMessage()
+	if err != nil {
 		return nil, err
 	}
 
-	respLen := binary.BigEndian.Uint32(header)
-	resp := make([]byte, respLen)
-	if _, err := io.ReadFull(c.conn, resp); err != nil {
-		return nil, err
+	if opcode == OpError {
+		return nil, c.parseErrorPayload(payload)
 	}
 
-	if resp[0] != byte(OpOK) {
-		return nil, c.parseError(resp)
+	if opcode != OpValue && opcode != OpOK {
+		return nil, &ProtocolError{Message: fmt.Sprintf("unexpected query response opcode: %#x", opcode)}
 	}
 
-	if len(resp) < 5 {
-		return nil, &ProtocolError{Message: "invalid query response"}
+	if len(payload) < 4 {
+		// Empty result
+		return []KeyValue{}, nil
 	}
 
-	count := binary.BigEndian.Uint32(resp[1:5])
+	// Response format: count(4 LE) + [key_len(4 LE) + key + value_len(4 LE) + value]...
+	count := binary.LittleEndian.Uint32(payload[0:4])
 	results := make([]KeyValue, 0, count)
-	offset := 5
+	offset := 4
 
 	for i := uint32(0); i < count; i++ {
-		if offset+4 > len(resp) {
+		if offset+4 > len(payload) {
 			return nil, &ProtocolError{Message: "truncated query response"}
 		}
-		keyLen := binary.BigEndian.Uint32(resp[offset : offset+4])
+		keyLen := binary.LittleEndian.Uint32(payload[offset : offset+4])
 		offset += 4
 
-		if offset+int(keyLen)+4 > len(resp) {
+		if offset+int(keyLen)+4 > len(payload) {
 			return nil, &ProtocolError{Message: "truncated query response"}
 		}
 		key := make([]byte, keyLen)
-		copy(key, resp[offset:offset+int(keyLen)])
+		copy(key, payload[offset:offset+int(keyLen)])
 		offset += int(keyLen)
 
-		valueLen := binary.BigEndian.Uint32(resp[offset : offset+4])
+		valueLen := binary.LittleEndian.Uint32(payload[offset : offset+4])
 		offset += 4
 
-		if offset+int(valueLen) > len(resp) {
+		if offset+int(valueLen) > len(payload) {
 			return nil, &ProtocolError{Message: "truncated query response"}
 		}
 		value := make([]byte, valueLen)
-		copy(value, resp[offset:offset+int(valueLen)])
+		copy(value, payload[offset:offset+int(valueLen)])
 		offset += int(valueLen)
 
 		results = append(results, KeyValue{Key: key, Value: value})
@@ -411,16 +491,60 @@ func (c *IPCClient) readQueryResponse() ([]KeyValue, error) {
 	return results, nil
 }
 
-func (c *IPCClient) parseError(resp []byte) error {
-	if len(resp) < 5 {
-		return &ProtocolError{Message: "malformed error response"}
+// readScanResponse parses the SCAN response format:
+// count(4 LE) + [key_len(2 LE) + key + val_len(4 LE) + val]...
+func (c *IPCClient) readScanResponse() ([]KeyValue, error) {
+	opcode, payload, err := c.readMessage()
+	if err != nil {
+		return nil, err
 	}
-	msgLen := binary.BigEndian.Uint32(resp[1:5])
-	if len(resp) < int(5+msgLen) {
-		return &ProtocolError{Message: "truncated error message"}
+
+	if opcode == OpError {
+		return nil, c.parseErrorPayload(payload)
 	}
-	msg := string(resp[5 : 5+msgLen])
-	return &ToonDBError{Op: "remote", Message: msg}
+
+	if opcode != OpValue && opcode != OpOK {
+		return nil, &ProtocolError{Message: fmt.Sprintf("unexpected scan response opcode: %#x", opcode)}
+	}
+
+	if len(payload) < 4 {
+		// Empty result
+		return []KeyValue{}, nil
+	}
+
+	// Response format: count(4 LE) + [key_len(2 LE) + key + val_len(4 LE) + val]...
+	count := binary.LittleEndian.Uint32(payload[0:4])
+	results := make([]KeyValue, 0, count)
+	offset := 4
+
+	for i := uint32(0); i < count; i++ {
+		if offset+2 > len(payload) {
+			return nil, &ProtocolError{Message: "truncated scan response (key_len)"}
+		}
+		keyLen := binary.LittleEndian.Uint16(payload[offset : offset+2])
+		offset += 2
+
+		if offset+int(keyLen)+4 > len(payload) {
+			return nil, &ProtocolError{Message: "truncated scan response (key+val_len)"}
+		}
+		key := make([]byte, keyLen)
+		copy(key, payload[offset:offset+int(keyLen)])
+		offset += int(keyLen)
+
+		valueLen := binary.LittleEndian.Uint32(payload[offset : offset+4])
+		offset += 4
+
+		if offset+int(valueLen) > len(payload) {
+			return nil, &ProtocolError{Message: "truncated scan response (value)"}
+		}
+		value := make([]byte, valueLen)
+		copy(value, payload[offset:offset+int(valueLen)])
+		offset += int(valueLen)
+
+		results = append(results, KeyValue{Key: key, Value: value})
+	}
+
+	return results, nil
 }
 
 // KeyValue represents a key-value pair returned from queries.

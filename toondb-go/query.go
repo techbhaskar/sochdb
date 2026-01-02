@@ -8,6 +8,18 @@
 
 package toondb
 
+// SQLQueryResult represents the result of a SQL query.
+type SQLQueryResult struct {
+	// Rows contains the result rows (for SELECT queries)
+	Rows []map[string]interface{}
+	
+	// Columns contains the column names
+	Columns []string
+	
+	// RowsAffected is the number of rows affected (for INSERT/UPDATE/DELETE)
+	RowsAffected int
+}
+
 // Query is a fluent query builder for prefix scans.
 //
 // Example:

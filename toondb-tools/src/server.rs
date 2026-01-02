@@ -125,9 +125,9 @@ fn main() {
         std::process::exit(0);
     }).expect("Error setting Ctrl-C handler");
 
-    // Start the server (blocks)
+    // Start the server (blocks) - use run() not start() which is non-blocking
     info!("ToonDB server ready, accepting connections");
-    if let Err(e) = server.start() {
+    if let Err(e) = server.run() {
         error!("Server error: {}", e);
         std::process::exit(1);
     }

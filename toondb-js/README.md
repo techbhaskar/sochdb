@@ -1,320 +1,509 @@
-# ToonDB Node.js SDK
+# ToonDB JavaScript SDK
 
-[![npm version](https://badge.fury.io/js/%40sushanth%2Ftoondb.svg)](https://badge.fury.io/js/%40sushanth%2Ftoondb)
+[![npm version](https://badge.fury.io/js/%40toondb%2Ftoondb-js.svg)](https://www.npmjs.com/package/@toondb/toondb-js)
+[![CI](https://github.com/sushanthpy/toondb/actions/workflows/js-ci.yml/badge.svg)](https://github.com/sushanthpy/toondb/actions/workflows/js-ci.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Node.js 18+](https://img.shields.io/badge/node-18+-green.svg)](https://nodejs.org/)
 
-**ToonDB is an AI-native database with token-optimized output, O(|path|) lookups, built-in vector search, and durable transactions.**
+The official JavaScript/TypeScript SDK for **ToonDB** — a high-performance embedded document database with HNSW vector search and built-in multi-tenancy support.
 
-JavaScript/TypeScript client SDK for [ToonDB](https://github.com/toondb/toondb) - the database optimized for LLM context retrieval.
+## Version
+
+**v0.2.6** (January 2026)
+
+**What's New in 0.2.6:**
+- ✅ Fixed `putPath()` and `getPath()` encoding (path segment format)
+- ✅ Added `scan()` method for efficient prefix-based iteration
+- ✅ Wire protocol fully compatible with ToonDB server
+- ✅ Improved error handling and Buffer management
+- ✅ Full TypeScript type definitions included
+
+## Features
+
+- ✅ **Key-Value Store** — Simple `get()`/`put()`/`delete()` operations
+- ✅ **Path-Native API** — Hierarchical keys like `users/alice/email`
+- ✅ **Prefix Scanning** — Fast `scan()` for multi-tenant data isolation
+- ✅ **Transactions** — ACID-compliant with automatic commit/abort
+- ✅ **Query Builder** — Fluent API for complex queries (returns TOON format)
+- ✅ **Vector Search** — HNSW approximate nearest neighbor search
+- ✅ **TypeScript First** — Full type safety with `.d.ts` definitions
+- ✅ **Dual Mode** — Embedded server or external server connection
+- ✅ **Node.js + Bun** — Works with Node.js 18+ and Bun
 
 ## Installation
 
 ```bash
-npm install @sushanth/toondb
+npm install sushanth-toondb@0.2.6
+# or
+yarn add sushanth-toondb@0.2.6
+# or
+bun add sushanth-toondb@0.2.6
 ```
 
-**Zero compilation required** - pre-built binaries are bundled for all major platforms:
-- Linux x86_64 (glibc ≥ 2.17)
-- macOS ARM64 (Apple Silicon)
-- macOS x86_64 (Intel)
-- Windows x64
-
-## Architecture
-
-The SDK supports two modes of operation:
-
-### Embedded Mode (Default)
-The SDK automatically starts and manages a ToonDB server process:
-
-```
-┌─────────────────┐  auto-start   ┌──────────────────┐
-│  Your Node.js   │ ──────────►   │  ToonDB Server   │
-│   Application   │               │  (toondb-mcp)    │
-└─────────────────┘               └──────────────────┘
-         │                                 │
-         │         IPC/Socket              │
-         └────────────────────────────────►│
-                                           ▼
-                                   ┌──────────────────┐
-                                   │  Storage Engine  │
-                                   │  (LSM, WAL, etc) │
-                                   └──────────────────┘
-```
-
-### External Server Mode
-Connect to an existing ToonDB server (for multi-process access):
-
-```typescript
-const db = await Database.open({
-  path: './my_database',
-  embedded: false  // Don't start embedded server
-});
-```
-
-## Features
-
-### Core Database
-- 🚀 **Embedded Mode**: Automatically manages server lifecycle (v0.2.4+)
-- 📡 **IPC Mode**: Multi-process access via Unix domain sockets
-- 📁 **Path-Native API**: Hierarchical data organization with O(|path|) lookups
-- 💾 **ACID Transactions**: Full transaction support with snapshot isolation
-- 🔍 **Range Scans**: Efficient prefix and range queries
-- 🎯 **Token-Optimized**: TOON format output designed for LLM context windows
-
-### High-Performance Vector Operations
-- ⚡ **Bulk API**: High-throughput vector ingestion via native binary
-- 🔢 **SIMD Kernels**: Auto-dispatched AVX2/NEON optimizations for distance calculations
-- 📊 **Multi-Format Input**: Support for Float32Array and typed arrays
-- 🔎 **HNSW Indexing**: Build and query approximate nearest neighbor indexes
-
-### Distribution
-- 📦 **Zero-Compile Install**: Pre-built Rust binaries bundled in package
-- 🌍 **Cross-Platform**: Linux, macOS, Windows with automatic platform detection
-- 📝 **TypeScript**: Full type definitions included
-- ✅ **ESM & CommonJS**: Works with both module systems
+**Requirements:**
+- Node.js 18+ or Bun 1.0+
+- ToonDB server binary (for embedded mode)
 
 ## Quick Start
 
-### Database Operations
+### Embedded Mode (Recommended)
+
+Database runs in the same process:
 
 ```typescript
-import { Database } from '@sushanth/toondb';
+import { Database } from 'sushanth-toondb';
 
-// Open a database (creates if doesn't exist, starts embedded server)
-const db = await Database.open('./my_database');
-
-// Simple key-value operations
-await db.put(Buffer.from('user:123'), Buffer.from('{"name": "Alice", "email": "alice@example.com"}'));
-const value = await db.get(Buffer.from('user:123'));
-
-// Path-native API
-await db.putPath('users/alice/email', Buffer.from('alice@example.com'));
-const email = await db.getPath('users/alice/email');
-
-// Transactions
-await db.withTransaction(async (txn) => {
-  await txn.put(Buffer.from('key1'), Buffer.from('value1'));
-  await txn.put(Buffer.from('key2'), Buffer.from('value2'));
-  // Automatically commits on success, aborts on exception
+const db = new Database('./my_database', {
+  mode: 'embedded',
+  createIfMissing: true
 });
 
-// Clean up (stops embedded server automatically)
+await db.open();
+
+// Put and Get
+await db.put(Buffer.from('user:123'), Buffer.from('{"name":"Alice","age":30}'));
+const value = await db.get(Buffer.from('user:123'));
+console.log(value?.toString());
+// Output: {"name":"Alice","age":30}
+
 await db.close();
 ```
 
-### IPC Mode (For multi-process access)
+### External Mode
+
+Connect to a running ToonDB server:
+
+```bash
+# Terminal 1: Start server
+./toondb-server --db ./my_database
+# Output: [IpcServer] Listening on "./my_database/toondb.sock"
+```
 
 ```typescript
-import { IpcClient } from '@sushanth/toondb';
+import { Database } from 'sushanth-toondb';
 
-// Connect to a running ToonDB IPC server
-const client = await IpcClient.connect('/tmp/toondb.sock');
+const db = new Database('./my_database', {
+  mode: 'external' // Connect to existing server
+});
 
-// Same API as Database
-await client.put(Buffer.from('key'), Buffer.from('value'));
-const value = await client.get(Buffer.from('key'));
+await db.open();
+// Use db...
+await db.close();
+```
 
-// Query Builder
-const results = await client.queryBuilder('users/')
+## Core Operations
+
+### Basic Key-Value
+
+```typescript
+// Put
+await db.put(Buffer.from('key'), Buffer.from('value'));
+
+// Get
+const value = await db.get(Buffer.from('key'));
+if (!value) {
+  console.log('Key not found');
+} else {
+  console.log(value.toString());
+}
+
+// Delete
+await db.delete(Buffer.from('key'));
+```
+
+**Output:**
+```
+value
+Key not found (after delete)
+```
+
+### Path Operations ⭐ Fixed in 0.2.6
+
+```typescript
+// Store hierarchical data
+await db.putPath('users/alice/email', Buffer.from('alice@example.com'));
+await db.putPath('users/alice/age', Buffer.from('30'));
+await db.putPath('users/bob/email', Buffer.from('bob@example.com'));
+
+// Retrieve by path
+const email = await db.getPath('users/alice/email');
+console.log(`Alice's email: ${email?.toString()}`);
+```
+
+**Output:**
+```
+Alice's email: alice@example.com
+```
+
+**Note:** In v0.2.5, this threw "Path segment truncated" error. Now fixed!
+
+### Prefix Scanning ⭐ New in 0.2.6
+
+The most efficient way to iterate keys with a common prefix:
+
+```typescript
+// Insert multi-tenant data
+await db.put(Buffer.from('tenants/acme/users/1'), Buffer.from('{"name":"Alice"}'));
+await db.put(Buffer.from('tenants/acme/users/2'), Buffer.from('{"name":"Bob"}'));
+await db.put(Buffer.from('tenants/acme/orders/1'), Buffer.from('{"total":100}'));
+await db.put(Buffer.from('tenants/globex/users/1'), Buffer.from('{"name":"Charlie"}'));
+
+// Scan only ACME Corp's data
+const results = await db.scan('tenants/acme/');
+console.log(`ACME Corp has ${results.length} items:`);
+results.forEach(kv => {
+  console.log(`  ${kv.key.toString()}: ${kv.value.toString()}`);
+});
+```
+
+**Output:**
+```
+ACME Corp has 3 items:
+  tenants/acme/orders/1: {"total":100}
+  tenants/acme/users/1: {"name":"Alice"}
+  tenants/acme/users/2: {"name":"Bob"}
+```
+
+**Why use scan():**
+- **Fast**: Binary protocol, O(|prefix|) performance
+- **Isolated**: Perfect for multi-tenant apps
+- **Efficient**: Returns raw Buffers (no JSON parsing)
+
+## Transactions
+
+```typescript
+// Automatic commit/abort
+await db.transaction(async (txn) => {
+  await txn.put(Buffer.from('account:1:balance'), Buffer.from('1000'));
+  await txn.put(Buffer.from('account:2:balance'), Buffer.from('500'));
+  // Commits on success, aborts on error
+});
+```
+
+**Output:**
+```
+✅ Transaction committed
+```
+
+**Manual control:**
+```typescript
+const txn = await db.beginTransaction();
+try {
+  await txn.put(Buffer.from('key1'), Buffer.from('value1'));
+  await txn.put(Buffer.from('key2'), Buffer.from('value2'));
+  await txn.commit();
+} catch (err) {
+  await txn.abort();
+  throw err;
+}
+```
+
+## Query Builder
+
+Returns results in **TOON format** (token-optimized for LLMs):
+
+```typescript
+// Insert structured data
+await db.put(Buffer.from('products/laptop'), Buffer.from('{"name":"Laptop","price":999}'));
+await db.put(Buffer.from('products/mouse'), Buffer.from('{"name":"Mouse","price":25}'));
+
+// Query with column selection
+const results = await db.query('products/')
+  .select(['name', 'price'])
   .limit(10)
-  .select(['name', 'email'])
-  .toList();
+  .execute();
 
-await client.close();
+results.forEach(kv => {
+  console.log(`${kv.key.toString()}: ${kv.value.toString()}`);
+});
 ```
 
-### Vector Search
+**Output (TOON Format):**
+```
+products/laptop: result[1]{name,price}:Laptop,999
+products/mouse: result[1]{name,price}:Mouse,25
+```
+
+**Other query methods:**
+```typescript
+const first = await db.query('products/').first();     // Get first result
+const count = await db.query('products/').count();     // Count results
+const exists = await db.query('products/').exists();   // Check existence
+```
+
+## SQL-Like Operations
+
+While JavaScript SDK focuses on key-value operations, you can use query() for SQL-like operations:
 
 ```typescript
-import { VectorIndex } from '@sushanth/toondb';
+// INSERT-like: Store structured data
+await db.put(Buffer.from('products/001'), Buffer.from('{"id":1,"name":"Laptop","price":999}'));
+await db.put(Buffer.from('products/002'), Buffer.from('{"id":2,"name":"Mouse","price":25}'));
 
-// Generate or load embeddings (10K × 768D)
-const embeddings = new Float32Array(10000 * 768);
-// ... fill with your embeddings
+// SELECT-like: Query with column selection
+const results = await db.query('products/')
+  .select(['name', 'price'])  // SELECT name, price
+  .limit(10)                   // LIMIT 10
+  .execute();
+```
 
-// Build HNSW index
-const stats = await VectorIndex.bulkBuild(embeddings, {
-  output: 'my_index.hnsw',
-  dimension: 768,
+**Output:**
+```
+SELECT name, price FROM products LIMIT 10:
+products/001: result[1]{name,price}:Laptop,999
+products/002: result[1]{name,price}:Mouse,25
+```
+
+**UPDATE-like:**
+```typescript
+// Get current value
+const current = await db.get(Buffer.from('products/001'));
+const product = JSON.parse(current.toString());
+
+// Update
+product.price = 899;
+await db.put(Buffer.from('products/001'), Buffer.from(JSON.stringify(product)));
+```
+
+**DELETE-like:**
+```typescript
+await db.delete(Buffer.from('products/001'));
+```
+
+> **Note:** For full SQL (CREATE TABLE, JOIN, WHERE clauses), use Python SDK or Rust API.
+
+## Vector Search
+
+```typescript
+// Create HNSW index
+const index = await db.createVectorIndex({
+  dimension: 384,
+  metric: 'cosine',
   m: 16,
-  efConstruction: 100,
+  efConstruction: 100
 });
 
-console.log(`Built ${stats.vectors} vectors at ${stats.rate.toFixed(0)} vec/s`);
+// Build from embeddings
+const vectors = [
+  new Float32Array([0.1, 0.2, 0.3, /* ... 384 dims */]),
+  new Float32Array([0.4, 0.5, 0.6, /* ... 384 dims */])
+];
+const labels = ['doc1', 'doc2'];
+await index.bulkBuild(vectors, labels);
 
-// Query the index
-const query = new Float32Array(768);
-// ... fill with query vector
+// Search
+const query = new Float32Array([0.15, 0.25, 0.35, /* ... */]);
+const results = await index.query(query, 10, 50); // k=10, ef_search=50
 
-const results = await VectorIndex.query('my_index.hnsw', query, {
-  k: 10,
-  efSearch: 64,
+results.forEach((r, i) => {
+  console.log(`${i + 1}. ${r.label} (distance: ${r.distance.toFixed(4)})`);
 });
-
-for (const neighbor of results) {
-  console.log(`ID: ${neighbor.id}, Distance: ${neighbor.distance.toFixed(4)}`);
-}
 ```
 
-## API Reference
-
-### Database
-
-```typescript
-class Database {
-  // Open a database
-  static async open(path: string | DatabaseConfig): Promise<Database>;
-  
-  // Key-value operations
-  async get(key: Buffer | string): Promise<Buffer | null>;
-  async put(key: Buffer | string, value: Buffer | string): Promise<void>;
-  async delete(key: Buffer | string): Promise<void>;
-  
-  // Path operations
-  async getPath(path: string): Promise<Buffer | null>;
-  async putPath(path: string, value: Buffer | string): Promise<void>;
-  
-  // Query builder
-  query(pathPrefix: string): Query;
-  
-  // Transactions
-  async withTransaction<T>(fn: (txn: Transaction) => Promise<T>): Promise<T>;
-  
-  // Maintenance
-  async checkpoint(): Promise<void>;
-  async stats(): Promise<StorageStats>;
-  async close(): Promise<void>;
-}
+**Output:**
+```
+1. doc1 (distance: 0.0234)
+2. doc2 (distance: 0.1567)
 ```
 
-### IpcClient
+## Complete Example: Multi-Tenant App
 
 ```typescript
-class IpcClient {
-  // Connect to IPC server
-  static async connect(socketPath: string): Promise<IpcClient>;
-  
-  // Same operations as Database
-  async get(key: Buffer): Promise<Buffer | null>;
-  async put(key: Buffer, value: Buffer): Promise<void>;
-  async delete(key: Buffer): Promise<void>;
-  async getPath(path: string): Promise<Buffer | null>;
-  async putPath(path: string, value: Buffer): Promise<void>;
-  
-  // Query
-  async query(pathPrefix: string, options?: QueryOptions): Promise<string>;
-  queryBuilder(pathPrefix: string): Query;
-  
-  // Transaction management
-  async beginTransaction(): Promise<bigint>;
-  async commitTransaction(txnId: bigint): Promise<void>;
-  async abortTransaction(txnId: bigint): Promise<void>;
-  
-  // Utilities
-  async ping(): Promise<boolean>;
-  async close(): Promise<void>;
+import { Database } from 'sushanth-toondb';
+
+async function main() {
+  const db = new Database('./multi_tenant_db', {
+    mode: 'embedded',
+    createIfMissing: true
+  });
+  await db.open();
+
+  // Insert data for two tenants
+  await db.put(
+    Buffer.from('tenants/acme/users/alice'),
+    Buffer.from('{"role":"admin"}')
+  );
+  await db.put(
+    Buffer.from('tenants/acme/users/bob'),
+    Buffer.from('{"role":"user"}')
+  );
+  await db.put(
+    Buffer.from('tenants/globex/users/charlie'),
+    Buffer.from('{"role":"admin"}')
+  );
+
+  // Scan ACME Corp data only (tenant isolation)
+  const acmeData = await db.scan('tenants/acme/');
+  console.log(`ACME Corp: ${acmeData.length} users`);
+  acmeData.forEach(kv => {
+    console.log(`  ${kv.key.toString()}: ${kv.value.toString()}`);
+  });
+
+  // Scan Globex Corp data
+  const globexData = await db.scan('tenants/globex/');
+  console.log(`\nGlobex Corp: ${globexData.length} users`);
+  globexData.forEach(kv => {
+    console.log(`  ${kv.key.toString()}: ${kv.value.toString()}`);
+  });
+
+  await db.close();
 }
+
+main();
 ```
 
-### Query
+**Output:**
+```
+ACME Corp: 2 users
+  tenants/acme/users/alice: {"role":"admin"}
+  tenants/acme/users/bob: {"role":"user"}
 
-```typescript
-class Query {
-  limit(n: number): Query;
-  offset(n: number): Query;
-  select(columns: string[]): Query;
-  
-  async execute(): Promise<string>;      // Returns TOON format
-  async toList(): Promise<object[]>;     // Returns parsed objects
-  async first(): Promise<object | null>; // Returns first result
-  async count(): Promise<number>;        // Returns count
-}
+Globex Corp: 1 users
+  tenants/globex/users/charlie: {"role":"admin"}
 ```
 
-### VectorIndex
+## Embedded vs External Mode
+
+### Embedded Mode (Default)
+✅ **Pros:**
+- No separate server process needed
+- Automatic lifecycle management
+- Simpler deployment
+- Better for single-app scenarios
+
+❌ **Cons:**
+- Database locked to one process
+- Can't share across apps
 
 ```typescript
-class VectorIndex {
-  // Build an HNSW index
-  static async bulkBuild(
-    vectors: Float32Array,
-    options: {
-      output: string;
-      dimension: number;
-      m?: number;           // default: 16
-      efConstruction?: number; // default: 100
-      metric?: 'cosine' | 'euclidean' | 'dot';
-    }
-  ): Promise<BulkBuildStats>;
-  
-  // Query an index
-  static async query(
-    indexPath: string,
-    query: Float32Array,
-    options?: {
-      k?: number;        // default: 10
-      efSearch?: number; // default: 64
-    }
-  ): Promise<VectorSearchResult[]>;
-  
-  // Get index metadata
-  static async info(indexPath: string): Promise<IndexInfo>;
-}
+const db = new Database('./db', { mode: 'embedded' });
 ```
 
-## SDKs
+### External Mode
+✅ **Pros:**
+- Multiple clients can connect
+- Server runs independently
+- Better for microservices
 
-| Platform | Package | Install |
-|----------|---------|---------|
-| Rust | [`toondb`](https://crates.io/crates/toondb) | `cargo add toondb` |
-| Python | [`toondb-client`](https://pypi.org/project/toondb-client/) | `pip install toondb-client` |
-| JavaScript | [`@sushanth/toondb`](https://www.npmjs.com/package/@sushanth/toondb) | `npm install @sushanth/toondb` |
-
-## TypeScript Support
-
-Full TypeScript definitions are included. Import types as needed:
+❌ **Cons:**
+- Must manage server process
+- Extra network hop (Unix socket)
 
 ```typescript
-import {
-  Database,
-  DatabaseConfig,
-  IpcClient,
-  Query,
-  QueryResult,
-  VectorIndex,
-  VectorSearchResult,
-  ToonDBError,
-  ConnectionError,
-  TransactionError,
-} from '@sushanth/toondb';
+const db = new Database('./db', { mode: 'external' });
 ```
 
 ## Error Handling
 
-All errors extend from `ToonDBError`:
-
 ```typescript
-import { ToonDBError, ConnectionError, TransactionError } from '@sushanth/toondb';
-
 try {
-  await db.get(Buffer.from('key'));
-} catch (error) {
-  if (error instanceof ConnectionError) {
-    console.error('Connection failed:', error.message);
-  } else if (error instanceof TransactionError) {
-    console.error('Transaction failed:', error.message);
-  } else if (error instanceof ToonDBError) {
-    console.error('Database error:', error.message);
+  const value = await db.get(Buffer.from('key'));
+  if (!value) {
+    console.log('Key not found (not an error)');
+  }
+} catch (err) {
+  if (err.message.includes('Database is closed')) {
+    console.error('Database not open!');
+  } else if (err.message.includes('Connection failed')) {
+    console.error('Server not running!');
+  } else {
+    console.error('Unknown error:', err);
   }
 }
 ```
 
-## Development
+## Configuration Options
+
+```typescript
+const db = new Database('./my_database', {
+  mode: 'embedded',           // 'embedded' | 'external'
+  createIfMissing: true,      // Auto-create database
+  walEnabled: true,           // Write-ahead logging
+  syncMode: 'normal',         // 'full' | 'normal' | 'off'
+  memtableSizeBytes: 64 * 1024 * 1024,  // 64MB
+  serverPath: './toondb-server',        // Custom server binary
+  timeout: 30000              // Connection timeout (ms)
+});
+```
+
+## TypeScript Types
+
+```typescript
+import { Database, QueryBuilder, Transaction } from 'sushanth-toondb';
+
+interface User {
+  name: string;
+  email: string;
+}
+
+// Type-safe helpers
+async function getUser(db: Database, key: string): Promise<User | null> {
+  const value = await db.get(Buffer.from(key));
+  return value ? JSON.parse(value.toString()) : null;
+}
+
+async function putUser(db: Database, key: string, user: User): Promise<void> {
+  await db.put(Buffer.from(key), Buffer.from(JSON.stringify(user)));
+}
+```
+
+## Best Practices
+
+✅ **Always close:** `await db.close()` to prevent resource leaks
+✅ **Use transactions:** For atomic multi-key operations
+✅ **Check null:** `value === null` means key doesn't exist
+✅ **Use scan():** For prefix iteration (not query)
+✅ **Multi-tenant:** Prefix keys with tenant ID
+✅ **Buffer keys:** Always use Buffer for binary safety
+
+## Testing
 
 ```bash
-# Clone the repository
-git clone https://github.com/toondb/toondb.git
+# Run tests
+npm test
+
+# Build
+npm run build
+
+# Type check
+npm run typecheck
+```
+
+## Troubleshooting
+
+**"Database is closed" error:**
+```typescript
+await db.open(); // Must call open() first!
+```
+
+**"Path segment truncated" (v0.2.5):**
+- **Fixed in v0.2.6!** Upgrade: `npm install sushanth-toondb@0.2.6`
+
+**Server not found:**
+```typescript
+// Specify custom server path
+const db = new Database('./db', {
+  mode: 'embedded',
+  serverPath: '/path/to/toondb-server'
+});
+```
+
+## Migration from 0.2.5 → 0.2.6
+
+**No breaking changes!** Just upgrade:
+
+```bash
+npm install sushanth-toondb@0.2.6
+```
+
+**New features:**
+- `scan()` method now available
+- `putPath()` / `getPath()` now work correctly
+
+## Building the Package
+
+```bash
+# Clone repo
+git clone https://github.com/sushanthpy/toondb
 cd toondb/toondb-js
 
 # Install dependencies
@@ -323,13 +512,25 @@ npm install
 # Build
 npm run build
 
-# Test
-npm test
-
-# Lint
-npm run lint
+# Create tarball
+npm pack
+# Creates: sushanth-toondb-0.2.6.tgz
 ```
 
 ## License
 
-Apache-2.0
+Apache License 2.0
+
+## Links
+
+- [Documentation](https://toondb.io/docs)
+- [Python SDK](../toondb-python-sdk)
+- [Go SDK](../toondb-go)
+- [GitHub](https://github.com/sushanthpy/toondb)
+- [npm Package](https://www.npmjs.com/package/sushanth-toondb)
+
+## Support
+
+- GitHub Issues: https://github.com/sushanthpy/toondb/issues
+- Discord: https://discord.gg/toondb
+- Email: support@toondb.io

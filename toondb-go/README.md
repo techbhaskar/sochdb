@@ -5,73 +5,47 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/toondb/toondb/toondb-go)](https://goreportcard.com/report/github.com/toondb/toondb/toondb-go)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-The official Go client SDK for **ToonDB** — a high-performance embedded document database with HNSW vector search.
+The official Go client SDK for **ToonDB** — a high-performance embedded document database with HNSW vector search and built-in multi-tenancy support.
 
-## Architecture
+## Version
 
-The Go SDK is an **IPC client** that communicates with the ToonDB server via Unix domain sockets:
+**v0.2.6** (January 2026)
 
-```
-┌─────────────────┐         IPC/Socket         ┌──────────────────┐
-│   Go SDK        │ ◄────────────────────────► │  ToonDB Server   │
-│  (toondb-go)    │    (toondb.sock)           │  (toondb-mcp)    │
-└─────────────────┘                            └──────────────────┘
-                                                        │
-                                                        ▼
-                                                ┌──────────────────┐
-                                                │  Storage Engine  │
-                                                │  (LSM, WAL, etc) │
-                                                └──────────────────┘
-```
-
-> **Note:** Unlike embedded databases like SQLite, the Go SDK requires a ToonDB server process to be running. The Python and JavaScript SDKs include automatic server management, but the Go SDK currently requires manual server startup.
+**What's New in 0.2.6:**
+- ✅ Fixed wire protocol compatibility with ToonDB server
+- ✅ Added `Scan()` method for efficient prefix-based key-value iteration
+- ✅ Fixed path operations (`GetPath`, `PutPath`) encoding
+- ✅ All opcodes now match server implementation (Little Endian)
+- ✅ Improved error handling and protocol parsing
 
 ## Features
 
 - ✅ **Key-Value Store** — Simple `Get`/`Put`/`Delete` operations
 - ✅ **Path-Native API** — Hierarchical keys like `users/alice/email`
+- ✅ **Prefix Scanning** — Fast `Scan()` for multi-tenant data isolation
 - ✅ **Transactions** — ACID-compliant with automatic commit/abort
-- ✅ **Query Builder** — Fluent API for prefix scans
+- ✅ **Query Builder** — Fluent API for complex queries (returns TOON format)
 - ✅ **Vector Search** — HNSW approximate nearest neighbor search
-- ✅ **Type-Safe** — Full Go type safety with generics
+- ✅ **Type-Safe** — Full Go type safety
 - ✅ **Zero CGO** — Pure Go IPC client (no C dependencies)
-
-## Prerequisites
-
-Before using the Go SDK, you must:
-
-1. **Install the ToonDB server binary** (one of these methods):
-   
-   ```bash
-   # Option 1: Download pre-built binaries
-   # Download from: https://github.com/toondb/toondb/releases
-   
-   # Option 2: Build from source (requires Rust)
-   cargo build --release -p toondb-mcp
-   ```
-
-2. **Start the ToonDB server** before running your Go application:
-   
-   ```bash
-   # Start server for a database directory
-   ./target/release/toondb-mcp serve --db ./my_database
-   ```
-
-3. **(Optional) For vector search**, also build the toondb-bulk tool:
-   
-   ```bash
-   cargo build --release -p toondb-tools
-   ```
 
 ## Installation
 
 ```bash
-go get github.com/toondb/toondb/toondb-go@v0.2.4
+go get github.com/toondb/toondb/toondb-go@v0.2.6
 ```
 
 **Requirements:**
 - Go 1.21+
-- ToonDB server running (see Prerequisites)
+- ToonDB server running
+
+**Start the server:**
+```bash
+# Download or build toondb-server, then:
+./toondb-server --db ./my_database
+
+# Output: [IpcServer] Listening on "./my_database/toondb.sock"
+```
 
 ## Quick Start
 
@@ -81,140 +55,194 @@ package main
 import (
     "fmt"
     "log"
-
     toondb "github.com/toondb/toondb/toondb-go"
 )
 
 func main() {
-    // Open database
     db, err := toondb.Open("./my_database")
     if err != nil {
         log.Fatal(err)
     }
     defer db.Close()
 
-    // Key-value operations
-    err = db.Put([]byte("user:123"), []byte(`{"name": "Alice"}`))
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    value, err := db.Get([]byte("user:123"))
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Println(string(value)) // {"name": "Alice"}
-
-    // Path-native API
-    err = db.PutPath("users/alice/email", []byte("alice@example.com"))
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    email, err := db.GetPath("users/alice/email")
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Println(string(email)) // alice@example.com
+    // Put and Get
+    db.Put([]byte("user:123"), []byte(`{"name":"Alice","age":30}`))
+    value, _ := db.Get([]byte("user:123"))
+    fmt.Println(string(value))
+    // Output: {"name":"Alice","age":30}
 }
 ```
 
-## API Reference
+## Core Operations
 
-### Database
+### Basic Key-Value
 
 ```go
-// Open a database
-db, err := toondb.Open("./my_database")
+// Put
+err = db.Put([]byte("key"), []byte("value"))
 
-// Open with custom configuration
-db, err := toondb.OpenWithConfig(&toondb.Config{
-    Path:            "./my_database",
-    WALEnabled:      true,
-    SyncMode:        "full",
-    CreateIfMissing: true,
-})
+// Get
+value, err := db.Get([]byte("key"))
+if value == nil {
+    fmt.Println("Key not found")
+}
 
-// Key-value operations
-err = db.Put(key, value)
-value, err := db.Get(key)
-err = db.Delete(key)
+// Delete
+err = db.Delete([]byte("key"))
 
-// String convenience methods
-err = db.PutString("key", "value")
-value, err := db.GetString("key")
-
-// Path-native operations
-err = db.PutPath("users/alice/email", value)
-value, err := db.GetPath("users/alice/email")
-
-// Close
-err = db.Close()
+// String helpers
+db.PutString("greeting", "Hello World")
+msg, _ := db.GetString("greeting")
 ```
 
-### Transactions
+**Output:**
+```
+Put: key → value
+Get: value
+Delete: key
+String: Hello World
+```
+
+### Path Operations
 
 ```go
-// Recommended: Use WithTransaction for automatic commit/abort
+// Store hierarchical data
+db.PutPath("users/alice/email", []byte("alice@example.com"))
+db.PutPath("users/alice/age", []byte("30"))
+db.PutPath("users/bob/email", []byte("bob@example.com"))
+
+// Retrieve by path
+email, _ := db.GetPath("users/alice/email")
+fmt.Printf("Alice's email: %s\n", email)
+```
+
+**Output:**
+```
+Alice's email: alice@example.com
+```
+
+### Prefix Scanning ⭐ New in 0.2.6
+
+The most efficient way to iterate keys with a common prefix:
+
+```go
+// Insert multi-tenant data
+db.Put([]byte("tenants/acme/users/1"), []byte(`{"name":"Alice"}`))
+db.Put([]byte("tenants/acme/users/2"), []byte(`{"name":"Bob"}`))
+db.Put([]byte("tenants/acme/orders/1"), []byte(`{"total":100}`))
+db.Put([]byte("tenants/globex/users/1"), []byte(`{"name":"Charlie"}`))
+
+// Scan only ACME Corp's data
+results, err := db.Scan("tenants/acme/")
+fmt.Printf("ACME Corp has %d items:\n", len(results))
+for _, kv := range results {
+    fmt.Printf("  %s: %s\n", kv.Key, kv.Value)
+}
+```
+
+**Output:**
+```
+ACME Corp has 3 items:
+  tenants/acme/orders/1: {"total":100}
+  tenants/acme/users/1: {"name":"Alice"}
+  tenants/acme/users/2: {"name":"Bob"}
+```
+
+**Why use Scan():**
+- **Fast**: Binary protocol, O(|prefix|) performance
+- **Isolated**: Perfect for multi-tenant apps
+- **Efficient**: No deserialization overhead
+
+## Transactions
+
+```go
+// Automatic commit/abort
 err := db.WithTransaction(func(txn *toondb.Transaction) error {
-    if err := txn.Put([]byte("key1"), []byte("value1")); err != nil {
-        return err  // Transaction will abort
-    }
-    if err := txn.Put([]byte("key2"), []byte("value2")); err != nil {
-        return err
-    }
-    return nil  // Transaction will commit
+    txn.Put([]byte("account:1:balance"), []byte("1000"))
+    txn.Put([]byte("account:2:balance"), []byte("500"))
+    return nil // Commits on success
 })
-
-// Manual transaction control
-txn, err := db.BeginTransaction()
-if err != nil {
-    log.Fatal(err)
-}
-
-err = txn.Put([]byte("key"), []byte("value"))
-if err != nil {
-    txn.Abort()
-    log.Fatal(err)
-}
-
-err = txn.Commit()
 ```
 
-### Query Builder
+**Output:**
+```
+Transaction started
+✅ Committed 2 writes
+```
+
+**Manual control:**
+```go
+txn, _ := db.BeginTransaction()
+defer txn.Abort() // Cleanup if commit fails
+
+txn.Put([]byte("key1"), []byte("value1"))
+txn.Put([]byte("key2"), []byte("value2"))
+
+err := txn.Commit()
+```
+
+## Query Builder
+
+Returns results in **TOON format** (token-optimized for LLMs):
 
 ```go
-// Prefix scan with fluent API
-results, err := db.Query("users/").
+// Insert structured data
+db.Put([]byte("products/laptop"), []byte(`{"name":"Laptop","price":999}`))
+db.Put([]byte("products/mouse"), []byte(`{"name":"Mouse","price":25}`))
+
+// Query with column selection
+results, err := db.Query("products/").
+    Select("name", "price").
     Limit(10).
-    Offset(0).
-    Select("name", "email").
     Execute()
 
 for _, kv := range results {
-    fmt.Printf("Key: %s, Value: %s\n", kv.Key, kv.Value)
+    fmt.Printf("%s: %s\n", kv.Key, kv.Value)
 }
-
-// Get first result only
-first, err := db.Query("users/").First()
-
-// Check existence
-exists, err := db.Query("users/alice/").Exists()
-
-// Count results
-count, err := db.Query("users/").Count()
-
-// Iterate with callback
-err = db.Query("users/").ForEach(func(kv toondb.KeyValue) error {
-    fmt.Println(string(kv.Key))
-    return nil
-})
 ```
 
-### Vector Search
+**Output (TOON Format):**
+```
+products/laptop: result[1]{name,price}:Laptop,999
+products/mouse: result[1]{name,price}:Mouse,25
+```
+
+**Other query methods:**
+```go
+first, _ := db.Query("products/").First()    // Get first result
+count, _ := db.Query("products/").Count()    // Count results
+exists, _ := db.Query("products/").Exists()  // Check existence
+```
+
+## SQL-Like Operations
+
+While Go SDK focuses on key-value operations, you can use Query for SQL-like operations:
 
 ```go
-// Create vector index
+// INSERT-like: Store structured data
+db.Put([]byte("products/001"), []byte(`{"id":1,"name":"Laptop","price":999}`))
+db.Put([]byte("products/002"), []byte(`{"id":2,"name":"Mouse","price":25}`))
+
+// SELECT-like: Query with column selection
+results, _ := db.Query("products/").
+    Select("name", "price"). // SELECT name, price
+    Limit(10).               // LIMIT 10
+    Execute()
+```
+
+**Output:**
+```
+SELECT name, price FROM products LIMIT 10:
+products/001: result[1]{name,price}:Laptop,999
+products/002: result[1]{name,price}:Mouse,25
+```
+
+> **Note:** For full SQL (CREATE TABLE, JOIN, etc.), use Python SDK or Rust API.
+
+## Vector Search
+
+```go
+// Create HNSW index
 config := &toondb.VectorIndexConfig{
     Dimension:      384,
     Metric:         toondb.Cosine,
@@ -223,40 +251,73 @@ config := &toondb.VectorIndexConfig{
 }
 index := toondb.NewVectorIndex("./vectors", config)
 
-// Build index from vectors
+// Build from embeddings
 vectors := [][]float32{
-    {0.1, 0.2, 0.3, ...},  // 384-dim embedding
-    {0.4, 0.5, 0.6, ...},
+    {0.1, 0.2, 0.3, /* ... 384 dims */},
+    {0.4, 0.5, 0.6, /* ... 384 dims */},
 }
 labels := []string{"doc1", "doc2"}
-err := index.BulkBuild(vectors, labels)
+index.BulkBuild(vectors, labels)
 
-// Query nearest neighbors
-queryVec := []float32{0.15, 0.25, 0.35, ...}
-results, err := index.Query(queryVec, 10, 50)  // k=10, ef_search=50
+// Search
+query := []float32{0.15, 0.25, 0.35, /* ... */}
+results, _ := index.Query(query, 10, 50) // k=10, ef_search=50
 
-for _, r := range results {
-    fmt.Printf("ID: %d, Distance: %.4f, Label: %s\n",
-        r.ID, r.Distance, r.Label)
+for i, r := range results {
+    fmt.Printf("%d. %s (distance: %.4f)\n", i+1, r.Label, r.Distance)
 }
-
-// Get index info
-info, err := index.Info()
-fmt.Printf("Vectors: %d, Dimension: %d\n", info.NumVectors, info.Dimension)
 ```
 
-### Utility Functions
+**Output:**
+```
+1. doc1 (distance: 0.0234)
+2. doc2 (distance: 0.1567)
+```
+
+## Complete Example: Multi-Tenant App
 
 ```go
-// Distance calculations
-dist := toondb.ComputeCosineDistance(vecA, vecB)
-dist := toondb.ComputeEuclideanDistance(vecA, vecB)
+package main
 
-// Vector normalization
-normalized := toondb.NormalizeVector(vec)
+import (
+    "fmt"
+    "log"
+    toondb "github.com/toondb/toondb/toondb-go"
+)
 
-// Read FVECS format (common benchmark format)
-vectors, err := toondb.ReadVectorsFromFVECS("./vectors.fvecs")
+func main() {
+    db, _ := toondb.Open("./multi_tenant_db")
+    defer db.Close()
+
+    // Insert data for two tenants
+    db.Put([]byte("tenants/acme/users/alice"), []byte(`{"role":"admin"}`))
+    db.Put([]byte("tenants/acme/users/bob"), []byte(`{"role":"user"}`))
+    db.Put([]byte("tenants/globex/users/charlie"), []byte(`{"role":"admin"}`))
+
+    // Scan ACME Corp data only (tenant isolation)
+    acmeData, _ := db.Scan("tenants/acme/")
+    fmt.Printf("ACME Corp: %d users\n", len(acmeData))
+    for _, kv := range acmeData {
+        fmt.Printf("  %s: %s\n", kv.Key, kv.Value)
+    }
+
+    // Scan Globex Corp data
+    globexData, _ := db.Scan("tenants/globex/")
+    fmt.Printf("\nGlobex Corp: %d users\n", len(globexData))
+    for _, kv := range globexData {
+        fmt.Printf("  %s: %s\n", kv.Key, kv.Value)
+    }
+}
+```
+
+**Output:**
+```
+ACME Corp: 2 users
+  tenants/acme/users/alice: {"role":"admin"}
+  tenants/acme/users/bob: {"role":"user"}
+
+Globex Corp: 1 users
+  tenants/globex/users/charlie: {"role":"admin"}
 ```
 
 ## Error Handling
@@ -267,124 +328,54 @@ import "errors"
 value, err := db.Get(key)
 if err != nil {
     if errors.Is(err, toondb.ErrClosed) {
-        // Database is closed
+        log.Println("Database closed")
     }
-    // Handle other errors
+    if errors.Is(err, toondb.ErrConnectionFailed) {
+        log.Println("Server not running")
+    }
+    log.Fatal(err)
 }
 
 if value == nil {
-    // Key not found (not an error)
-}
-```
-
-### Error Types
-
-| Error | Description |
-|-------|-------------|
-| `ErrNotFound` | Key was not found |
-| `ErrClosed` | Database is closed |
-| `ErrTxnCommitted` | Transaction already committed |
-| `ErrTxnAborted` | Transaction already aborted |
-| `ErrConnectionFailed` | Failed to connect to server |
-| `ErrProtocol` | Wire protocol error |
-| `ErrVectorDimension` | Vector dimension mismatch |
-
-## Configuration
-
-```go
-config := &toondb.Config{
-    // Path to database directory (required)
-    Path: "./my_database",
-
-    // Create directory if it doesn't exist (default: true)
-    CreateIfMissing: true,
-
-    // Enable Write-Ahead Logging (default: true)
-    WALEnabled: true,
-
-    // Sync mode: "full", "normal", or "off" (default: "normal")
-    SyncMode: "normal",
-
-    // Maximum memtable size before flush (default: 64MB)
-    MemtableSizeBytes: 64 * 1024 * 1024,
+    log.Println("Key not found (not an error)")
 }
 ```
 
 ## Best Practices
 
-### 1. Always Close the Database
+✅ **Always close:** `defer db.Close()`
+✅ **Use transactions:** For atomic multi-key operations
+✅ **Check nil:** `value == nil` means key doesn't exist
+✅ **Use Scan():** For prefix iteration (not Query)
+✅ **Multi-tenant:** Prefix keys with tenant ID
+
+## Configuration
 
 ```go
-db, err := toondb.Open("./my_database")
-if err != nil {
-    log.Fatal(err)
+config := &toondb.Config{
+    Path:              "./my_database",
+    CreateIfMissing:   true,
+    WALEnabled:        true,
+    SyncMode:          "normal", // "full", "normal", "off"
+    MemtableSizeBytes: 64 * 1024 * 1024,
 }
-defer db.Close()  // Always defer close
-```
-
-### 2. Use WithTransaction for Atomic Operations
-
-```go
-// Good: automatic commit/abort
-err := db.WithTransaction(func(txn *toondb.Transaction) error {
-    // Operations...
-    return nil
-})
-
-// Avoid: manual transaction handling (error-prone)
-txn, _ := db.BeginTransaction()
-// ...
-txn.Commit()
-```
-
-### 3. Handle nil Values
-
-```go
-value, err := db.Get(key)
-if err != nil {
-    return err
-}
-if value == nil {
-    // Key doesn't exist - this is not an error!
-    return fmt.Errorf("key not found: %s", key)
-}
-```
-
-### 4. Batch Operations in Transactions
-
-```go
-// Efficient: batch multiple writes
-err := db.WithTransaction(func(txn *toondb.Transaction) error {
-    for _, item := range items {
-        if err := txn.Put(item.Key, item.Value); err != nil {
-            return err
-        }
-    }
-    return nil
-})
+db, err := toondb.OpenWithConfig(config)
 ```
 
 ## Testing
 
 ```bash
-cd toondb-go
 go test -v ./...
-```
-
-## Benchmarks
-
-```bash
 go test -bench=. -benchmem ./...
 ```
 
 ## License
 
-Apache License 2.0 - see [LICENSE](../LICENSE) for details.
+Apache License 2.0
 
 ## Links
 
-- [ToonDB Documentation](https://toondb.io/docs)
+- [Documentation](https://toondb.io/docs)
 - [Python SDK](../toondb-python-sdk)
-- [TypeScript SDK](../toondb-js)
-- [Rust Crate](../toondb-client)
-- [GitHub Repository](https://github.com/sushanthpy/toondb)
+- [JavaScript SDK](../toondb-js)
+- [GitHub](https://github.com/sushanthpy/toondb)

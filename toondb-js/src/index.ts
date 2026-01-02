@@ -25,7 +25,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export { Database, Transaction, DatabaseConfig } from './database';
+export { Database, Transaction, DatabaseConfig, SQLQueryResult } from './database';
 export { IpcClient, IpcClientConfig, OpCode } from './ipc-client';
 export { Query, QueryResult } from './query';
 export { VectorIndex, VectorSearchResult, VectorIndexConfig } from './vector';

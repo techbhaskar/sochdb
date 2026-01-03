@@ -23,9 +23,23 @@ import os
 import sys
 import ctypes
 import warnings
-from typing import Optional
+from typing import Optional, Dict, List
 from contextlib import contextmanager
-from .errors import DatabaseError, TransactionError
+from .errors import (
+    DatabaseError, 
+    TransactionError,
+    NamespaceNotFoundError,
+    NamespaceExistsError,
+)
+from .namespace import (
+    Namespace,
+    NamespaceConfig,
+    Collection,
+    CollectionConfig,
+    DistanceMetric,
+    SearchRequest,
+    SearchResults,
+)
 
 
 def _get_target_triple() -> str:
@@ -1156,3 +1170,209 @@ class Database:
         """Check that database is open."""
         if self._closed:
             raise DatabaseError("Database is closed")
+
+    # =========================================================================
+    # Namespace API (Task 8: First-Class Namespace Handle)
+    # =========================================================================
+    
+    def create_namespace(
+        self,
+        name: str,
+        display_name: Optional[str] = None,
+        labels: Optional[Dict[str, str]] = None,
+    ) -> Namespace:
+        """
+        Create a new namespace.
+        
+        Namespaces provide multi-tenant isolation. All data within a namespace
+        is isolated from other namespaces, making cross-tenant access impossible
+        by construction.
+        
+        Args:
+            name: Unique namespace identifier (e.g., "tenant_123")
+            display_name: Optional human-readable name
+            labels: Optional metadata labels (e.g., {"tier": "enterprise"})
+            
+        Returns:
+            Namespace handle
+            
+        Raises:
+            NamespaceExistsError: If namespace already exists
+            
+        Example:
+            ns = db.create_namespace("tenant_123", display_name="Acme Corp")
+            collection = ns.create_collection("documents", dimension=384)
+        """
+        self._check_open()
+        
+        if not hasattr(self, '_namespaces'):
+            self._namespaces: Dict[str, Namespace] = {}
+        
+        if name in self._namespaces:
+            raise NamespaceExistsError(name)
+        
+        config = NamespaceConfig(
+            name=name,
+            display_name=display_name,
+            labels=labels or {},
+        )
+        
+        # Create namespace marker in storage
+        marker_key = f"_namespaces/{name}/_meta".encode("utf-8")
+        import json
+        self.put(marker_key, json.dumps(config.to_dict()).encode("utf-8"))
+        
+        ns = Namespace(self, name, config)
+        self._namespaces[name] = ns
+        return ns
+    
+    def namespace(self, name: str) -> Namespace:
+        """
+        Get an existing namespace handle.
+        
+        This returns a handle to the namespace for performing operations.
+        The namespace must already exist.
+        
+        Args:
+            name: Namespace identifier
+            
+        Returns:
+            Namespace handle
+            
+        Raises:
+            NamespaceNotFoundError: If namespace doesn't exist
+            
+        Example:
+            ns = db.namespace("tenant_123")
+            collection = ns.collection("documents")
+            results = collection.vector_search(query_embedding, k=10)
+        """
+        self._check_open()
+        
+        if not hasattr(self, '_namespaces'):
+            self._namespaces = {}
+        
+        if name in self._namespaces:
+            return self._namespaces[name]
+        
+        # Try to load from storage
+        marker_key = f"_namespaces/{name}/_meta".encode("utf-8")
+        data = self.get(marker_key)
+        if data is None:
+            raise NamespaceNotFoundError(name)
+        
+        import json
+        config = NamespaceConfig.from_dict(json.loads(data.decode("utf-8")))
+        ns = Namespace(self, name, config)
+        self._namespaces[name] = ns
+        return ns
+    
+    def get_or_create_namespace(
+        self,
+        name: str,
+        display_name: Optional[str] = None,
+        labels: Optional[Dict[str, str]] = None,
+    ) -> Namespace:
+        """
+        Get an existing namespace or create if it doesn't exist.
+        
+        This is idempotent and safe to call multiple times.
+        
+        Args:
+            name: Namespace identifier
+            display_name: Optional human-readable name (used if creating)
+            labels: Optional metadata labels (used if creating)
+            
+        Returns:
+            Namespace handle
+        """
+        try:
+            return self.namespace(name)
+        except NamespaceNotFoundError:
+            return self.create_namespace(name, display_name, labels)
+    
+    @contextmanager
+    def use_namespace(self, name: str):
+        """
+        Context manager for namespace operations.
+        
+        Use this to scope a block of operations to a specific namespace.
+        
+        Args:
+            name: Namespace identifier
+            
+        Yields:
+            Namespace handle
+            
+        Example:
+            with db.use_namespace("tenant_123") as ns:
+                collection = ns.collection("documents")
+                results = collection.search(...)
+                # All operations scoped to tenant_123
+        """
+        ns = self.namespace(name)
+        try:
+            yield ns
+        finally:
+            # Could flush pending writes here
+            pass
+    
+    def list_namespaces(self) -> List[str]:
+        """
+        List all namespaces.
+        
+        Returns:
+            List of namespace names
+        """
+        self._check_open()
+        
+        namespaces = []
+        prefix = b"_namespaces/"
+        suffix = b"/_meta"
+        
+        for key, _ in self.scan_prefix(prefix):
+            # Extract namespace name from _namespaces/{name}/_meta
+            if key.endswith(suffix):
+                name = key[len(prefix):-len(suffix)].decode("utf-8")
+                namespaces.append(name)
+        
+        return namespaces
+    
+    def delete_namespace(self, name: str, force: bool = False) -> bool:
+        """
+        Delete a namespace and all its data.
+        
+        Args:
+            name: Namespace identifier
+            force: If True, delete even if namespace has collections
+            
+        Returns:
+            True if deleted
+            
+        Raises:
+            NamespaceNotFoundError: If namespace doesn't exist
+            ToonDBError: If namespace has collections and force=False
+        """
+        self._check_open()
+        
+        # Check exists
+        marker_key = f"_namespaces/{name}/_meta".encode("utf-8")
+        if self.get(marker_key) is None:
+            raise NamespaceNotFoundError(name)
+        
+        # Delete all namespace data
+        prefix = f"{name}/".encode("utf-8")
+        with self.transaction() as txn:
+            for key, _ in txn.scan_prefix(prefix):
+                txn.delete(key)
+            
+            # Delete metadata
+            ns_prefix = f"_namespaces/{name}/".encode("utf-8")
+            for key, _ in txn.scan_prefix(ns_prefix):
+                txn.delete(key)
+        
+        # Remove from cache
+        if hasattr(self, '_namespaces') and name in self._namespaces:
+            del self._namespaces[name]
+        
+        return True

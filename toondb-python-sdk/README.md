@@ -10,10 +10,15 @@ The official Python SDK for **ToonDB** — a high-performance embedded document 
 
 - ✅ **Key-Value Store** — Simple `get()`/`put()`/`delete()` operations
 - ✅ **Path-Native API** — Hierarchical keys like `users/alice/email`
-- ✅ **Prefix Scanning** — Fast `scan_prefix()` for multi-tenant data isolation
+- ✅ **Namespace Isolation** — Type-safe multi-tenancy with `Namespace` and `Collection`
+- ✅ **Hybrid Search** — Vector + BM25 keyword search with RRF fusion
+- ✅ **ContextQuery Builder** — Token-aware LLM context retrieval with budgeting
+- ✅ **Multi-Vector Documents** — Chunk-level embeddings with aggregation
+- ✅ **Prefix Scanning** — Fast `scan_prefix()` for safe tenant-scoped iteration
 - ✅ **ACID Transactions** — Full snapshot isolation with automatic commit/abort
 - ✅ **Vector Search** — HNSW with bulk API (~1,600 vec/s ingestion)
 - ✅ **SQL Support** — Full DDL/DML with CREATE, INSERT, SELECT, UPDATE, DELETE
+- ✅ **Enhanced Error Taxonomy** — ErrorCode enum with remediation hints
 - ✅ **CLI Tools** — `toondb-server`, `toondb-bulk`, `toondb-grpc-server` commands
 - ✅ **Dual Mode** — Embedded (FFI) or IPC (multi-process)
 - ✅ **Zero Compilation** — Pre-built binaries for Linux/macOS/Windows
@@ -35,6 +40,103 @@ pip install toondb-client
 - Windows x64
 
 **No Rust toolchain required!**
+
+## What's New in Latest Release
+
+### 🎯 Namespace Isolation
+Logical database namespaces for true multi-tenancy without key prefixing:
+
+```python
+from toondb import Database, CollectionConfig, DistanceMetric
+
+db = Database.open("./my_database")
+
+# Create isolated namespace for tenant
+ns = db.create_namespace(
+    "tenant_acme",
+    display_name="Acme Corporation",
+    labels={"tier": "enterprise"}
+)
+
+# Create collection with immutable config
+collection = ns.create_collection(
+    CollectionConfig(
+        name="documents",
+        dimension=384,
+        metric=DistanceMetric.COSINE,
+        enable_hybrid_search=True,
+        content_field="text"
+    )
+)
+```
+
+### 🔍 Hybrid Search
+Combine dense vectors (HNSW) with sparse BM25 text search:
+
+```python
+# Insert documents with text and vectors
+collection.insert(
+    id="doc_1",
+    vector=[0.1] * 384,
+    metadata={"title": "Guide", "text": "ToonDB is fast"},
+    content="ToonDB is a fast database"
+)
+
+# Hybrid search (vector + keyword)
+results = collection.hybrid_search(
+    vector=query_embedding,
+    text_query="fast database",
+    k=10,
+    alpha=0.7,  # 70% vector, 30% keyword weight
+    rrf_fusion=True  # Reciprocal Rank Fusion
+)
+```
+
+### 📄 Multi-Vector Documents
+Store multiple embeddings per document (e.g., title + content):
+
+```python
+# Insert document with multiple vectors
+collection.insert_multi_vector(
+    id="article_1",
+    vectors={
+        "title": title_embedding,      # List[float] of dim 384
+        "abstract": abstract_embedding, # List[float] of dim 384
+        "content": content_embedding    # List[float] of dim 384
+    },
+    metadata={"title": "Deep Learning Survey"}
+)
+
+# Search with aggregation strategy
+results = collection.multi_vector_search(
+    query_vectors={
+        "title": query_title_embedding,
+        "content": query_content_embedding
+    },
+    k=10,
+    aggregation="max_pooling"  # or "mean_pooling", "weighted_sum"
+)
+```
+
+### 🧩 Context-Aware Queries
+Optimize retrieval for LLM context windows:
+
+```python
+from toondb import ContextQuery, DeduplicationStrategy
+
+# Build context with token budgeting
+context = (
+    ContextQuery(collection)
+    .add_vector_query(query_embedding, weight=0.7)
+    .add_keyword_query("machine learning", weight=0.3)
+    .with_token_budget(4000)  # Stay within model limit
+    .with_deduplication(DeduplicationStrategy.SEMANTIC)
+    .execute()
+)
+
+# Format for LLM
+prompt = f"Context: {context.as_markdown()}\\n\\nQuestion: {user_question}"
+```
 
 ## Quick Start
 

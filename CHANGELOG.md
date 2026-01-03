@@ -11,6 +11,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2026-01-03
+
+### Added
+- **Namespace Isolation** — Type-safe multi-tenancy with logical database namespaces
+  - `Namespace` and `Collection` APIs for tenant-scoped data isolation
+  - No key prefixing required — true isolation at the storage layer
+  - Per-namespace configuration and collection management
+  - Available in Python, Go, Node.js, and Rust SDKs
+- **Hybrid Search** — Dense vector (HNSW) + sparse BM25 text search
+  - `HybridSearchEngine` with Reciprocal Rank Fusion (RRF)
+  - Configurable alpha weighting (vector vs. keyword balance)
+  - `InvertedIndex` for full-text search with BM25 scoring
+  - Automatic tokenization with stop-word filtering
+- **Multi-Vector Documents** — Multiple embeddings per document
+  - Store title, abstract, and content vectors separately
+  - Aggregation strategies: max-pooling, mean-pooling, weighted sum
+  - `MultiVectorMapping` for chunk-level semantic search
+- **Context-Aware Queries** — LLM-optimized retrieval with token budgeting
+  - `ContextQuery` builder with fluent API
+  - Token estimation for GPT-4, Claude, Gemini models
+  - Semantic deduplication to avoid redundant results
+  - Automatic content extraction with configurable fields
+- **Tombstone-Based Deletion** — Logical deletion for vector indices
+  - `TombstoneManager` for efficient soft deletes
+  - Filtering during search without rebuilding index
+  - Lazy compaction for performance
+- **Enhanced Error Taxonomy** — Structured error handling across all SDKs
+  - `ErrorCode` enum with 40+ specific error types
+  - Hierarchical error categories (Storage, Index, Query, IPC)
+  - Remediation hints for common errors
+  - Python SDK: Enhanced exception classes with error codes
+
+### Changed
+- **SDK Documentation** — Comprehensive updates across all languages
+  - Removed version numbers from installation instructions (easier maintenance)
+  - Added "What's New in Latest Release" section to all READMEs
+  - Developer-friendly examples for namespace, hybrid search, and multi-vector
+  - Consistent documentation structure across Python, Go, Node.js, and Rust SDKs
+- **Python SDK** — Namespace API integration in Database class
+  - `create_namespace()`, `namespace()`, `list_namespaces()` methods
+  - Namespace examples in Quick Start section
+- **Go SDK** — Updated with 0.3.0 feature examples
+- **Node.js SDK** — TypeScript examples for all new features
+- **Rust SDK** — Updated with NamespaceHandle and new vector APIs
+
+### Fixed
+- **Node.js VERSION Bug** — VERSION constant was stuck at 0.2.8 instead of matching package.json
+  - Fixed `toondb-js/src/index.ts` VERSION export
+  - Updated `database.test.ts` to test correct version
+
+### Breaking Changes
+- Namespace API requires explicit namespace creation before use
+- Collection configuration is immutable after creation
+- Python SDK: Import path remains `toondb` (package name: `toondb-client`)
+
+---
+
 ## [0.2.9] - 2026-01-02
 
 ### Added

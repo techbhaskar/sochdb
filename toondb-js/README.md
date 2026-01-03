@@ -22,18 +22,18 @@ The official JavaScript/TypeScript SDK for **ToonDB** — a high-performance emb
 ## Installation
 
 ```bash
-npm install @sushanth/toondb@0.3.0
+npm install @sushanth/toondb
 # or
-yarn add @sushanth/toondb@0.3.0
+yarn add @sushanth/toondb
 # or
-bun add @sushanth/toondb@0.3.0
+bun add @sushanth/toondb
 ```
 
 **Requirements:**
 - Node.js 18+ or Bun 1.0+
 - ToonDB server binaries (automatically installed)
 
-## What's New in v0.3.0
+## What's New in Latest Release
 
 ### 🎯 Namespace Isolation
 Logical database namespaces for true multi-tenancy without key prefixing:

@@ -24,11 +24,11 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-toondb = "0.3.0"
+toondb = "0.3"  # Or specific version like "0.3.0"
 tokio = { version = "1", features = ["full"] }  # For async IPC
 ```
 
-## What's New in v0.3.0
+## What's New in Latest Release
 
 ### 🎯 Namespace Isolation
 Logical database namespaces for true multi-tenancy without key prefixing:

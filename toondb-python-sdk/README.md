@@ -10,15 +10,15 @@ The official Python SDK for **ToonDB** — a high-performance embedded document 
 
 - ✅ **Key-Value Store** — Simple `get()`/`put()`/`delete()` operations
 - ✅ **Path-Native API** — Hierarchical keys like `users/alice/email`
-- ✅ **Namespace Isolation** (v0.3.0) — Type-safe multi-tenancy with `Namespace` and `Collection`
-- ✅ **Hybrid Search** (v0.3.0) — Vector + BM25 keyword search with RRF fusion
-- ✅ **ContextQuery Builder** (v0.3.0) — Token-aware LLM context retrieval with budgeting
-- ✅ **Multi-Vector Documents** (v0.3.0) — Chunk-level embeddings with aggregation
+- ✅ **Namespace Isolation** — Type-safe multi-tenancy with `Namespace` and `Collection`
+- ✅ **Hybrid Search** — Vector + BM25 keyword search with RRF fusion
+- ✅ **ContextQuery Builder** — Token-aware LLM context retrieval with budgeting
+- ✅ **Multi-Vector Documents** — Chunk-level embeddings with aggregation
 - ✅ **Prefix Scanning** — Fast `scan_prefix()` for safe tenant-scoped iteration
 - ✅ **ACID Transactions** — Full snapshot isolation with automatic commit/abort
 - ✅ **Vector Search** — HNSW with bulk API (~1,600 vec/s ingestion)
 - ✅ **SQL Support** — Full DDL/DML with CREATE, INSERT, SELECT, UPDATE, DELETE
-- ✅ **Enhanced Error Taxonomy** (v0.3.0) — ErrorCode enum with remediation hints
+- ✅ **Enhanced Error Taxonomy** — ErrorCode enum with remediation hints
 - ✅ **CLI Tools** — `toondb-server`, `toondb-bulk`, `toondb-grpc-server` commands
 - ✅ **Dual Mode** — Embedded (FFI) or IPC (multi-process)
 - ✅ **Zero Compilation** — Pre-built binaries for Linux/macOS/Windows
@@ -41,21 +41,10 @@ pip install toondb-client
 
 **No Rust toolchain required!**
 
-## Quick Start
+## What's New in Latest Release
 
-### Embedded Mode (Recommended)
-
-```python
-from toondb import Database
-
-# Open database (creates if doesn't exist)
-with Database.open("./my_database") as db:
-    # Simple key-value
-    db.put(b"user:123", b'{"name":"Alice","age":30}')
-    value = db.get(b"user:123")
-```
-
-### Multi-Tenant Namespace Isolation (v0.3.0)
+### 🎯 Namespace Isolation
+Logical database namespaces for true multi-tenancy without key prefixing:
 
 ```python
 from toondb import Database, CollectionConfig, DistanceMetric
@@ -79,8 +68,13 @@ collection = ns.create_collection(
         content_field="text"
     )
 )
+```
 
-# Insert vector with metadata
+### 🔍 Hybrid Search
+Combine dense vectors (HNSW) with sparse BM25 text search:
+
+```python
+# Insert documents with text and vectors
 collection.insert(
     id="doc_1",
     vector=[0.1] * 384,
@@ -93,45 +87,69 @@ results = collection.hybrid_search(
     vector=query_embedding,
     text_query="fast database",
     k=10,
-    alpha=0.7  # 70% vector, 30% keyword weight
+    alpha=0.7,  # 70% vector, 30% keyword weight
+    rrf_fusion=True  # Reciprocal Rank Fusion
 )
-
-for result in results:
-    print(f"{result.id}: {result.score:.3f}")
-
-db.close()
 ```
 
-### Token-Aware Context Retrieval (v0.3.0)
+### 📄 Multi-Vector Documents
+Store multiple embeddings per document (e.g., title + content):
 
 ```python
-from toondb import Database, ContextQuery, DeduplicationStrategy
+# Insert document with multiple vectors
+collection.insert_multi_vector(
+    id="article_1",
+    vectors={
+        "title": title_embedding,      # List[float] of dim 384
+        "abstract": abstract_embedding, # List[float] of dim 384
+        "content": content_embedding    # List[float] of dim 384
+    },
+    metadata={"title": "Deep Learning Survey"}
+)
 
-db = Database.open("./my_database")
-ns = db.namespace("tenant_acme")
-collection = ns.collection("documents")
+# Search with aggregation strategy
+results = collection.multi_vector_search(
+    query_vectors={
+        "title": query_title_embedding,
+        "content": query_content_embedding
+    },
+    k=10,
+    aggregation="max_pooling"  # or "mean_pooling", "weighted_sum"
+)
+```
 
-# Build context with token budgeting for LLM
+### 🧩 Context-Aware Queries
+Optimize retrieval for LLM context windows:
+
+```python
+from toondb import ContextQuery, DeduplicationStrategy
+
+# Build context with token budgeting
 context = (
     ContextQuery(collection)
     .add_vector_query(query_embedding, weight=0.7)
     .add_keyword_query("machine learning", weight=0.3)
     .with_token_budget(4000)  # Stay within model limit
-    .with_min_relevance(0.5)
-    .with_deduplication(DeduplicationStrategy.EXACT)
-    .from_field("text")  # Extract text from this field
+    .with_deduplication(DeduplicationStrategy.SEMANTIC)
     .execute()
 )
 
-# Format for LLM prompt
-prompt = f"""Context (using {context.total_tokens}/{context.budget_tokens} tokens):
-{context.as_markdown(include_scores=True)}
+# Format for LLM
+prompt = f"Context: {context.as_markdown()}\\n\\nQuestion: {user_question}"
+```
 
-Question: {user_question}
-"""
+## Quick Start
 
-print(f"Retrieved {len(context)} relevant chunks")
-db.close()
+### Embedded Mode (Recommended)
+
+```python
+from toondb import Database
+
+# Open database (creates if doesn't exist)
+with Database.open("./my_database") as db:
+    # Simple key-value
+    db.put(b"user:123", b'{"name":"Alice","age":30}')
+    value = db.get(b"user:123")
     print(value.decode())
     # Output: {"name":"Alice","age":30}
 ```

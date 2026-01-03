@@ -133,6 +133,9 @@ pub mod tournament_tree; // K-way merge with tournament tree (Task 2)
 pub mod vectorized_scan; // SIMD-accelerated vectorized scan engine (Recommendation 2)
 pub mod zero_copy_serde; // Zero-copy serialization for WAL (Recommendation 6)
 
+// Namespace and multi-tenancy support (Task 3)
+pub mod namespace; // Namespace routing and on-disk layout
+
 // Core utilities
 pub mod backend;
 pub mod backup;

@@ -1,0 +1,174 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in ToonDB
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the information below to help us diagnose and fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: What happened that shouldn't have?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the behavior
+      placeholder: |
+        1. Initialize database with...
+        2. Insert data using...
+        3. Query with...
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Describe the expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Describe the actual behavior, including any error messages
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Minimal Reproducible Example
+      description: Provide a minimal code example that reproduces the issue
+      placeholder: |
+        ```python
+        # Your code here
+        ```
+      render: python
+
+  - type: input
+    id: version
+    attributes:
+      label: ToonDB Version
+      description: Which version of ToonDB are you using?
+      placeholder: "e.g., 0.1.0, latest, main branch"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language/SDK
+      description: Which language or SDK are you using?
+      options:
+        - Python
+        - Rust
+        - Go
+        - JavaScript/TypeScript
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: language-version
+    attributes:
+      label: Language Version
+      description: Version of the programming language
+      placeholder: "e.g., Python 3.11, Node.js 20.0, Rust 1.75"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: What operating system are you using?
+      options:
+        - macOS
+        - Linux (Ubuntu)
+        - Linux (Debian)
+        - Linux (Fedora)
+        - Linux (Other)
+        - Windows
+        - Docker
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS Version
+      description: Version of your operating system
+      placeholder: "e.g., macOS 14.0, Ubuntu 22.04, Windows 11"
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment Mode
+      description: How are you running ToonDB?
+      options:
+        - Embedded (in-process)
+        - Client-Server (local)
+        - Client-Server (remote)
+        - Docker
+        - Cloud deployment
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Log Output
+      description: Please copy and paste any relevant log output
+      placeholder: Paste logs here
+      render: shell
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: Relevant configuration settings (if applicable)
+      placeholder: |
+        ```toml
+        # Your config here
+        ```
+      render: toml
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here
+      placeholder: |
+        - Data size/dimensions
+        - Performance characteristics
+        - Related issues
+        - Workarounds attempted
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched existing issues to ensure this bug hasn't been reported
+          required: true
+        - label: I have tested with the latest version of ToonDB
+          required: false
+        - label: I have provided a minimal reproducible example
+          required: false
+        - label: I have included relevant logs and error messages
+          required: false

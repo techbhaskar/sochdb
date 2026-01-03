@@ -1,0 +1,171 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for ToonDB
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your interest in improving ToonDB! Please describe your feature request below.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? Is your feature request related to a problem?
+      placeholder: |
+        I'm trying to do X, but currently it's difficult because...
+        When working with Y, I notice that...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see
+      placeholder: |
+        I would like ToonDB to support...
+        Add a new API that allows...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+      placeholder: |
+        I've tried using X, but it doesn't work because...
+        An alternative could be Y, but...
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of ToonDB does this feature relate to?
+      options:
+        - Vector Search/Indexing
+        - SQL Query Engine
+        - Storage Engine
+        - Client SDKs (Python)
+        - Client SDKs (Rust)
+        - Client SDKs (Go)
+        - Client SDKs (JavaScript)
+        - Server/Networking
+        - Performance/Optimization
+        - Documentation
+        - DevOps/Deployment
+        - Testing/Quality
+        - Other
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Critical - Blocking my use case
+        - High - Would significantly improve my workflow
+        - Medium - Nice to have
+        - Low - Minor improvement
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe your specific use case for this feature
+      placeholder: |
+        I'm building an application that...
+        My use case involves...
+        This would be useful for...
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: API/Usage Example
+      description: Show how you envision using this feature (pseudocode or real code)
+      placeholder: |
+        ```python
+        # Example of how the feature might work
+        db.new_feature(parameter="value")
+        ```
+      render: python
+
+  - type: textarea
+    id: benefits
+    attributes:
+      label: Benefits
+      description: Who would benefit from this feature and how?
+      placeholder: |
+        - Users working with large-scale data would benefit because...
+        - This would improve performance by...
+        - This would make it easier to...
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation Ideas
+      description: (Optional) Do you have ideas about how this could be implemented?
+      placeholder: |
+        This could be implemented by...
+        Similar to how X does it...
+        Might require changes to...
+
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Breaking Changes
+      description: Would this feature require breaking changes to existing APIs?
+      options:
+        - "No - Fully backward compatible"
+        - "Maybe - Might require minor changes"
+        - "Yes - Would require breaking changes"
+        - "Unsure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: related
+    attributes:
+      label: Related Issues/PRs
+      description: Are there any related issues or pull requests?
+      placeholder: |
+        Related to #123
+        Similar to #456
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be interested in contributing to this feature?
+      options:
+        - label: I would be willing to implement this feature
+        - label: I would be willing to help test this feature
+        - label: I would be willing to help document this feature
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or examples about the feature request
+      placeholder: |
+        Links to similar features in other databases...
+        Research papers or articles...
+        Performance benchmarks...
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched existing issues to ensure this hasn't been requested
+          required: true
+        - label: I have described the problem this feature would solve
+          required: true
+        - label: I have provided a clear use case
+          required: true

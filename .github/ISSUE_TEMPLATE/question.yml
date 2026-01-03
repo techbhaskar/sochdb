@@ -1,0 +1,155 @@
+name: Question/Support Request
+description: Ask a question or request support for using ToonDB
+title: "[Question]: "
+labels: ["question", "needs-response"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your interest in ToonDB! Please provide details about your question below.
+        
+        **Note**: For general discussions, consider using [GitHub Discussions](https://github.com/toondb/toondb/discussions) instead.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know about ToonDB?
+      placeholder: |
+        How do I...?
+        What's the best way to...?
+        Can ToonDB support...?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Question Category
+      description: What area does your question relate to?
+      options:
+        - Getting Started/Installation
+        - Usage/How-to
+        - Configuration
+        - Performance/Optimization
+        - Vector Search/Embeddings
+        - SQL Queries
+        - API/SDK Usage
+        - Architecture/Design
+        - Deployment
+        - Troubleshooting
+        - Best Practices
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide background information about what you're trying to accomplish
+      placeholder: |
+        I'm working on a project that...
+        I'm trying to implement...
+        My goal is to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What Have You Tried?
+      description: What have you already tried or researched?
+      placeholder: |
+        I've looked at the documentation for...
+        I've tried this approach...
+        I found X but it doesn't address...
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code Example
+      description: (Optional) Share relevant code snippets
+      placeholder: |
+        ```python
+        # Your code here
+        ```
+      render: python
+
+  - type: input
+    id: version
+    attributes:
+      label: ToonDB Version
+      description: Which version of ToonDB are you using?
+      placeholder: "e.g., 0.1.0, latest"
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language/SDK
+      description: Which language or SDK are you using?
+      options:
+        - Python
+        - Rust
+        - Go
+        - JavaScript/TypeScript
+        - Not applicable
+        - Other
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: What environment are you working in?
+      options:
+        - Development (local)
+        - Production
+        - Testing/Staging
+        - Docker/Containerized
+        - Cloud (AWS/GCP/Azure)
+        - Not applicable
+
+  - type: textarea
+    id: docs
+    attributes:
+      label: Documentation Reference
+      description: Have you checked the documentation? If so, which sections?
+      placeholder: |
+        I've read the docs on...
+        I couldn't find information about...
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Information
+      description: Any other details that might help us answer your question?
+      placeholder: |
+        Error messages...
+        Configuration settings...
+        Performance characteristics...
+        Links to external resources...
+
+  - type: dropdown
+    id: urgency
+    attributes:
+      label: Urgency
+      description: How urgent is this for you?
+      options:
+        - Blocking - Can't proceed without this
+        - High - Important for my project
+        - Medium - Would like to know soon
+        - Low - Just curious
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched existing issues and discussions for similar questions
+          required: true
+        - label: I have checked the documentation
+          required: true
+        - label: I have provided enough context about what I'm trying to achieve
+          required: true

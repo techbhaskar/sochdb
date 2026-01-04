@@ -95,7 +95,7 @@ stages:
               git push origin "$TAG"
               
               echo "##[section]Released toondb-go $VERSION"
-              echo "Install with: go get github.com/toondb/toondb/toondb-go@$VERSION"
+              echo "Install with: go get github.com/toondb/toondb-go@$VERSION"
             displayName: 'Create release tag'
             workingDirectory: toondb-go
 
@@ -127,8 +127,8 @@ stages:
               go mod init test
               
               # Try to get the new version
-              if go get github.com/toondb/toondb/toondb-go@$VERSION; then
-                echo "##[section]Module verified: github.com/toondb/toondb/toondb-go@$VERSION"
+              if go get github.com/toondb/toondb-go@$VERSION; then
+                echo "##[section]Module verified: github.com/toondb/toondb-go@$VERSION"
               else
                 echo "##vso[task.logissue type=warning]Module not yet available on proxy (may take a few minutes)"
               fi

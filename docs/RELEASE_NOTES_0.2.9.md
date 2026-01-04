@@ -120,7 +120,7 @@ npm install @sushanth/toondb
 
 ### Go
 ```bash
-go get github.com/toondb/toondb/toondb-go@latest
+go get github.com/toondb/toondb-go@latest
 ```
 
 ### Rust

@@ -117,7 +117,7 @@ await db.close();
 ### Go
 
 ```go
-import "github.com/toondb/toondb/toondb-go"
+import "github.com/toondb/toondb-go"
 
 db, err := toondb.Open("./mydb")
 if err != nil {

@@ -92,8 +92,8 @@ pip install toondb-client
 # Node.js / TypeScript
 npm install @sushanth/toondb
 
-# Go
-go get github.com/toondb/toondb/toondb-go@latest
+# Go (from separate repository)
+go get github.com/toondb/toondb-go@latest
 
 # Rust - add to Cargo.toml
 # toondb = "0.2"
@@ -130,7 +130,7 @@ package main
 
 import (
     "fmt"
-    toondb "github.com/toondb/toondb/toondb-go"
+    toondb "github.com/toondb/toondb-go"
 )
 
 func main() {

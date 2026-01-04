@@ -51,7 +51,7 @@ await db.close();
 ## Go SDK
 
 ```bash
-go get github.com/toondb/toondb/toondb-go@v0.2.9
+go get github.com/toondb/toondb-go@v0.2.9
 ```
 
 ### Verify Installation
@@ -61,7 +61,7 @@ package main
 
 import (
     "fmt"
-    toondb "github.com/toondb/toondb/toondb-go"
+    toondb "github.com/toondb/toondb-go"
 )
 
 func main() {

@@ -104,7 +104,7 @@ await db.close();
 <TabItem value="go" label="Go">
 
 ```bash
-go get github.com/toondb/toondb/toondb-go
+go get github.com/toondb/toondb-go
 ```
 
 ```go
@@ -112,7 +112,7 @@ package main
 
 import (
     "fmt"
-    toondb "github.com/toondb/toondb/toondb-go"
+    toondb "github.com/toondb/toondb-go"
 )
 
 func main() {

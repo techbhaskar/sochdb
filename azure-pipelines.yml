@@ -6,7 +6,7 @@
 #   - crates.io: toondb (Rust)
 #   - PyPI: toondb-client (Python)
 #   - npm: @sushanth/toondb (JavaScript)
-#   - Go modules: github.com/toondb/toondb/toondb-go (Go)
+#   - Go modules: github.com/toondb/toondb-go (Go)
 #
 # Principle: When version changes, it changes everywhere.
 #
@@ -421,7 +421,7 @@ stages:
                 echo "Creating tag: $TAG"
                 git tag -a "$TAG" -m "Release toondb-go $VERSION"
                 git push origin "$TAG"
-                echo "Go module released: github.com/toondb/toondb/toondb-go@$VERSION"
+                echo "Go module released: github.com/toondb/toondb-go@$VERSION"
               fi
             displayName: 'Create Go module tag'
 
@@ -457,7 +457,7 @@ stages:
               echo "  - crates.io: toondb"
               echo "  - PyPI: toondb-client"
               echo "  - npm: @sushanth/toondb"
-              echo "  - Go modules: github.com/toondb/toondb/toondb-go"
+              echo "  - Go modules: github.com/toondb/toondb-go"
               echo ""
               echo "========================================"
             displayName: 'Release summary'

@@ -6,7 +6,8 @@
 #   - crates.io: toondb (Rust)
 #   - PyPI: toondb-client (Python) - uses Trusted Publisher (OIDC, no token!)
 #   - npm: @sushanth/toondb (JavaScript/TypeScript)
-#   - Go modules: github.com/toondb/toondb/toondb-go (Go)
+#
+# Go SDK: Released separately at github.com/toondb/toondb-go
 #
 # Platforms supported:
 #   - Linux x86_64 (manylinux)
@@ -527,127 +528,12 @@ jobs:
           publish_crate toondb-client  # Published as 'toondb' on crates.io
 
   # ===========================================================================
-  # Publish Go Module (via git tag)
-  # ===========================================================================
-  publish-go:
-    name: Publish Go Module
-    runs-on: ubuntu-latest
-    needs: [build-binaries, build-npm, build-python, build-python-sdist]
-    permissions:
-      contents: write  # Required to push tags
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-          cache-dependency-path: toondb-go/go.sum
-
-      - name: Download all binaries
-        uses: actions/download-artifact@v4
-        with:
-          pattern: binaries-*
-          path: binaries/
-          merge-multiple: true
-
-      - name: Bundle binaries into Go SDK
-        run: |
-          # Create bin directory structure matching server.go expectations
-          mkdir -p toondb-go/bin
-          
-          # Copy binaries for each platform (using target triple format)
-          for target in x86_64-unknown-linux-gnu aarch64-apple-darwin x86_64-pc-windows-msvc; do
-            if [ -d "binaries/$target" ]; then
-              mkdir -p "toondb-go/bin/$target"
-              cp -r binaries/$target/* "toondb-go/bin/$target/"
-              
-              # Make executables on non-Windows
-              if [ "$target" != "x86_64-pc-windows-msvc" ]; then
-                chmod +x toondb-go/bin/$target/*
-              fi
-            fi
-          done
-          
-          echo "=== Go SDK binary structure ==="
-          find toondb-go/bin -type f
-
-      - name: Update Go SDK version
-        run: |
-          cd toondb-go
-          sed -i 's/const Version = ".*"/const Version = "${{ inputs.version }}"/' database.go
-
-      - name: Test Go module
-        run: |
-          cd toondb-go
-          go mod download
-          go build -v ./...
-          go test -v ./...
-
-      - name: Commit bundled binaries and version change
-        if: ${{ inputs.dry_run != true }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION="v${{ inputs.version }}"
-          TAG="toondb-go/$VERSION"
-          BRANCH="release/go-$VERSION"
-          
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Create and switch to release branch
-          git checkout -b "$BRANCH"
-          
-          # Add bundled binaries and version change
-          git add toondb-go/bin/
-          git add toondb-go/database.go
-          
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "chore(go): bump version to $VERSION and bundle binaries"
-            git push origin "$BRANCH"
-            
-            # Create pull request
-            gh pr create \
-              --title "Release Go SDK $VERSION" \
-              --body "Automated release for toondb-go $VERSION with bundled binaries for all platforms." \
-              --base main \
-              --head "$BRANCH" \
-              || echo "PR may already exist"
-          fi
-          
-          # Create tag pointing to the release branch
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists, skipping..."
-          else
-            echo "Creating tag: $TAG"
-            git tag -a "$TAG" -m "Release toondb-go $VERSION - Bundled binaries for Linux x86_64, macOS ARM64, and Windows x64"
-            git push origin "$TAG"
-          fi
-          
-          echo "Go module released: github.com/toondb/toondb/toondb-go@$VERSION"
-          echo "✅ Binaries included - 'Batteries Included' mode active!"
-          echo "📝 Pull request created for branch: $BRANCH"
-
-      - name: Verify Go module (dry run)
-        if: ${{ inputs.dry_run == true }}
-        run: |
-          echo "🔍 Dry run - would create tag: toondb-go/v${{ inputs.version }}"
-          echo "Install command would be: go get github.com/toondb/toondb/toondb-go@v${{ inputs.version }}"
-          echo "Bundled binaries would be included in:"
-          find toondb-go/bin -type f
-
-  # ===========================================================================
   # Create GitHub Release with all artifacts
   # ===========================================================================
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [publish-npm, publish-python, publish-rust, publish-go]
+    needs: [publish-npm, publish-python, publish-rust]
     if: ${{ inputs.dry_run != true }}
     permissions:
       contents: write  # Required to create releases and upload assets
@@ -707,9 +593,9 @@ jobs:
             npm install @sushanth/toondb
             ```
             
-            **Go**
+            **Go** (separate repository)
             ```bash
-            go get github.com/toondb/toondb/toondb-go@v${{ inputs.version }}
+            go get github.com/toondb/toondb-go@latest
             ```
             
             ### Pre-built Binaries
@@ -731,7 +617,7 @@ jobs:
   summary:
     name: Release Summary
     runs-on: ubuntu-latest
-    needs: [publish-rust, publish-python, publish-npm, publish-go]
+    needs: [publish-rust, publish-python, publish-npm]
     if: always()
     steps:
       - name: Summary
@@ -752,7 +638,7 @@ jobs:
           echo "| crates.io | \`toondb\` | ${{ needs.publish-rust.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| PyPI | \`toondb-client\` | ${{ needs.publish-python.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| npm | \`@sushanth/toondb\` | ${{ needs.publish-npm.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Go modules | \`github.com/toondb/toondb/toondb-go\` | ${{ needs.publish-go.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Go modules | \`github.com/toondb/toondb-go\` | separate repo |" >> $GITHUB_STEP_SUMMARY
           
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Platforms Bundled" >> $GITHUB_STEP_SUMMARY

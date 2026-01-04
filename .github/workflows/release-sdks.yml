@@ -5,7 +5,7 @@
 # Lightweight pipeline for releasing SDK packages without rebuilding binaries.
 # Use this when binaries are already published and you only need to update:
 #   - npm: @sushanth/toondb (JavaScript/TypeScript)
-#   - Go modules: github.com/toondb/toondb/toondb-go (Go)
+#   - Go modules: github.com/toondb/toondb-go (Go)
 #
 # Binaries must already exist from a previous full release.
 # =============================================================================
@@ -132,13 +132,13 @@ jobs:
             git push origin "$TAG"
           fi
           
-          echo "Go module released: github.com/toondb/toondb/toondb-go@$VERSION"
+          echo "Go module released: github.com/toondb/toondb-go@$VERSION"
 
       - name: Verify Go module (dry run)
         if: ${{ inputs.dry_run == true }}
         run: |
           echo "🔍 Dry run - would create tag: toondb-go/v${{ inputs.version }}"
-          echo "Install command would be: go get github.com/toondb/toondb/toondb-go@v${{ inputs.version }}"
+          echo "Install command would be: go get github.com/toondb/toondb-go@v${{ inputs.version }}"
 
   # ===========================================================================
   # Release Summary
@@ -165,7 +165,7 @@ jobs:
           echo "| Platform | Package | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|----------|---------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| npm | \`@sushanth/toondb\` | ${{ needs.publish-npm.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Go modules | \`github.com/toondb/toondb/toondb-go\` | ${{ needs.publish-go.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Go modules | \`github.com/toondb/toondb-go\` | ${{ needs.publish-go.result }} |" >> $GITHUB_STEP_SUMMARY
           
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Installation" >> $GITHUB_STEP_SUMMARY
@@ -177,7 +177,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Go**" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "go get github.com/toondb/toondb/toondb-go@v${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "go get github.com/toondb/toondb-go@v${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           
           echo "" >> $GITHUB_STEP_SUMMARY

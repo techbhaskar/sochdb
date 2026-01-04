@@ -12,7 +12,7 @@ import (
 	"log"
 	"strconv"
 
-	toondb "github.com/toondb/toondb/toondb-go"
+	toondb "github.com/toondb/toondb-go"
 )
 
 func main() {

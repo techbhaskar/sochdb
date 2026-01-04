@@ -11,7 +11,7 @@ Complete guide to ToonDB's Go SDK with all features, patterns, and best practice
 ## 📦 Installation
 
 ```bash
-go get github.com/toondb/toondb/toondb-go@v0.2.9
+go get github.com/toondb/toondb-go@v0.2.9
 ```
 
 **What's New in 0.2.9:**
@@ -40,17 +40,17 @@ ToonDB includes Go-native wrappers for installation via `go install`:
 
 1. **`toondb-server`**: IPC server management.
    ```bash
-   go install github.com/toondb/toondb/toondb-go/cmd/toondb-server@latest
+   go install github.com/toondb/toondb-go/cmd/toondb-server@latest
    ```
 
 2. **`toondb-bulk`**: Bulk operations tool.
    ```bash
-   go install github.com/toondb/toondb/toondb-go/cmd/toondb-bulk@latest
+   go install github.com/toondb/toondb-go/cmd/toondb-bulk@latest
    ```
 
 3. **`toondb-grpc-server`**: gRPC vector server.
    ```bash
-   go install github.com/toondb/toondb/toondb-go/cmd/toondb-grpc-server@latest
+   go install github.com/toondb/toondb-go/cmd/toondb-grpc-server@latest
    ```
 
 > **Deep Dive:** See [Server Reference](/servers/IPC_SERVER.md) for full usage.
@@ -63,7 +63,7 @@ package main
 import (
     "fmt"
     "log"
-    toondb "github.com/toondb/toondb/toondb-go"
+    toondb "github.com/toondb/toondb-go"
 )
 
 func main() {
@@ -657,7 +657,7 @@ import (
     "encoding/json"
     "fmt"
     "log"
-    toondb "github.com/toondb/toondb/toondb-go"
+    toondb "github.com/toondb/toondb-go"
 )
 
 type User struct {
@@ -702,7 +702,7 @@ package main
 import (
     "encoding/json"
     "fmt"
-    toondb "github.com/toondb/toondb/toondb-go"
+    toondb "github.com/toondb/toondb-go"
 )
 
 type TenantData struct {
@@ -769,7 +769,7 @@ import (
     "encoding/json"
     "fmt"
     "time"
-    toondb "github.com/toondb/toondb/toondb-go"
+    toondb "github.com/toondb/toondb-go"
 )
 
 type Session struct {

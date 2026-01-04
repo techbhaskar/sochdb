@@ -29,7 +29,7 @@ npm install @sushanth/toondb
 toondb-client = "0.2.9"
 
 # Go
-go get github.com/toondb/toondb/toondb-go@v0.2.9
+go get github.com/toondb/toondb-go@v0.2.9
 ```
 
 ### Opening a Database

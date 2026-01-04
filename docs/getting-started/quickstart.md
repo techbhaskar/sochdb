@@ -44,7 +44,7 @@ toondb = "0.2"
 ### Go
 
 ```bash
-go get github.com/toondb/toondb/toondb-go@v0.2.9
+go get github.com/toondb/toondb-go@v0.2.9
 ```
 
 ### Build from Source
@@ -104,7 +104,7 @@ package main
 
 import (
     "fmt"
-    toondb "github.com/toondb/toondb/toondb-go"
+    toondb "github.com/toondb/toondb-go"
 )
 
 func main() {
@@ -166,7 +166,7 @@ node -e "const {ToonDatabase} = require('@sushanth/toondb'); console.log('ToonDB
 ### Go
 
 ```bash
-go run -e 'package main; import _ "github.com/toondb/toondb/toondb-go"; func main() { println("ToonDB Go SDK installed!") }'
+go run -e 'package main; import _ "github.com/toondb/toondb-go"; func main() { println("ToonDB Go SDK installed!") }'
 ```
 
 ### Rust

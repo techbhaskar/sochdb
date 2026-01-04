@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"log"
 
-	toondb "github.com/toondb/toondb/toondb-go"
+	toondb "github.com/toondb/toondb-go"
 )
 
 func main() {

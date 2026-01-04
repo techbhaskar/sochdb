@@ -10,7 +10,6 @@ members = [
     "toondb-mcp",
     "toondb-grpc",
     "toondb-wasm",
-    "toondb-studio/src-tauri",
     "toondb-vector",
     "toondb-tools",
     "benchmarks",

@@ -3873,3 +3873,50 @@ mod tests {
         assert!(!storage.needs_recovery());
     }
 }
+
+// Implement ConnectionTrait for DurableConnection
+impl crate::ConnectionTrait for DurableConnection {
+    fn put(&self, key: &[u8], value: &[u8]) -> Result<()> {
+        DurableConnection::put(self, key, value)
+    }
+
+    fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>> {
+        DurableConnection::get(self, key)
+    }
+
+    fn delete(&self, key: &[u8]) -> Result<()> {
+        DurableConnection::delete(self, key)
+    }
+
+    fn scan(&self, prefix: &[u8]) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
+        DurableConnection::scan(self, prefix)
+    }
+}
+
+// Implement ConnectionTrait for ToonConnection
+impl crate::ConnectionTrait for ToonConnection {
+    fn put(&self, key: &[u8], value: &[u8]) -> Result<()> {
+        self.storage.put(key, value)
+    }
+
+    fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>> {
+        self.storage.get("", key)
+    }
+
+    fn delete(&self, key: &[u8]) -> Result<()> {
+        self.storage.delete(key)
+    }
+
+    fn scan(&self, prefix: &[u8]) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
+        // ToonConnection's storage doesn't have a proper scan method,
+        // so we iterate through the memtable and filter by prefix
+        let memtable = self.storage.memtable.read();
+        let results: Vec<(Vec<u8>, Vec<u8>)> = memtable
+            .iter()
+            .filter(|(k, _)| k.starts_with(prefix))
+            .filter(|(_, v)| !v.deleted)
+            .map(|(k, v)| (k.clone(), v.value.clone()))
+            .collect();
+        Ok(results)
+    }
+}

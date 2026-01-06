@@ -1075,8 +1075,41 @@ impl Database {
         self.storage.delete(txn.txn_id, key.to_vec())
     }
 
-    /// Scan keys with a prefix
+    /// Minimum prefix length for scan operations.
+    /// Prevents expensive full-table scans by requiring a meaningful prefix.
+    pub const MIN_SCAN_PREFIX_LEN: usize = 2;
+
+    /// Scan keys with a prefix (enforces minimum prefix length for safety).
+    ///
+    /// # Prefix Safety
+    /// 
+    /// To prevent accidental full-table scans, this method requires a minimum
+    /// prefix length of 2 bytes. Use `scan_unchecked` for internal operations
+    /// that need empty/short prefixes.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ToonDBError::InvalidInput` if prefix is too short.
     pub fn scan(&self, txn: TxnHandle, prefix: &[u8]) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
+        if prefix.len() < Self::MIN_SCAN_PREFIX_LEN {
+            return Err(ToonDBError::InvalidArgument(format!(
+                "Prefix too short: {} bytes (minimum {} required). \
+                 Use scan_unchecked() for unrestricted scans.",
+                prefix.len(),
+                Self::MIN_SCAN_PREFIX_LEN
+            )));
+        }
+        self.scan_unchecked(txn, prefix)
+    }
+
+    /// Scan keys with a prefix without length validation.
+    ///
+    /// # Warning
+    ///
+    /// This method allows empty/short prefixes which can cause expensive
+    /// full-table scans. Use `scan()` unless you specifically need unrestricted
+    /// prefix access for internal operations.
+    pub fn scan_unchecked(&self, txn: TxnHandle, prefix: &[u8]) -> Result<Vec<(Vec<u8>, Vec<u8>)>> {
         let results = self.storage.scan(txn.txn_id, prefix)?;
         let bytes: u64 = results
             .iter()

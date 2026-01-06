@@ -187,6 +187,9 @@ pub enum ComparisonOp {
     Ge,
     Like,
     In,
+    /// Vector similarity search: `column SIMILAR TO 'query text'`
+    /// The value should be the query text to embed and search for.
+    SimilarTo,
 }
 
 /// ORDER BY clause

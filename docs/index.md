@@ -15,9 +15,12 @@ Welcome to the official ToonDB documentation. ToonDB is **The LLM-Native Databas
 | Feature | Description |
 |---------|-------------|
 | **40-66% Fewer Tokens** | TOON format optimized for LLM consumption |
+| **Graph Overlay** (v0.3.3) | Lightweight graph layer for agent memory with BFS/DFS traversal |
 | **Namespace Isolation** (v0.3.0) | Type-safe multi-tenancy with per-tenant data isolation |
 | **Hybrid Search** (v0.3.0) | Vector + BM25 keyword search with RRF fusion |
-| **ContextQuery Builder** (v0.3.0) | Token-aware retrieval with budgeting and deduplication |
+| **ContextQuery Builder** (v0.3.0+) | Token-aware retrieval with enhanced deduplication (v0.3.3) |
+| **Policy Hooks** (v0.3.3) | Agent safety controls with pre-built templates |
+| **Tool Routing** (v0.3.3) | Multi-agent coordination with dynamic discovery |
 | **Blazing Fast** | Rust-powered with zero-copy and SIMD |
 | **Vector Search** | Built-in HNSW indexing for embeddings |
 | **Embeddable** | In-process or client-server mode |
@@ -159,6 +162,14 @@ Task-oriented guides for specific use cases.
 - [Bulk Operations](/guides/bulk-operations) — Batch processing
 - [Deployment](/guides/deployment) — Production setup
 
+**AI Agent Safety:**
+- [Policy & Safety Hooks](/guides/policy-hooks) — Pre/post operation validation
+- [Multi-Agent Tool Routing](/guides/tool-routing) — Route tools across agents
+
+**Agent Memory & Context:**
+- [Graph Overlay](/guides/graph-overlay) — Lightweight graph for agent memory
+- [Context Query](/guides/context-query) — Token-aware retrieval for LLMs
+
 ### 💡 Concepts
 Deep dives into ToonDB's architecture and design.
 
@@ -202,6 +213,10 @@ Recipes for common tasks.
 | Use the Node.js SDK | [Node.js Guide](/guides/nodejs-sdk) |
 | Use the Go SDK | [Go Guide](/guides/go-sdk) |
 | Add vector search | [Vector Search](/guides/vector-search) |
+| Enforce agent safety policies | [Policy Hooks](/guides/policy-hooks) |
+| Route tools across agents | [Tool Routing](/guides/tool-routing) |
+| Model agent memory relationships | [Graph Overlay](/guides/graph-overlay) |
+| Build token-aware context | [Context Query](/guides/context-query) |
 | Understand the architecture | [Architecture](/concepts/architecture) |
 | See the SQL API reference | [SQL API](/api-reference/sql-api) |
 

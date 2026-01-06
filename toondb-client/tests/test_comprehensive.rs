@@ -1,23 +1,22 @@
 use toondb::prelude::*;
 use std::fs;
 use std::path::Path;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
-static mut TEST_COUNT: usize = 0;
-static mut PASS_COUNT: usize = 0;
-static mut FAIL_COUNT: usize = 0;
+static TEST_COUNT: AtomicUsize = AtomicUsize::new(0);
+static PASS_COUNT: AtomicUsize = AtomicUsize::new(0);
+static FAIL_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 fn test_assert(condition: bool, message: &str) -> bool {
-    unsafe {
-        TEST_COUNT += 1;
-        if condition {
-            PASS_COUNT += 1;
-            println!("  ✓ {}", message);
-            true
-        } else {
-            FAIL_COUNT += 1;
-            println!("  ✗ {}", message);
-            false
-        }
+    TEST_COUNT.fetch_add(1, Ordering::SeqCst);
+    if condition {
+        PASS_COUNT.fetch_add(1, Ordering::SeqCst);
+        println!("  ✓ {}", message);
+        true
+    } else {
+        FAIL_COUNT.fetch_add(1, Ordering::SeqCst);
+        println!("  ✗ {}", message);
+        false
     }
 }
 
@@ -164,23 +163,25 @@ fn main() {
     drop(conn);
     let _ = fs::remove_dir_all(test_dir);
 
-    unsafe {
-        println!("\n{}", "=".repeat(60));
-        println!("\n📊 Test Results:");
-        println!("   Total:  {}", TEST_COUNT);
-        println!("   ✓ Pass: {}", PASS_COUNT);
-        println!("   ✗ Fail: {}", FAIL_COUNT);
-        println!(
-            "   Success Rate: {:.1}%",
-            (PASS_COUNT as f64 / TEST_COUNT as f64) * 100.0
-        );
+    let total = TEST_COUNT.load(Ordering::SeqCst);
+    let pass = PASS_COUNT.load(Ordering::SeqCst);
+    let fail = FAIL_COUNT.load(Ordering::SeqCst);
+    
+    println!("\n{}", "=".repeat(60));
+    println!("\n📊 Test Results:");
+    println!("   Total:  {}", total);
+    println!("   ✓ Pass: {}", pass);
+    println!("   ✗ Fail: {}", fail);
+    println!(
+        "   Success Rate: {:.1}%",
+        (pass as f64 / total as f64) * 100.0
+    );
 
-        if FAIL_COUNT == 0 {
-            println!("\n✅ All tests passed! Rust SDK is working correctly.\n");
-            std::process::exit(0);
-        } else {
-            println!("\n❌ {} test(s) failed. See details above.\n", FAIL_COUNT);
-            std::process::exit(1);
-        }
+    if fail == 0 {
+        println!("\n✅ All tests passed! Rust SDK is working correctly.\n");
+        std::process::exit(0);
+    } else {
+        println!("\n❌ {} test(s) failed. See details above.\n", fail);
+        std::process::exit(1);
     }
 }

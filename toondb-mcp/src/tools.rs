@@ -51,6 +51,34 @@ use toondb::DurableToonClient;
 // ContextQueryBuilder removed - using direct scan operations instead
 
 // ============================================================================
+// ToonQL Query Parser Types (Task 4: Harden MCP Query Execution)
+// ============================================================================
+
+/// Parsed query result from ToonQL parser
+#[derive(Debug, Clone)]
+enum ParsedQuery {
+    /// SELECT query with structured components
+    Select {
+        columns: Vec<String>,
+        table: String,
+        where_clause: Option<Vec<WhereCondition>>,
+        order_by: Option<(String, bool)>,  // (column, ascending)
+    },
+    /// Direct path scan
+    DirectPath {
+        path: String,
+    },
+}
+
+/// WHERE clause condition
+#[derive(Debug, Clone)]
+struct WhereCondition {
+    column: String,
+    op: String,
+    value: Value,
+}
+
+// ============================================================================
 // TOON Format Serialization (~25% token savings vs JSON)
 // ============================================================================
 
@@ -877,21 +905,21 @@ impl ToolExecutor {
 
         info!("ToonQL: {} (limit={})", query, limit);
 
-        // Simple query parsing: extract table/path from query
-        // Supports: SELECT * FROM <table>, or just <path> as scan prefix
-        let scan_path = if query.to_uppercase().contains("FROM") {
-            // Extract table name after FROM
-            let lower = query.to_lowercase();
-            let parts: Vec<&str> = lower.split("from").collect();
-            if parts.len() >= 2 {
-                let table_part = parts[1].trim().split_whitespace().next().unwrap_or("");
-                format!("/{}", table_part.trim_matches(|c| c == '\'' || c == '"'))
-            } else {
-                "/".to_string()
+        // Parse and validate query using structured parsing
+        let parsed = Self::parse_toonql_query(query)?;
+        
+        // Enforce prefix-bounded scans for multi-tenant safety
+        let scan_path = match &parsed {
+            ParsedQuery::Select { table, .. } => {
+                // Always prefix-bound to table namespace
+                Self::validate_table_name(table)?;
+                format!("/{}", table)
             }
-        } else {
-            // Direct path scan
-            query.to_string()
+            ParsedQuery::DirectPath { path } => {
+                // Validate path doesn't escape intended prefix
+                Self::validate_path_prefix(path)?;
+                path.clone()
+            }
         };
 
         // Begin transaction for scan
@@ -901,29 +929,313 @@ impl ToolExecutor {
             Ok(results) => {
                 self.conn.abort().ok();
                 
-                let limited: Vec<_> = results.into_iter().take(limit).collect();
-                let mut output = Vec::new();
-                
-                for (key, value) in limited {
-                    let mut parsed = parse_value_deep(&value);
-                    if let Value::Object(ref mut map) = parsed {
-                        map.insert("_path".to_string(), Value::String(key));
-                        output.push(parsed);
-                    } else {
-                        output.push(json!({
-                            "_path": key,
-                            "value": parsed
-                        }));
+                // Apply WHERE clause filtering if specified
+                let filtered = match &parsed {
+                    ParsedQuery::Select { columns, where_clause, order_by, .. } => {
+                        let mut output: Vec<Value> = Vec::new();
+                        
+                        for (key, value) in results {
+                            let mut parsed_row = parse_value_deep(&value);
+                            
+                            // Apply WHERE filter
+                            if let Some(conditions) = where_clause {
+                                if !Self::matches_conditions(&parsed_row, conditions) {
+                                    continue;
+                                }
+                            }
+                            
+                            // Project columns
+                            if let Value::Object(ref mut map) = parsed_row {
+                                map.insert("_path".to_string(), Value::String(key));
+                                
+                                // Column projection
+                                if !columns.is_empty() && columns[0] != "*" {
+                                    let projected: serde_json::Map<String, Value> = map.iter()
+                                        .filter(|(k, _)| *k == "_path" || columns.contains(k))
+                                        .map(|(k, v)| (k.clone(), v.clone()))
+                                        .collect();
+                                    output.push(Value::Object(projected));
+                                } else {
+                                    output.push(parsed_row);
+                                }
+                            } else {
+                                output.push(json!({
+                                    "_path": key,
+                                    "value": parsed_row
+                                }));
+                            }
+                            
+                            if output.len() >= limit {
+                                break;
+                            }
+                        }
+                        
+                        // Apply ORDER BY
+                        if let Some((col, asc)) = order_by {
+                            output.sort_by(|a, b| {
+                                let va = a.get(col);
+                                let vb = b.get(col);
+                                let cmp = match (va, vb) {
+                                    (Some(Value::Number(na)), Some(Value::Number(nb))) => {
+                                        na.as_f64().partial_cmp(&nb.as_f64()).unwrap_or(std::cmp::Ordering::Equal)
+                                    }
+                                    (Some(Value::String(sa)), Some(Value::String(sb))) => sa.cmp(sb),
+                                    _ => std::cmp::Ordering::Equal,
+                                };
+                                if *asc { cmp } else { cmp.reverse() }
+                            });
+                        }
+                        
+                        output
                     }
-                }
+                    ParsedQuery::DirectPath { .. } => {
+                        let mut output = Vec::new();
+                        for (key, value) in results.into_iter().take(limit) {
+                            let mut parsed = parse_value_deep(&value);
+                            if let Value::Object(ref mut map) = parsed {
+                                map.insert("_path".to_string(), Value::String(key));
+                                output.push(parsed);
+                            } else {
+                                output.push(json!({
+                                    "_path": key,
+                                    "value": parsed
+                                }));
+                            }
+                        }
+                        output
+                    }
+                };
                 
-                formatted_result(&Value::Array(output), fmt).map_err(|e| e.to_string())
+                formatted_result(&Value::Array(filtered), fmt).map_err(|e| e.to_string())
             }
             Err(e) => {
                 self.conn.abort().ok();
                 Err(e.to_string())
             }
         }
+    }
+    
+    /// Parsed query result
+    fn parse_toonql_query(query: &str) -> Result<ParsedQuery, String> {
+        let query = query.trim();
+        let upper = query.to_uppercase();
+        
+        if upper.starts_with("SELECT") {
+            Self::parse_select_query(query)
+        } else if query.starts_with('/') || query.contains('/') {
+            // Direct path scan
+            Ok(ParsedQuery::DirectPath { path: query.to_string() })
+        } else {
+            // Treat as table name
+            Self::validate_table_name(query)?;
+            Ok(ParsedQuery::DirectPath { path: format!("/{}", query) })
+        }
+    }
+    
+    /// Parse SELECT query into structured form
+    fn parse_select_query(query: &str) -> Result<ParsedQuery, String> {
+        // Grammar: SELECT cols FROM table [WHERE conditions] [ORDER BY col [ASC|DESC]] [LIMIT n]
+        let upper = query.to_uppercase();
+        
+        // Extract columns
+        let select_idx = upper.find("SELECT").ok_or("Missing SELECT")?;
+        let from_idx = upper.find("FROM").ok_or("Missing FROM")?;
+        
+        if from_idx <= select_idx + 6 {
+            return Err("Invalid SELECT query: columns missing".to_string());
+        }
+        
+        let cols_str = query[select_idx + 6..from_idx].trim();
+        let columns: Vec<String> = if cols_str == "*" {
+            vec!["*".to_string()]
+        } else {
+            cols_str.split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect()
+        };
+        
+        // Extract table name
+        let after_from = &query[from_idx + 4..];
+        let table_end = after_from.find(|c: char| c.is_whitespace())
+            .unwrap_or(after_from.len());
+        let table = after_from[..table_end].trim()
+            .trim_matches(|c| c == '\'' || c == '"' || c == '`')
+            .to_string();
+        
+        // Validate table name
+        Self::validate_table_name(&table)?;
+        
+        // Extract WHERE clause
+        let where_clause = if let Some(where_idx) = upper.find("WHERE") {
+            let where_start = where_idx + 5;
+            let where_end = upper[where_start..]
+                .find("ORDER")
+                .or_else(|| upper[where_start..].find("LIMIT"))
+                .map(|i| where_start + i)
+                .unwrap_or(query.len());
+            
+            let where_str = query[where_start..where_end].trim();
+            Some(Self::parse_where_clause(where_str)?)
+        } else {
+            None
+        };
+        
+        // Extract ORDER BY
+        let order_by = if let Some(order_idx) = upper.find("ORDER BY") {
+            let order_start = order_idx + 8;
+            let order_end = upper[order_start..]
+                .find("LIMIT")
+                .map(|i| order_start + i)
+                .unwrap_or(query.len());
+            
+            let order_str = query[order_start..order_end].trim();
+            let asc = !order_str.to_uppercase().contains("DESC");
+            let col = order_str.split_whitespace().next()
+                .unwrap_or("")
+                .to_string();
+            Some((col, asc))
+        } else {
+            None
+        };
+        
+        Ok(ParsedQuery::Select {
+            columns,
+            table,
+            where_clause,
+            order_by,
+        })
+    }
+    
+    /// Parse WHERE clause into conditions
+    fn parse_where_clause(clause: &str) -> Result<Vec<WhereCondition>, String> {
+        let mut conditions = Vec::new();
+        
+        // Simple AND-separated conditions
+        for part in clause.split(" AND ") {
+            let part = part.trim();
+            if part.is_empty() { continue; }
+            
+            // Parse: column op value
+            let ops = [">=", "<=", "!=", "<>", "=", ">", "<", "LIKE", "NOT LIKE"];
+            
+            for op in ops {
+                if let Some(op_idx) = part.to_uppercase().find(op) {
+                    let col = part[..op_idx].trim().to_string();
+                    let val_str = part[op_idx + op.len()..].trim()
+                        .trim_matches(|c| c == '\'' || c == '"');
+                    
+                    let value = Self::parse_value(val_str);
+                    
+                    conditions.push(WhereCondition {
+                        column: col,
+                        op: op.to_string(),
+                        value,
+                    });
+                    break;
+                }
+            }
+        }
+        
+        Ok(conditions)
+    }
+    
+    /// Parse string value to typed Value
+    fn parse_value(s: &str) -> Value {
+        if s.eq_ignore_ascii_case("null") {
+            Value::Null
+        } else if s.eq_ignore_ascii_case("true") {
+            Value::Bool(true)
+        } else if s.eq_ignore_ascii_case("false") {
+            Value::Bool(false)
+        } else if let Ok(n) = s.parse::<i64>() {
+            Value::Number(n.into())
+        } else if let Ok(f) = s.parse::<f64>() {
+            Value::Number(serde_json::Number::from_f64(f).unwrap_or(0.into()))
+        } else {
+            Value::String(s.to_string())
+        }
+    }
+    
+    /// Validate table name to prevent path injection
+    fn validate_table_name(table: &str) -> Result<(), String> {
+        // Table names must be alphanumeric with underscores
+        if table.is_empty() {
+            return Err("Empty table name".to_string());
+        }
+        if table.contains("..") || table.contains('/') || table.contains('\\') {
+            return Err(format!("Invalid table name '{}': path traversal not allowed", table));
+        }
+        if !table.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-') {
+            return Err(format!("Invalid table name '{}': only alphanumeric, underscore, hyphen allowed", table));
+        }
+        Ok(())
+    }
+    
+    /// Validate path prefix to prevent escaping intended boundaries
+    fn validate_path_prefix(path: &str) -> Result<(), String> {
+        // Normalize and validate path
+        if path.contains("..") {
+            return Err("Path traversal (..) not allowed".to_string());
+        }
+        // Ensure path doesn't try to access system prefixes
+        let dangerous_prefixes = ["/_internal", "/_system", "/_admin"];
+        for prefix in dangerous_prefixes {
+            if path.starts_with(prefix) {
+                return Err(format!("Access to {} prefix not allowed", prefix));
+            }
+        }
+        Ok(())
+    }
+    
+    /// Check if a row matches WHERE conditions
+    fn matches_conditions(row: &Value, conditions: &[WhereCondition]) -> bool {
+        for cond in conditions {
+            let row_val = row.get(&cond.column);
+            
+            let matches = match cond.op.to_uppercase().as_str() {
+                "=" => row_val == Some(&cond.value),
+                "!=" | "<>" => row_val != Some(&cond.value),
+                ">" => Self::compare_values(row_val, &cond.value) == Some(std::cmp::Ordering::Greater),
+                ">=" => matches!(Self::compare_values(row_val, &cond.value), Some(std::cmp::Ordering::Greater | std::cmp::Ordering::Equal)),
+                "<" => Self::compare_values(row_val, &cond.value) == Some(std::cmp::Ordering::Less),
+                "<=" => matches!(Self::compare_values(row_val, &cond.value), Some(std::cmp::Ordering::Less | std::cmp::Ordering::Equal)),
+                "LIKE" => {
+                    if let (Some(Value::String(s)), Value::String(pattern)) = (row_val, &cond.value) {
+                        Self::matches_like(s, pattern)
+                    } else {
+                        false
+                    }
+                }
+                _ => true,
+            };
+            
+            if !matches {
+                return false;
+            }
+        }
+        true
+    }
+    
+    /// Compare two values
+    fn compare_values(a: Option<&Value>, b: &Value) -> Option<std::cmp::Ordering> {
+        match (a, b) {
+            (Some(Value::Number(na)), Value::Number(nb)) => {
+                na.as_f64().partial_cmp(&nb.as_f64())
+            }
+            (Some(Value::String(sa)), Value::String(sb)) => Some(sa.cmp(sb)),
+            _ => None,
+        }
+    }
+    
+    /// Simple LIKE pattern matching (% = any, _ = single char)
+    fn matches_like(s: &str, pattern: &str) -> bool {
+        let regex_pattern = pattern
+            .replace('%', ".*")
+            .replace('_', ".");
+        regex::Regex::new(&format!("^{}$", regex_pattern))
+            .map(|re: regex::Regex| re.is_match(s))
+            .unwrap_or(false)
     }
 
     fn exec_get(&self, args: Value) -> Result<String, String> {

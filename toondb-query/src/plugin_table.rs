@@ -227,6 +227,15 @@ impl VirtualFilter {
                         }
                     }
                     In => VirtualFilter::In(c.column.clone(), vec![c.value.clone()]),
+                    SimilarTo => {
+                        // SimilarTo is used for vector similarity search
+                        // For now, we treat it as a Like pattern for virtual tables
+                        if let ToonValue::Text(pattern) = &c.value {
+                            VirtualFilter::Like(c.column.clone(), pattern.clone())
+                        } else {
+                            VirtualFilter::Like(c.column.clone(), "".to_string())
+                        }
+                    }
                 }
             })
             .collect();

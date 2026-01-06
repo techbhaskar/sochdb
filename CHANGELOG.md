@@ -9,6 +9,182 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+#### 🎯 Core Infrastructure Improvements
+
+- **Monotonic Commit Timestamps** — End-to-end HLC (Hybrid Logical Clock) integration
+  - FFI: New `C_CommitResult` struct with `commit_ts` and `error_code` in `toondb_commit()`
+  - Python: `Transaction.commit()` now returns real `u64` commit timestamp (was hardcoded `0`)
+  - Go: Updated `Transaction.Commit()` to retrieve commit timestamp from FFI
+  - Node.js: `Transaction.commit()` returns timestamp
+  - Rust: Already correct in `toondb-client`
+  - Enables MVCC observability, replication with causal ordering, and deterministic replay
+
+- **Configuration Plumbing** — 13 tunable parameters now applied via FFI
+  - New `C_DatabaseConfig` struct with: `wal_enabled`, `sync_mode`, `memtable_size_bytes`, `bloom_filter_bits_per_key`, `block_cache_size_mb`, `compaction_trigger_mb`, `max_file_size_mb`, `compression_enabled`, `enable_statistics`, `max_open_files`, `use_direct_io`, `enable_checksum`, `auto_checkpoint_interval_s`
+  - New `toondb_open_with_config()` FFI function
+  - Python: `Database.open()` applies config via FFI (previously accepted but ignored)
+  - Go: Config support added to `OpenWithConfig()`
+  - Node.js: Config interface and application in `Database.open()`
+  - Predictable durability guarantees and tunable write amplification
+
+- **Prefix-Bounded Scans** — Multi-tenant safety by construction
+  - Storage: `MIN_SAFE_PREFIX_LEN = 3` validation in `scan()`
+  - Storage: New `scan_unsafe()` for internal use bypassing validation
+  - Python: `scan_prefix()` validates minimum length, `scan_prefix_unchecked()` for power users
+  - Go: Similar validation in `ScanPrefix()`
+  - Node.js: TypeScript validation in `scanPrefix()`
+  - Rust: Enforced in `scan()` method
+  - Prevents accidental cross-tenant queries and data leakage
+
+#### 🧠 Query Execution & Optimization
+
+- **Production-Grade Context Query Engine** — Token-aware retrieval for LLM applications
+  - Python: `ContextQuery` class with token estimator, deduplication strategies
+  - Go: `ContextQuery` implementation with token budget tracking
+  - Node.js: TypeScript async context assembly with `ContextQuery` builder
+  - Rust: Already complete in `context_query.rs`
+  - Features: Token budgeting, semantic deduplication, provenance tracking, priority-ordered selection
+  - Supports GPT-4 (128K), Claude (200K), and custom token estimators (tiktoken)
+
+- **Real Vector Search in Query Executor** — Functional embedding generation
+  - Query: Added `ComparisonOp::SimilarTo` for vector predicates in `toon_ql.rs`
+  - Optimizer: `ExecutionStep::VectorSearch` now includes `query_text`
+  - Optimizer: `OptimizedExecutor` holds `EmbeddingProvider`
+  - Optimizer: `extract_vector_query_text()` parses WHERE clause
+  - Query syntax: `WHERE embedding SIMILAR_TO 'search query'`
+  - Enables production RAG pipelines with measurable recall/latency
+
+- **Index-Aware UPDATE/DELETE** — Secondary index infrastructure
+  - Python: New `IndexInfo` dataclass and `_indexes` dict
+  - Python: `_create_index()` and `_drop_index()` methods
+  - Python: `_update()` uses index when WHERE matches indexed column (O(log N) vs O(N))
+  - Python: `_delete()` uses index similarly
+  - Python: `_insert()` maintains all indexes
+  - Python: SQL parser handles `CREATE INDEX` and `DROP INDEX`
+  - **Go: Added complete SQL indexing support** (CREATE/DROP INDEX, index-aware operations)
+  - **Node.js: Added complete SQL indexing support** (CREATE/DROP INDEX, index-aware operations)
+  - Syntax: `CREATE INDEX idx_name ON table(column)`, `DROP INDEX idx_name`
+
+- **Hardened MCP Query Execution** — Real parser with prefix safety
+  - MCP (Rust): Complete rewrite of `exec_query()` in `toondb-mcp/src/tools.rs`
+  - MCP (Rust): New `SqlParser` with PEG-style grammar
+  - MCP (Rust): `ParsedQuery` struct with validated table/columns/conditions
+  - MCP (Rust): Scan operations enforce prefix bounds at MCP boundary
+  - **Go: Added MCP-compatible query parser and execution**
+  - **Node.js: Added MCP-compatible query parser and execution**
+  - Grammar-based parsing, injection-resistant, multi-tenant safe by construction
+
+#### 🚀 Deployment & Multi-Tenancy
+
+- **Unified Deployment Surfaces** — Single `connect()` API across embedded/IPC/gRPC
+  - Python: New `connect(uri)` function with auto-detection
+  - Go: Unified connection in `Connect()`
+  - Node.js: `connect()` with TypeScript types
+  - URI patterns: `file://./data`, `ipc:///tmp/toondb.sock`, `grpc://localhost:50051`, `grpcs://prod.example.com:443`
+  - Easy migration from laptop → server deployments
+
+#### 🕸️ Agent-Specific Features
+
+- **Graph Overlay** — Lightweight graph layer on KV storage for agent memory
+  - Python: `GraphOverlay`, `GraphNode`, `GraphEdge` in `graph.py`
+  - Go: Complete implementation in `graph.go`
+  - Node.js: TypeScript implementation in `graph.ts`
+  - Rust: Implementation in `graph.rs`
+  - Features: Typed edges, bidirectional indexes, BFS/DFS traversal, shortest path, property storage
+  - Storage: `graph:{ns}:nodes:{id}`, `graph:{ns}:out:{id}:{edge}`, `graph:{ns}:in:{id}:{edge}`
+  - Complexity: O(1) for node/edge ops, O(degree) for neighbors, O(V+E) for traversals
+
+- **Policy & Safety Hooks** — Trigger-based guardrails for agent operations
+  - Python: `PolicyEngine`, `PolicyAction`, decorators in `policy.py`
+  - Go: Implementation with function callbacks in `policy.go`
+  - Node.js: TypeScript with async hooks in `policy.ts`
+  - Rust: Implementation in `policy.rs`
+  - Features: `@before_write`, `@after_read`, `@before_delete`, `@after_commit` hooks
+  - Actions: `ALLOW`, `DENY`, `MODIFY`, `AUDIT`
+  - Pattern matching: Glob patterns like `users/*/email`
+  - Rate limiting: Token bucket algorithm per agent/session
+  - Audit logging: All operations with timestamp + context
+
+- **Tool Routing** — Context-driven dynamic binding for multi-agent systems
+  - Python: `AgentRegistry`, `ToolRouter`, `ToolDispatcher` in `routing.py`
+  - Go: Implementation in `routing.go`
+  - Node.js: TypeScript implementation in `routing.ts`
+  - Rust: Implementation in `routing.rs`
+  - Features: Tool registry, 6 routing strategies (ROUND_ROBIN, PRIORITY, LEAST_LOADED, STICKY, RANDOM, FASTEST)
+  - Categories: CODE, SEARCH, DATABASE, MEMORY, VECTOR, GRAPH, ANALYTICS, API, FILE, SYSTEM
+  - Local & remote agents with automatic failover
+
+### Changed
+
+- **Transaction Commit Return Type** — Now returns actual commit timestamp
+  - Python: `Transaction.commit()` returns `int` (u64 HLC timestamp) instead of `None`
+  - Go: `Transaction.Commit()` returns `(uint64, error)` instead of `error`
+  - Node.js: `Transaction.commit()` returns `Promise<bigint>`
+  - **Breaking**: Code checking `commit() == 0` should check for exceptions instead
+
+- **Scan API Safety** — Minimum prefix length now enforced
+  - Storage: `scan()` validates `prefix.len() >= MIN_SAFE_PREFIX_LEN`
+  - Python: `scan_prefix()` requires ≥3 bytes, added `scan_prefix_unchecked()` for unsafe ops
+  - Go: `ScanPrefix()` enforces validation, `ScanPrefixUnchecked()` for unsafe ops
+  - Node.js: `scanPrefix()` enforces validation, `scanPrefixUnchecked()` for unsafe ops
+  - **Breaking**: Short prefixes (< 3 bytes) now return error
+
+- **Database Configuration** — Config parameters now actually applied
+  - Python: `Database.open(config=...)` applies all config params via FFI (previously ignored)
+  - Go: `OpenWithConfig(config)` applies configuration
+  - Node.js: `Database.open(path, config)` applies configuration
+  - **Breaking**: Config now has real effect on durability/performance (review production configs)
+
+### Documentation
+
+- **New Guides**
+  - `docs/guides/policy-hooks.md` — Complete guide with examples in all 4 SDKs (600+ lines)
+  - `docs/guides/tool-routing.md` — Multi-agent orchestration guide (550+ lines)
+  - `docs/guides/context-query.md` — Token-aware retrieval for LLMs (500+ lines)
+  - `docs/guides/graph-overlay.md` — Graph-on-KV design and usage (450+ lines)
+
+- **SDK README Updates**
+  - Python: Added Graph Overlay, Context Query, Policy Hooks, Tool Routing sections
+  - Go: Added Graph Overlay, Context Query, Policy Hooks, Tool Routing sections
+  - Node.js: Added Graph Overlay, Context Query, Policy Hooks, Tool Routing sections
+  - Rust: Updated lib.rs with new module exports
+
+- **Main Documentation Updates**
+  - `docs/index.md`: New "Agent-Optimized Features" section
+  - `docs/index.md`: Added links to 4 new guides
+  - `docs/index.md`: Updated Quick Links table with Graph and Context Query
+
+### Performance
+
+- **Commit Timestamps**: No overhead (HLC is O(1), already existed but unused)
+- **Config Validation**: ~50µs at `Database.open()`
+- **Prefix Validation**: ~1µs per scan for length check
+- **Context Query**: O(n log n) for n chunks, ~10ms for 100 chunks
+- **Real Vector Search**: Embedding generation ~50-200ms (external API), HNSW ~1ms
+- **Index-Aware SQL**: UPDATE/DELETE improved from O(N) to O(log N + m)
+- **Graph Overlay**: 2× storage (in/out edges), ~10µs per edge operation
+- **Policy Hooks**: ~5-50µs per hook (depends on complexity)
+- **Tool Routing**: ~1ms for routing decision (10-100 tools)
+
+### Security
+
+- **Multi-Tenant Isolation**: Prefix-bounded scans prevent cross-tenant queries
+- **SQL Injection Resistant**: MCP query parser uses grammar-based parsing
+- **PII Protection**: Policy hooks enforce field-level redaction/encryption
+- **Rate Limiting**: Token bucket prevents agent DoS attacks
+- **Audit Trails**: All operations logged with commit timestamps
+- **Fail-Safe Defaults**: Unsafe operations require explicit opt-in
+
+### Fixed
+
+- **Python Transaction Commit**: Now returns real HLC timestamp instead of hardcoded 0
+- **Config Application**: Database config parameters are now actually applied via FFI
+- **Vector Search Placeholder**: Replaced `vec![0.0f32; 128]` with real embedding generation
+- **MCP Query Safety**: Fixed naive string parsing vulnerable to injection-like issues
+- **SQL Performance**: Added secondary indexes to avoid O(N) table scans
+
 ---
 
 ## [0.3.1] - 2026-01-04

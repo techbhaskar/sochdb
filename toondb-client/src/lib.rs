@@ -72,14 +72,37 @@ pub mod connection;
 pub mod context_query;
 pub mod crud;
 pub mod error;
+pub mod graph;
 pub mod path_query;
+pub mod policy;
 pub mod query;
 pub mod recovery;
 pub mod result;
+pub mod routing;
 pub mod schema;
 pub mod storage;
 pub mod transaction;
 pub mod vectors;
+
+use crate::error::Result;
+
+/// Trait for database connection operations.
+///
+/// This trait defines the core operations required for graph overlay,
+/// policy engine, and tool routing to work with any connection type.
+pub trait ConnectionTrait {
+    /// Put a key-value pair
+    fn put(&self, key: &[u8], value: &[u8]) -> Result<()>;
+    
+    /// Get a value by key
+    fn get(&self, key: &[u8]) -> Result<Option<Vec<u8>>>;
+    
+    /// Delete a key
+    fn delete(&self, key: &[u8]) -> Result<()>;
+    
+    /// Scan keys with a prefix
+    fn scan(&self, prefix: &[u8]) -> Result<Vec<(Vec<u8>, Vec<u8>)>>;
+}
 
 // Primary connection API - DurableConnection is the default
 pub use connection::DurableConnection;
@@ -173,7 +196,7 @@ impl Default for ClientConfig {
 
 impl ToonClient {
     /// Open database at path
-    pub fn open(path: impl AsRef<Path>) -> Result<Self, ClientError> {
+    pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let connection = ToonConnection::open(path)?;
         Ok(Self {
             connection: Arc::new(connection),
@@ -185,7 +208,7 @@ impl ToonClient {
     pub fn open_with_config(
         path: impl AsRef<Path>,
         config: ClientConfig,
-    ) -> Result<Self, ClientError> {
+    ) -> Result<Self> {
         let connection = ToonConnection::open(path)?;
         Ok(Self {
             connection: Arc::new(connection),
@@ -206,12 +229,12 @@ impl ToonClient {
     }
 
     /// Access vector collection
-    pub fn vectors(&self, name: &str) -> Result<VectorCollection, ClientError> {
+    pub fn vectors(&self, name: &str) -> Result<VectorCollection> {
         VectorCollection::open(&self.connection, name)
     }
 
     /// Begin transaction with default isolation (snapshot)
-    pub fn begin(&self) -> Result<ClientTransaction<'_>, ClientError> {
+    pub fn begin(&self) -> Result<ClientTransaction<'_>> {
         ClientTransaction::begin(&self.connection, IsolationLevel::SnapshotIsolation)
     }
 
@@ -219,17 +242,17 @@ impl ToonClient {
     pub fn begin_with_isolation(
         &self,
         isolation: IsolationLevel,
-    ) -> Result<ClientTransaction<'_>, ClientError> {
+    ) -> Result<ClientTransaction<'_>> {
         ClientTransaction::begin(&self.connection, isolation)
     }
 
     /// Create a read-only snapshot at current time
-    pub fn snapshot(&self) -> Result<SnapshotReader<'_>, ClientError> {
+    pub fn snapshot(&self) -> Result<SnapshotReader<'_>> {
         SnapshotReader::now(&self.connection)
     }
 
     /// Execute raw TOON-QL query
-    pub fn execute(&self, sql: &str) -> Result<QueryResult, ClientError> {
+    pub fn execute(&self, sql: &str) -> Result<QueryResult> {
         self.connection.query_sql(sql)
     }
 
@@ -276,7 +299,7 @@ pub struct DurableToonClient {
 #[cfg(feature = "embedded")]
 impl DurableToonClient {
     /// Open durable database at path with WAL/MVCC
-    pub fn open(path: impl AsRef<Path>) -> Result<Self, ClientError> {
+    pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let connection = EmbeddedConnection::open(path)?;
         Ok(Self {
             connection: Arc::new(connection),
@@ -297,7 +320,7 @@ impl DurableToonClient {
         path: impl AsRef<Path>,
         config: ClientConfig,
         db_config: toondb_storage::database::DatabaseConfig,
-    ) -> Result<Self, ClientError> {
+    ) -> Result<Self> {
         let connection = EmbeddedConnection::open_with_config(path, db_config)?;
         Ok(Self {
             connection: Arc::new(connection),
@@ -312,37 +335,37 @@ impl DurableToonClient {
     }
 
     /// Begin a transaction
-    pub fn begin(&self) -> Result<(), ClientError> {
+    pub fn begin(&self) -> Result<()> {
         self.connection.begin()
     }
 
     /// Commit the active transaction
-    pub fn commit(&self) -> Result<u64, ClientError> {
+    pub fn commit(&self) -> Result<u64> {
         self.connection.commit()
     }
 
     /// Abort the active transaction
-    pub fn abort(&self) -> Result<(), ClientError> {
+    pub fn abort(&self) -> Result<()> {
         self.connection.abort()
     }
 
     /// Put bytes at a path
-    pub fn put(&self, path: &str, value: &[u8]) -> Result<(), ClientError> {
+    pub fn put(&self, path: &str, value: &[u8]) -> Result<()> {
         self.connection.put(path, value)
     }
 
     /// Get bytes at a path
-    pub fn get(&self, path: &str) -> Result<Option<Vec<u8>>, ClientError> {
+    pub fn get(&self, path: &str) -> Result<Option<Vec<u8>>> {
         self.connection.get(path)
     }
 
     /// Delete a path
-    pub fn delete(&self, path: &str) -> Result<(), ClientError> {
+    pub fn delete(&self, path: &str) -> Result<()> {
         self.connection.delete(path)
     }
 
     /// Scan paths with prefix
-    pub fn scan(&self, prefix: &str) -> Result<Vec<(String, Vec<u8>)>, ClientError> {
+    pub fn scan(&self, prefix: &str) -> Result<Vec<(String, Vec<u8>)>> {
         self.connection.scan(prefix)
     }
 
@@ -352,7 +375,7 @@ impl DurableToonClient {
     }
 
     /// Force fsync
-    pub fn fsync(&self) -> Result<(), ClientError> {
+    pub fn fsync(&self) -> Result<()> {
         self.connection.fsync()
     }
 

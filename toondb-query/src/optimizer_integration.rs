@@ -421,6 +421,8 @@ pub struct OptimizedExecutor {
     table_stats: HashMap<String, TableStats>,
     /// Real-time cardinality tracker (Task 11)
     cardinality_tracker: Arc<CardinalityTracker>,
+    /// Embedding provider for vector search (optional)
+    embedding_provider: Option<Arc<dyn crate::embedding_provider::EmbeddingProvider>>,
 }
 
 /// Statistics for a table
@@ -445,6 +447,7 @@ impl OptimizedExecutor {
             optimizer: QueryOptimizer::new(),
             table_stats: HashMap::new(),
             cardinality_tracker: Arc::new(CardinalityTracker::new()),
+            embedding_provider: None,
         }
     }
 
@@ -454,6 +457,7 @@ impl OptimizedExecutor {
             optimizer: QueryOptimizer::with_cost_model(cost_model),
             table_stats: HashMap::new(),
             cardinality_tracker: Arc::new(CardinalityTracker::new()),
+            embedding_provider: None,
         }
     }
 
@@ -463,7 +467,25 @@ impl OptimizedExecutor {
             optimizer: QueryOptimizer::new(),
             table_stats: HashMap::new(),
             cardinality_tracker: tracker,
+            embedding_provider: None,
         }
+    }
+
+    /// Set embedding provider for vector search
+    pub fn set_embedding_provider(
+        &mut self,
+        provider: Arc<dyn crate::embedding_provider::EmbeddingProvider>,
+    ) {
+        self.embedding_provider = Some(provider);
+    }
+
+    /// Create with embedding provider
+    pub fn with_embedding_provider(
+        mut self,
+        provider: Arc<dyn crate::embedding_provider::EmbeddingProvider>,
+    ) -> Self {
+        self.embedding_provider = Some(provider);
+        self
     }
 
     /// Get the cardinality tracker for external updates (e.g., on INSERT)
@@ -623,9 +645,12 @@ impl OptimizedExecutor {
             }
             IndexSelection::VectorIndex => {
                 if let Some(QueryOperation::VectorSearch { k }) = opt_plan.operations.first() {
+                    // Extract query text from SIMILAR TO predicate in WHERE clause
+                    let query_text = self.extract_vector_query_text(select);
                     steps.push(ExecutionStep::VectorSearch {
                         table: select.table.clone(),
                         k: *k,
+                        query_text,
                     });
                 }
             }
@@ -748,10 +773,38 @@ impl OptimizedExecutor {
                 } => {
                     rows = storage.time_index_scan(table, *start_us, *end_us)?;
                 }
-                ExecutionStep::VectorSearch { table, k } => {
-                    // Vector search requires embedding - for now, use placeholder
-                    // Real implementation would extract embedding from predicates
-                    let query_embedding = vec![0.0f32; 128]; // Placeholder
+                ExecutionStep::VectorSearch {
+                    table,
+                    k,
+                    query_text,
+                } => {
+                    // Generate real embedding from query text using embedding provider
+                    let query_embedding = match (query_text, &self.embedding_provider) {
+                        (Some(text), Some(provider)) => {
+                            // Use embedding provider to generate real embedding
+                            provider.embed(text).unwrap_or_else(|e| {
+                                tracing::warn!(
+                                    "Failed to generate embedding for '{}': {}. Using fallback.",
+                                    text,
+                                    e
+                                );
+                                // Fallback to zeros matching provider dimension
+                                vec![0.0f32; provider.dimension()]
+                            })
+                        }
+                        (Some(_text), None) => {
+                            // No embedding provider configured - use placeholder
+                            tracing::warn!(
+                                "Vector search requested but no embedding provider configured"
+                            );
+                            vec![0.0f32; 128] // Fallback dimension
+                        }
+                        (None, _) => {
+                            // No query text provided - use placeholder
+                            tracing::warn!("Vector search without query text, using placeholder");
+                            vec![0.0f32; 128] // Fallback dimension
+                        }
+                    };
                     let results = storage.vector_search(table, &query_embedding, *k)?;
                     rows = results.into_iter().map(|(_, row)| row).collect();
                 }
@@ -853,6 +906,26 @@ impl OptimizedExecutor {
                 QueryPredicate::Project(id) => return Some(ToonValue::UInt(*id as u64)),
                 QueryPredicate::SpanType(s) => return Some(ToonValue::Text(s.clone())),
                 _ => {}
+            }
+        }
+        None
+    }
+
+    /// Extract query text from SIMILAR TO predicate for vector search
+    ///
+    /// Looks for conditions like: `content SIMILAR TO 'search query text'`
+    /// Returns the query text to be embedded for similarity search.
+    fn extract_vector_query_text(&self, select: &SelectQuery) -> Option<String> {
+        use crate::toon_ql::ComparisonOp;
+        
+        if let Some(where_clause) = &select.where_clause {
+            for condition in &where_clause.conditions {
+                if matches!(condition.operator, ComparisonOp::SimilarTo) {
+                    // Extract the text value from the condition
+                    if let ToonValue::Text(query_text) = &condition.value {
+                        return Some(query_text.clone());
+                    }
+                }
             }
         }
         None
@@ -970,7 +1043,13 @@ pub enum ExecutionStep {
         end_us: u64,
     },
     /// Vector similarity search
-    VectorSearch { table: String, k: usize },
+    VectorSearch {
+        table: String,
+        k: usize,
+        /// Query text to embed for similarity search.
+        /// If None, falls back to placeholder (for backwards compat).
+        query_text: Option<String>,
+    },
     /// Graph traversal
     GraphTraversal {
         table: String,

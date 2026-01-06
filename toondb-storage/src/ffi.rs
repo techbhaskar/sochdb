@@ -29,6 +29,103 @@ pub struct C_TxnHandle {
     pub snapshot_ts: u64,
 }
 
+/// C-compatible Commit Result
+/// Returns commit_ts on success, or 0 with error_code on failure
+#[repr(C)]
+pub struct C_CommitResult {
+    /// Commit timestamp (HLC-backed, monotonically increasing)
+    /// This is 0 if the commit failed.
+    pub commit_ts: u64,
+    /// Error code: 0 = success, -1 = error, -2 = SSI conflict
+    pub error_code: i32,
+}
+
+/// C-compatible Database Configuration
+/// 
+/// All fields have sensible defaults when set to 0/false.
+/// This allows clients to only set the fields they care about.
+#[repr(C)]
+pub struct C_DatabaseConfig {
+    /// Enable WAL for durability (default: true if wal_enabled_set is false)
+    pub wal_enabled: bool,
+    /// Whether wal_enabled was explicitly set
+    pub wal_enabled_set: bool,
+    /// Sync mode: 0=OFF, 1=NORMAL (default), 2=FULL
+    pub sync_mode: u8,
+    /// Whether sync_mode was explicitly set
+    pub sync_mode_set: bool,
+    /// Memtable size in bytes (0 = default 64MB)
+    pub memtable_size_bytes: u64,
+    /// Enable group commit for throughput (default: true if group_commit_set is false)
+    pub group_commit: bool,
+    /// Whether group_commit was explicitly set  
+    pub group_commit_set: bool,
+    /// Default index policy: 0=WriteOptimized, 1=Balanced (default), 2=ScanOptimized, 3=AppendOnly
+    pub default_index_policy: u8,
+    /// Whether default_index_policy was explicitly set
+    pub default_index_policy_set: bool,
+}
+
+/// Open the database with configuration.
+/// Returns a pointer to the database instance, or null on error.
+/// # Safety
+/// The path must be a valid C string.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn toondb_open_with_config(
+    path: *const c_char, 
+    config: C_DatabaseConfig
+) -> *mut DatabasePtr {
+    if path.is_null() {
+        return ptr::null_mut();
+    }
+
+    let c_str = unsafe { CStr::from_ptr(path) };
+    let path_str = match c_str.to_str() {
+        Ok(s) => s,
+        Err(_) => return ptr::null_mut(),
+    };
+
+    // Build config from C struct, using defaults for unset fields
+    let mut db_config = crate::database::DatabaseConfig::default();
+    
+    if config.wal_enabled_set {
+        db_config.wal_enabled = config.wal_enabled;
+    }
+    
+    if config.sync_mode_set {
+        db_config.sync_mode = match config.sync_mode {
+            0 => crate::database::SyncMode::Off,
+            1 => crate::database::SyncMode::Normal,
+            _ => crate::database::SyncMode::Full,
+        };
+    }
+    
+    if config.memtable_size_bytes > 0 {
+        db_config.memtable_size_limit = config.memtable_size_bytes as usize;
+    }
+    
+    if config.group_commit_set {
+        db_config.group_commit = config.group_commit;
+    }
+    
+    if config.default_index_policy_set {
+        db_config.default_index_policy = match config.default_index_policy {
+            0 => crate::index_policy::IndexPolicy::WriteOptimized,
+            1 => crate::index_policy::IndexPolicy::Balanced,
+            2 => crate::index_policy::IndexPolicy::ScanOptimized,
+            _ => crate::index_policy::IndexPolicy::AppendOnly,
+        };
+    }
+
+    match Database::open_with_config(path_str, db_config) {
+        Ok(db) => {
+            let ptr = Box::new(DatabasePtr(db));
+            Box::into_raw(ptr)
+        }
+        Err(_) => ptr::null_mut(),
+    }
+}
+
 /// Open the database.
 /// Returns a pointer to the database instance, or null on error.
 /// # Safety
@@ -96,13 +193,18 @@ pub unsafe extern "C" fn toondb_begin_txn(ptr: *mut DatabasePtr) -> C_TxnHandle 
 }
 
 /// Commit a transaction.
-/// Returns 0 on success, -1 on error.
+/// Returns C_CommitResult with commit_ts on success.
+/// The commit_ts is HLC-backed and monotonically increasing, suitable for 
+/// MVCC observability, replication, and audit trails.
 /// # Safety
 /// The ptr must be a valid pointer returned by toondb_open.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn toondb_commit(ptr: *mut DatabasePtr, handle: C_TxnHandle) -> c_int {
+pub unsafe extern "C" fn toondb_commit(ptr: *mut DatabasePtr, handle: C_TxnHandle) -> C_CommitResult {
     if ptr.is_null() {
-        return -1;
+        return C_CommitResult {
+            commit_ts: 0,
+            error_code: -1,
+        };
     }
     let db = unsafe { &(*ptr).0 };
     let txn = TxnHandle {
@@ -110,8 +212,14 @@ pub unsafe extern "C" fn toondb_commit(ptr: *mut DatabasePtr, handle: C_TxnHandl
         snapshot_ts: handle.snapshot_ts,
     };
     match db.commit(txn) {
-        Ok(_) => 0,
-        Err(_) => -1,
+        Ok(commit_ts) => C_CommitResult {
+            commit_ts,
+            error_code: 0,
+        },
+        Err(_) => C_CommitResult {
+            commit_ts: 0,
+            error_code: -1,
+        },
     }
 }
 
@@ -953,5 +1061,94 @@ pub unsafe extern "C" fn toondb_scan_batch(
     let _ = Box::into_raw(boxed);
     
     0 // Success, check is_done flag for completion
+}
+
+// ============================================================================
+// Per-Table Index Policy API
+// ============================================================================
+
+/// Set index policy for a table.
+///
+/// # Policy Values
+/// - 0: WriteOptimized - O(1) writes, O(N) scans. For write-heavy tables.
+/// - 1: Balanced (default) - O(1) amortized writes, O(output + log K) scans.
+/// - 2: ScanOptimized - O(log N) writes, O(log N + K) scans. For analytics.
+/// - 3: AppendOnly - O(1) writes, O(N) forward-only scans. For time-series.
+///
+/// # Returns
+/// - 0: Success
+/// - -1: Invalid pointer or table name
+/// - -2: Invalid policy value
+///
+/// # Safety
+/// ptr must be a valid DatabasePtr, table_name must be a valid C string.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn toondb_set_table_index_policy(
+    ptr: *mut DatabasePtr,
+    table_name: *const c_char,
+    policy: u8,
+) -> c_int {
+    if ptr.is_null() || table_name.is_null() {
+        return -1;
+    }
+    
+    let c_str = unsafe { CStr::from_ptr(table_name) };
+    let table = match c_str.to_str() {
+        Ok(s) => s,
+        Err(_) => return -1,
+    };
+    
+    let index_policy = match policy {
+        0 => crate::index_policy::IndexPolicy::WriteOptimized,
+        1 => crate::index_policy::IndexPolicy::Balanced,
+        2 => crate::index_policy::IndexPolicy::ScanOptimized,
+        3 => crate::index_policy::IndexPolicy::AppendOnly,
+        _ => return -2,
+    };
+    
+    let db = unsafe { &(*ptr).0 };
+    
+    // Configure the table's index policy through the database registry
+    let config = crate::index_policy::TableIndexConfig::new(table, index_policy);
+    db.index_registry().configure_table(config);
+    
+    0
+}
+
+/// Get index policy for a table.
+///
+/// # Returns
+/// - 0: WriteOptimized
+/// - 1: Balanced  
+/// - 2: ScanOptimized
+/// - 3: AppendOnly
+/// - 255: Error (invalid pointer)
+///
+/// # Safety
+/// ptr must be a valid DatabasePtr, table_name must be a valid C string.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn toondb_get_table_index_policy(
+    ptr: *mut DatabasePtr,
+    table_name: *const c_char,
+) -> u8 {
+    if ptr.is_null() || table_name.is_null() {
+        return 255;
+    }
+    
+    let c_str = unsafe { CStr::from_ptr(table_name) };
+    let table = match c_str.to_str() {
+        Ok(s) => s,
+        Err(_) => return 255,
+    };
+    
+    let db = unsafe { &(*ptr).0 };
+    let config = db.index_registry().get_config(table);
+    
+    match config.policy {
+        crate::index_policy::IndexPolicy::WriteOptimized => 0,
+        crate::index_policy::IndexPolicy::Balanced => 1,
+        crate::index_policy::IndexPolicy::ScanOptimized => 2,
+        crate::index_policy::IndexPolicy::AppendOnly => 3,
+    }
 }
 

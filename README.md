@@ -38,7 +38,10 @@ Most "agent stacks" still glue together:
 ### ✅ LLM / Agent primitives
 
 * **TOON output format** for compact, model-friendly context
-* **ContextQuery Builder** with token budgeting, deduplication, and multi-source fusion
+* **🕸️ Graph Overlay** (v0.3.3) - lightweight graph layer for agent memory with BFS/DFS traversal, relationship tracking
+* **ContextQuery Builder** with token budgeting, deduplication, and multi-source fusion (enhanced in v0.3.3)
+* **🛡️ Policy Hooks** (v0.3.3) - agent safety controls with pre-built policy templates and audit trails
+* **🔀 Tool Routing** (v0.3.3) - multi-agent coordination with dynamic discovery and load balancing
 * **Hybrid search** (vector + BM25 keyword) with Reciprocal Rank Fusion (RRF)
 * **Multi-vector documents** with chunk-level aggregation (max, mean, first)
 * **Vector search** (HNSW), integrated into retrieval workflows
@@ -170,6 +173,103 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+### 🕸️ Graph Overlay for Agent Memory (v0.3.3)
+
+Build lightweight graph structures on top of ToonDB's KV storage for agent memory:
+
+#### Python
+
+```python
+from toondb import Database, GraphOverlay
+
+db = Database.open("./my_db")
+graph = GraphOverlay(db, namespace="agent_memory")
+
+# Build conversation graph
+graph.add_node("msg_1", {"role": "user", "content": "What's the weather?"})
+graph.add_node("msg_2", {"role": "assistant", "content": "Let me check..."})
+graph.add_node("msg_3", {"role": "tool", "content": "Sunny, 72°F"})
+graph.add_node("msg_4", {"role": "assistant", "content": "It's sunny and 72°F"})
+
+# Link causal relationships
+graph.add_edge("msg_1", "msg_2", {"type": "triggers"})
+graph.add_edge("msg_2", "msg_3", {"type": "invokes_tool"})
+graph.add_edge("msg_3", "msg_4", {"type": "provides_context"})
+
+# Traverse conversation history (BFS)
+path = graph.bfs("msg_1", "msg_4")
+print(f"Conversation flow: {' → '.join(path)}")
+
+# Get all tool invocations (neighbors by edge type)
+tools = graph.get_neighbors("msg_2", edge_filter={"type": "invokes_tool"})
+print(f"Tools used: {tools}")
+
+db.close()
+```
+
+#### Go
+
+```go
+package main
+
+import (
+    "fmt"
+    toondb "github.com/toondb/toondb-go"
+)
+
+func main() {
+    db, _ := toondb.Open("./my_db")
+    defer db.Close()
+    
+    graph := toondb.NewGraphOverlay(db, "agent_memory")
+    
+    // Build agent action graph
+    graph.AddNode("action_1", map[string]interface{}{
+        "type": "search", "query": "best restaurants",
+    })
+    graph.AddNode("action_2", map[string]interface{}{
+        "type": "filter", "criteria": "italian",
+    })
+    
+    graph.AddEdge("action_1", "action_2", map[string]interface{}{
+        "relationship": "feeds_into",
+    })
+    
+    // Find dependencies (DFS)
+    deps := graph.DFS("action_1", 10)
+    fmt.Printf("Action dependencies: %v\n", deps)
+}
+```
+
+#### Node.js/TypeScript
+
+```typescript
+import { Database, GraphOverlay } from '@sushanth/toondb';
+
+const db = await Database.open('./my_db');
+const graph = new GraphOverlay(db, 'agent_memory');
+
+// Track entity relationships
+await graph.addNode('entity_alice', { type: 'person', name: 'Alice' });
+await graph.addNode('entity_acme', { type: 'company', name: 'Acme Corp' });
+await graph.addNode('entity_project', { type: 'project', name: 'AI Initiative' });
+
+await graph.addEdge('entity_alice', 'entity_acme', { relationship: 'works_at' });
+await graph.addEdge('entity_alice', 'entity_project', { relationship: 'leads' });
+
+// Find all entities Alice is connected to
+const connections = await graph.getNeighbors('entity_alice');
+console.log(`Alice is connected to: ${connections.length} entities`);
+
+await db.close();
+```
+
+**Use Cases:**
+- Agent conversation history with causal chains
+- Entity relationship tracking across sessions
+- Action dependency graphs for planning
+- Knowledge graph construction
 
 ### Namespace Isolation (v0.3.0)
 

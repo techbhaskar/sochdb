@@ -176,6 +176,12 @@ impl PredicateCondition {
             ),
             ComparisonOp::Like => Self::like_match(row_value, &self.value),
             ComparisonOp::In => Self::in_match(row_value, &self.value),
+            ComparisonOp::SimilarTo => {
+                // SimilarTo is used for vector similarity search
+                // Evaluated by the vector index, not row-by-row comparison
+                // For row-level evaluation, we fall back to Like-style matching
+                Self::like_match(row_value, &self.value)
+            }
         }
     }
 

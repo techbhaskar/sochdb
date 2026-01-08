@@ -4,7 +4,14 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+keywords.workspace = true
+categories.workspace = true
+rust-version.workspace = true
 description = "ToonDB gRPC services for cross-language clients (Thick Server / Thin Client architecture)"
+readme = "README.md"
 
 [dependencies]
 toondb-index = { version = "0.3.3", path = "../toondb-index" }

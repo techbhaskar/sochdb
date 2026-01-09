@@ -18,6 +18,93 @@
 
 ---
 
+## 🎉 What's New in v0.3.5
+
+### Sync-First Architecture: Tokio is Truly Optional
+
+ToonDB v0.3.5 adopts a **sync-first core** design, following SQLite's proven architecture pattern. The async runtime (tokio) is now **truly optional** and only required at the edges (gRPC server, async client APIs).
+
+**Benefits:**
+- **~500KB smaller binaries** for embedded use cases
+- **~40 fewer transitive dependencies** in default builds
+- **Better compatibility** with sync codebases and FFI boundaries
+- **Simpler mental model**: storage is synchronous, async is opt-in
+
+```bash
+# Default build (no tokio)
+cargo build --release -p toondb-storage
+# Binary size: 732 KB
+
+# With async features
+cargo build --release -p toondb-storage --features async
+# Binary size: 1.2 MB
+```
+
+**Architecture:**
+```
+┌─────────────────────────────────────┐
+│      Async Edges (Optional)         │
+│  gRPC Server • Async Client APIs    │  ← tokio required
+├─────────────────────────────────────┤
+│         Sync-First Core             │
+│  Storage • MVCC • WAL • Indexes     │  ← NO tokio
+│  SQL Engine • Vector Index          │
+└─────────────────────────────────────┘
+```
+
+### Enhanced SQL Support
+
+- **AST-based query executor**: Unified SQL processing pipeline
+- **Multi-dialect support**: MySQL, PostgreSQL, SQLite syntax compatibility
+- **Idempotent DDL**: `CREATE TABLE IF NOT EXISTS`, `DROP TABLE IF EXISTS`
+- **Better error messages**: Detailed syntax errors with position information
+
+### Python SDK Improvements
+
+**Vector Index Convenience Methods**: Manage vector operations directly from the `Database` class without separate `VectorIndex` objects:
+
+```python
+from toondb import Database
+import numpy as np
+
+db = Database.open("./my_db")
+
+# Create index from Database class
+db.create_index("embeddings", dimension=384, max_connections=16, ef_construction=200)
+
+# Insert vectors (bulk operation)
+ids = ["doc1", "doc2", "doc3"]
+vectors = [np.random.randn(384).tolist() for _ in range(3)]
+db.insert_vectors("embeddings", ids, vectors)
+
+# Search directly
+results = db.search("embeddings", query_vector, k=10)
+print(f"Found {len(results)} results")
+
+db.close()
+```
+
+### Node.js SDK Graph Overlay
+
+Full TypeScript/JavaScript support for graph operations:
+
+```typescript
+import { Database } from '@sushanth/toondb';
+
+const db = await Database.open('./my_db');
+
+// Graph operations available on Database class
+await db.addNode('node1', { type: 'entity', name: 'Alice' });
+await db.addEdge('node1', 'node2', { relationship: 'knows' });
+const path = await db.traverse('node1', 'node2', { algorithm: 'bfs' });
+
+await db.close();
+```
+
+**Migration Guide**: See [docs/RELEASE_NOTES_0.3.5.md](docs/RELEASE_NOTES_0.3.5.md) for complete migration instructions.
+
+---
+
 ## Why ToonDB exists
 
 Most "agent stacks" still glue together:
@@ -49,10 +136,16 @@ Most "agent stacks" still glue together:
 ### ✅ Database fundamentals
 
 * **SQL support** with full SQL-92 syntax (SELECT, INSERT, UPDATE, DELETE, JOINs)
+  * **AST-based query executor** (v0.3.5) - unified SQL processing with dialect normalization
+  * **Multi-dialect support** (v0.3.5) - MySQL, PostgreSQL, SQLite compatibility
+  * **Idempotent DDL** (v0.3.5) - CREATE TABLE IF NOT EXISTS, DROP TABLE IF EXISTS
 * **ACID transactions** with **MVCC**
 * **WAL durability** + **group commit**
 * **Serializable Snapshot Isolation (SSI)**
 * **Columnar storage** with projection pushdown (read only the columns you need)
+* **Sync-first architecture** (v0.3.5) - async runtime (tokio) is truly optional
+  * ~500KB smaller binaries for embedded use cases
+  * Follows SQLite's design pattern for maximum compatibility
 
 ### ✅ Developer experience
 

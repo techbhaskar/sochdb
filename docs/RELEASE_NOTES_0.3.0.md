@@ -1,10 +1,10 @@
-# ToonDB v0.3.0 Release Notes
+# SochDB v0.3.0 Release Notes
 
 **Release Date:** January 3, 2026
 
 ## 🎉 What's New
 
-ToonDB v0.3.0 is a major feature release focused on **multi-tenancy, hybrid search, and LLM-native context retrieval**. This release introduces namespace isolation, BM25+vector fusion, multi-vector documents, and a token-aware context query builder.
+SochDB v0.3.0 is a major feature release focused on **multi-tenancy, hybrid search, and LLM-native context retrieval**. This release introduces namespace isolation, BM25+vector fusion, multi-vector documents, and a token-aware context query builder.
 
 ---
 
@@ -22,7 +22,7 @@ ToonDB v0.3.0 is a major feature release focused on **multi-tenancy, hybrid sear
 
 **Python Example:**
 ```python
-from toondb import Database
+from sochdb import Database
 
 db = Database.open("./my_db")
 
@@ -58,7 +58,7 @@ db.close()
 
 **Python Example:**
 ```python
-from toondb import Database, SearchRequest
+from sochdb import Database, SearchRequest
 
 db = Database.open("./my_db")
 ns = db.namespace("tenant_acme")
@@ -99,7 +99,7 @@ RRF_score(d) = Σ weight_i / (k + rank_i(d))
 
 **Python Example:**
 ```python
-from toondb import Database
+from sochdb import Database
 
 db = Database.open("./my_db")
 ns = db.namespace("tenant_acme")
@@ -109,7 +109,7 @@ collection = ns.collection("documents")
 collection.insert_multi(
     id="doc_123",
     vectors=[chunk_emb_1, chunk_emb_2, chunk_emb_3],
-    metadata={"title": "ToonDB Guide", "author": "Alice"},
+    metadata={"title": "SochDB Guide", "author": "Alice"},
     chunk_texts=["Intro", "Body", "Conclusion"],
     aggregate="max"  # Use max score across chunks
 )
@@ -140,7 +140,7 @@ results = collection.search(query_vector, k=10)
 
 **Python Example:**
 ```python
-from toondb import Database, ContextQuery, DeduplicationStrategy
+from sochdb import Database, ContextQuery, DeduplicationStrategy
 
 db = Database.open("./my_db")
 ns = db.namespace("tenant_acme")
@@ -215,7 +215,7 @@ results = collection.search(query_vector, k=10)  # Never returns deleted docs
 
 **Python Example:**
 ```python
-from toondb import Database, NamespaceNotFoundError, ErrorCode
+from sochdb import Database, NamespaceNotFoundError, ErrorCode
 
 db = Database.open("./my_db")
 
@@ -289,16 +289,16 @@ except NamespaceNotFoundError as e:
 ### Python SDK
 
 ```bash
-pip install --upgrade toondb-client
+pip install --upgrade sochdb-client
 ```
 
 ### Rust
 
 ```toml
 [dependencies]
-toondb = "0.3"
-toondb-vector = "0.3"
-toondb-storage = "0.3"
+sochdb = "0.3"
+sochdb-vector = "0.3"
+sochdb-storage = "0.3"
 ```
 
 ---
@@ -335,7 +335,7 @@ except DatabaseError:
 
 New:
 ```python
-from toondb import NamespaceNotFoundError, ErrorCode
+from sochdb import NamespaceNotFoundError, ErrorCode
 
 try:
     ns = db.namespace("missing")
@@ -357,7 +357,7 @@ results = collection.keyword_search("machine learning", k=10)
 results = collection.hybrid_search(query_vector, "ML", k=10, alpha=0.7)
 
 # NEW: Unified API
-from toondb import SearchRequest
+from sochdb import SearchRequest
 request = SearchRequest(vector=query_vector, text_query="ML", k=10, alpha=0.7)
 results = collection.search(request)
 ```
@@ -414,4 +414,4 @@ Apache 2.0
 
 ---
 
-**Full Changelog:** https://github.com/toondb/toondb/compare/v0.2.9...v0.3.0
+**Full Changelog:** https://github.com/sochdb/sochdb/compare/v0.2.9...v0.3.0

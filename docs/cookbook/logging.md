@@ -6,7 +6,7 @@
 
 ## Problem
 
-You need to see what ToonDB is doing internally for debugging, or capture audit logs for compliance.
+You need to see what SochDB is doing internally for debugging, or capture audit logs for compliance.
 
 ---
 
@@ -16,21 +16,21 @@ You need to see what ToonDB is doing internally for debugging, or capture audit 
 
 ```bash
 # Debug logging (development)
-export RUST_LOG=toondb=debug
+export RUST_LOG=sochdb=debug
 
 # Trace logging (verbose)
-export RUST_LOG=toondb=trace
+export RUST_LOG=sochdb=trace
 
 # Specific module only
-export RUST_LOG=toondb_kernel::wal=debug
+export RUST_LOG=sochdb_kernel::wal=debug
 
 # Multiple modules
-export RUST_LOG=toondb_kernel=debug,toondb_index::hnsw=trace
+export RUST_LOG=sochdb_kernel=debug,sochdb_index::hnsw=trace
 ```
 
 ### 2. Configuration File (Production)
 
-Create `toondb.toml`:
+Create `sochdb.toml`:
 
 ```toml
 [logging]
@@ -42,7 +42,7 @@ format = "json"
 
 # Output destination
 output = "file"  # "stdout", "stderr", or "file"
-file_path = "/var/log/toondb/toondb.log"
+file_path = "/var/log/sochdb/sochdb.log"
 
 # Log rotation
 max_size_mb = 100
@@ -52,7 +52,7 @@ compress = true
 # Audit logging (separate from debug logs)
 [logging.audit]
 enabled = true
-file_path = "/var/log/toondb/audit.log"
+file_path = "/var/log/sochdb/audit.log"
 events = ["transaction_commit", "schema_change", "auth_failure"]
 ```
 
@@ -65,7 +65,7 @@ fn setup_logging() {
     tracing_subscriber::registry()
         .with(fmt::layer().with_target(true))
         .with(EnvFilter::from_default_env()
-            .add_directive("toondb=debug".parse().unwrap()))
+            .add_directive("sochdb=debug".parse().unwrap()))
         .init();
 }
 ```
@@ -75,13 +75,13 @@ fn setup_logging() {
 ```python
 import logging
 
-# Enable ToonDB debug logs
+# Enable SochDB debug logs
 logging.basicConfig(level=logging.DEBUG)
 
 # Or configure specific logger
-logger = logging.getLogger("toondb")
+logger = logging.getLogger("sochdb")
 logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler("toondb.log")
+handler = logging.FileHandler("sochdb.log")
 handler.setFormatter(logging.Formatter(
     "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 ))
@@ -94,14 +94,14 @@ logger.addHandler(handler)
 
 ### Debug Format
 ```
-2024-12-30T10:15:32.123Z DEBUG toondb_kernel::wal > Appending record: txn_id=42, size=1024
-2024-12-30T10:15:32.124Z DEBUG toondb_kernel::mvcc > Snapshot created: ts=1000042
-2024-12-30T10:15:32.125Z DEBUG toondb_index::hnsw > Search: k=10, ef=50, candidates=127
+2024-12-30T10:15:32.123Z DEBUG sochdb_kernel::wal > Appending record: txn_id=42, size=1024
+2024-12-30T10:15:32.124Z DEBUG sochdb_kernel::mvcc > Snapshot created: ts=1000042
+2024-12-30T10:15:32.125Z DEBUG sochdb_index::hnsw > Search: k=10, ef=50, candidates=127
 ```
 
 ### JSON Format (Production)
 ```json
-{"timestamp":"2024-12-30T10:15:32.123Z","level":"INFO","target":"toondb_kernel::txn","message":"Transaction committed","txn_id":42,"duration_ms":3.2}
+{"timestamp":"2024-12-30T10:15:32.123Z","level":"INFO","target":"sochdb_kernel::txn","message":"Transaction committed","txn_id":42,"duration_ms":3.2}
 ```
 
 ### Audit Log

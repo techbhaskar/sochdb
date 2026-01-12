@@ -1,6 +1,6 @@
 # Multi-Agent Tool Routing
 
-ToonDB provides infrastructure for routing tool invocations across multiple
+SochDB provides infrastructure for routing tool invocations across multiple
 specialized agents. This enables building sophisticated multi-agent systems
 with load balancing, capability-based routing, and persistent agent state.
 
@@ -39,7 +39,7 @@ The routing system consists of three components:
 ### Python
 
 ```python
-from toondb import Database, ToolDispatcher, ToolCategory, RoutingStrategy
+from sochdb import Database, ToolDispatcher, ToolCategory, RoutingStrategy
 
 db = Database.open("./agent_data")
 dispatcher = ToolDispatcher(db)
@@ -71,32 +71,32 @@ result = await dispatcher.invoke(
 ### Go
 
 ```go
-db, _ := toondb.Open("./agent_data")
-dispatcher := toondb.NewToolDispatcher(db)
+db, _ := sochdb.Open("./agent_data")
+dispatcher := sochdb.NewToolDispatcher(db)
 
 // Register agents
 dispatcher.RegisterAgent("code_agent", 
-    toondb.WithTools(toondb.CategoryCode, toondb.CategoryShell),
-    toondb.WithEndpoint("http://localhost:8001/invoke"),
-    toondb.WithPriority(10),
+    sochdb.WithTools(sochdb.CategoryCode, sochdb.CategoryShell),
+    sochdb.WithEndpoint("http://localhost:8001/invoke"),
+    sochdb.WithPriority(10),
 )
 
 dispatcher.RegisterAgent("search_agent",
-    toondb.WithTools(toondb.CategorySearch, toondb.CategoryWeb),
-    toondb.WithEndpoint("http://localhost:8002/invoke"),
+    sochdb.WithTools(sochdb.CategorySearch, sochdb.CategoryWeb),
+    sochdb.WithEndpoint("http://localhost:8002/invoke"),
 )
 
 // Dispatch tool invocations
-result, err := dispatcher.Invoke(context.Background(), "code_exec", toondb.CategoryCode, 
+result, err := dispatcher.Invoke(context.Background(), "code_exec", sochdb.CategoryCode, 
     map[string]interface{}{"code": "print('hello')"},
-    toondb.WithStrategy(toondb.StrategyLeastLoaded),
+    sochdb.WithStrategy(sochdb.StrategyLeastLoaded),
 )
 ```
 
 ### TypeScript/Node.js
 
 ```typescript
-import { Database, ToolDispatcher, ToolCategory, RoutingStrategy } from '@sushanth/toondb';
+import { Database, ToolDispatcher, ToolCategory, RoutingStrategy } from '@sushanth/sochdb';
 
 const db = await Database.open('./agent_data');
 const dispatcher = new ToolDispatcher(db);
@@ -124,7 +124,7 @@ const result = await dispatcher.invoke('code_exec', ToolCategory.CODE, {
 ### Rust
 
 ```rust
-use toondb_client::routing::{ToolDispatcher, ToolCategory, RoutingStrategy, AgentConfig};
+use sochdb_client::routing::{ToolDispatcher, ToolCategory, RoutingStrategy, AgentConfig};
 
 let conn = Connection::open("./agent_data")?;
 let dispatcher = ToolDispatcher::new(conn);
@@ -196,7 +196,7 @@ result2 = await dispatcher.invoke(
 
 ## Agent State
 
-Agent registrations are persisted to ToonDB:
+Agent registrations are persisted to SochDB:
 
 ```python
 # Registrations survive restarts
@@ -263,7 +263,7 @@ result = await dispatcher.invoke("code_exec", ToolCategory.CODE, {...})
 Use policies to enforce routing rules:
 
 ```python
-from toondb import PolicyEngine
+from sochdb import PolicyEngine
 
 policy = PolicyEngine(db)
 

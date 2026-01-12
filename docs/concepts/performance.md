@@ -1,16 +1,16 @@
-# ToonDB Performance Optimizations
+# SochDB Performance Optimizations
 
 ## Summary
 
-This document details the performance improvements made to ToonDB's storage layer, achieving **~15× improvement** from ~55k ops/sec to ~800k-1.3M ops/sec for sequential inserts, making it competitive with SQLite (~1.16M ops/sec).
+This document details the performance improvements made to SochDB's storage layer, achieving **~15× improvement** from ~55k ops/sec to ~800k-1.3M ops/sec for sequential inserts, making it competitive with SQLite (~1.16M ops/sec).
 
 ## Benchmark Results
 
 | Benchmark | Before | After | Improvement |
 |-----------|--------|-------|-------------|
-| ToonDB Embedded (WAL) | ~55k ops/sec | ~761k ops/sec | **13.8×** |
-| ToonDB put_raw | N/A | ~1.30M ops/sec | Direct storage |
-| ToonDB insert_row_slice | N/A | ~1.29M ops/sec | Zero-alloc API |
+| SochDB Embedded (WAL) | ~55k ops/sec | ~761k ops/sec | **13.8×** |
+| SochDB put_raw | N/A | ~1.30M ops/sec | Direct storage |
+| SochDB insert_row_slice | N/A | ~1.29M ops/sec | Zero-alloc API |
 | SQLite File (WAL) | ~1.16M ops/sec | — | Baseline |
 
 ---
@@ -44,13 +44,13 @@ For sequential inserts, each operation was waiting for either:
 
 ### Architecture Context
 
-ToonDB has a properly layered architecture:
+SochDB has a properly layered architecture:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Client Layer                                               │
 │  ├── Connection (alias for DurableConnection) ← DEFAULT     │
-│  ├── InMemoryConnection (ToonConnection) ← Testing only     │
+│  ├── InMemoryConnection (SochConnection) ← Testing only     │
 │  └── EmbeddedConnection (optional, wraps Database)          │
 ├─────────────────────────────────────────────────────────────┤
 │  Storage Layer                                              │
@@ -68,7 +68,7 @@ The `DurableConnection` properly routes through the WAL/MVCC kernel, making all 
 
 ### 1. Single-Pass CRC32 Calculation
 
-**File**: `toondb-storage/src/txn_wal.rs`
+**File**: `sochdb-storage/src/txn_wal.rs`
 
 **Before**: CRC was calculated in a separate pass over the data.
 
@@ -95,7 +95,7 @@ pub fn write_no_flush_refs(&self, txn_id: TxnId, key: &[u8], value: &[u8]) -> Re
 
 ### 2. Zero-Allocation WAL Writes
 
-**File**: `toondb-storage/src/txn_wal.rs`
+**File**: `sochdb-storage/src/txn_wal.rs`
 
 **Before**: Each WAL write allocated a `Vec<u8>` buffer.
 
@@ -116,8 +116,8 @@ fn write_no_flush_refs(&self, txn_id: TxnId, key: &[u8], value: &[u8])
 ### 3. DashMap for Lock-Free Concurrent Access
 
 **Files**: 
-- `toondb-storage/src/durable_storage.rs`
-- `toondb-storage/src/database.rs`
+- `sochdb-storage/src/durable_storage.rs`
+- `sochdb-storage/src/database.rs`
 
 **Before**: `RwLock<HashMap>` for MVCC tracking and table metadata.
 
@@ -140,30 +140,30 @@ active_txns: DashMap<TxnId, TxnState>
 ### 4. Zero-Allocation Row Insertion API
 
 **Files**:
-- `toondb-storage/src/packed_row.rs`
-- `toondb-storage/src/database.rs`
+- `sochdb-storage/src/packed_row.rs`
+- `sochdb-storage/src/database.rs`
 
-**Before**: `insert_row()` required a `HashMap<String, ToonValue>` allocation per row.
+**Before**: `insert_row()` required a `HashMap<String, SochValue>` allocation per row.
 
-**After**: New `insert_row_slice()` accepts `&[(&str, ToonValue)]` directly.
+**After**: New `insert_row_slice()` accepts `&[(&str, SochValue)]` directly.
 
 ```rust
 // OLD: Allocates HashMap per row
 pub fn insert_row(&self, txn: TxnHandle, table: &str, 
-                  row: HashMap<String, ToonValue>) -> Result<u64>
+                  row: HashMap<String, SochValue>) -> Result<u64>
 
 // NEW: Zero allocation, uses slice
 pub fn insert_row_slice(&self, txn: TxnHandle, table: &str,
-                        row: &[(&str, ToonValue)]) -> Result<u64>
+                        row: &[(&str, SochValue)]) -> Result<u64>
 ```
 
 **PackedRow Enhancement**:
 ```rust
 // NEW: Pack from slice of references
-pub fn pack_slice(values: &[Option<&ToonValue>]) -> Vec<u8>
+pub fn pack_slice(values: &[Option<&SochValue>]) -> Vec<u8>
 
 // NEW: Unpack to pre-sized Vec
-pub fn unpack_to_vec(&self) -> Vec<Option<ToonValue>>
+pub fn unpack_to_vec(&self) -> Vec<Option<SochValue>>
 ```
 
 **Impact**: Achieved 1.29M ops/sec, matching raw storage performance.
@@ -172,7 +172,7 @@ pub fn unpack_to_vec(&self) -> Vec<Option<ToonValue>>
 
 ### 5. Cached Schema Lookup
 
-**File**: `toondb-storage/src/database.rs`
+**File**: `sochdb-storage/src/database.rs`
 
 **Before**: Schema was fetched and parsed on every insert.
 
@@ -188,7 +188,7 @@ packed_schemas: DashMap<String, Vec<String>>  // table_name -> column_names
 
 ### 6. Lazy Query Iterator
 
-**File**: `toondb-storage/src/database.rs`
+**File**: `sochdb-storage/src/database.rs`
 
 **Before**: `execute()` collected all results into a `Vec` before returning.
 
@@ -209,7 +209,7 @@ pub fn execute_iter(self) -> QueryRowIterator<'a> {
 
 ### 7. Group Commit Bypass for Sequential Workloads
 
-**File**: `toondb-storage/src/durable_storage.rs`
+**File**: `sochdb-storage/src/durable_storage.rs`
 
 For benchmarks and sequential workloads, group commit can be disabled:
 
@@ -325,8 +325,8 @@ For epoch_duration = 100ms, write_rate = 100K/s:
 ## Reproducing Benchmarks
 
 ```bash
-cd toon_database
+cd sochdb
 cargo run -p benchmarks --release
 ```
 
-This runs comparisons against SQLite and tests various ToonDB APIs.
+This runs comparisons against SQLite and tests various SochDB APIs.

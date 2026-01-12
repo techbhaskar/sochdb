@@ -1,31 +1,31 @@
 [workspace]
 members = [
-    "toondb-core",
-    "toondb-kernel",
-    "toondb-plugin-logging",
-    "toondb-storage",
-    "toondb-index",
-    "toondb-query",
-    "toondb-client",
-    "toondb-mcp",
-    "toondb-grpc",
-    "toondb-wasm",
-    "toondb-vector",
-    "toondb-tools",
+    "sochdb-core",
+    "sochdb-kernel",
+    "sochdb-plugin-logging",
+    "sochdb-storage",
+    "sochdb-index",
+    "sochdb-query",
+    "sochdb-client",
+    "sochdb-mcp",
+    "sochdb-grpc",
+    "sochdb-wasm",
+    "sochdb-vector",
+    "sochdb-tools",
 ]
-# toondb-python is excluded from workspace - it must be built with maturin
-# Use: cd toondb-python && maturin develop --release
-exclude = ["toondb-python"]
+# sochdb-python is excluded from workspace - it must be built with maturin
+# Use: cd sochdb-python && maturin develop --release
+exclude = ["sochdb-python"]
 resolver = "2"
 
 [workspace.package]
 version = "0.3.4"
 edition = "2024"
-authors = ["Sushanth <sushanth@toondb.dev>"]
+authors = ["Sushanth <sushanth@sochdb.dev>"]
 license = "Apache-2.0"
-repository = "https://github.com/toondb/toondb"
-homepage = "https://toondb.dev"
-documentation = "https://docs.toondb.dev"
+repository = "https://github.com/sochdb/sochdb"
+homepage = "https://sochdb.dev"
+documentation = "https://docs.sochdb.dev"
 keywords = ["database", "llm", "ai", "vector-search", "embedded"]
 categories = ["database-implementations", "data-structures"]
 rust-version = "1.85"
@@ -35,7 +35,7 @@ rust-version = "1.85"
 # RUNTIME DESIGN DECISION: Storage Layer is Sync-First
 # =============================================================================
 #
-# The core storage engine (toondb-storage) uses synchronous I/O:
+# The core storage engine (sochdb-storage) uses synchronous I/O:
 # - std::fs for file operations
 # - std::thread for background workers (GC, compaction)
 # - parking_lot for synchronization
@@ -46,7 +46,7 @@ rust-version = "1.85"
 # - Smaller binary size (~500KB less without tokio runtime)
 #
 # Tokio is OPTIONAL and only needed for:
-# - Server mode (toondb-mcp, toondb-server)
+# - Server mode (sochdb-mcp, sochdb-server)
 # - Async client libraries
 #
 # Crates should declare tokio as optional dependency when needed:

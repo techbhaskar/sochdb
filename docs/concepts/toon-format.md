@@ -202,7 +202,7 @@ For internal storage and high-performance scenarios, TOON has a binary encoding.
 ### Type Tags
 
 ```rust
-enum ToonTypeTag {
+enum SochTypeTag {
     Null      = 0x00,
     False     = 0x01,
     True      = 0x02,
@@ -255,21 +255,21 @@ Value Range          | Bytes
 ### Rust
 
 ```rust
-use toondb_core::ToonCodec;
+use sochdb_core::SochCodec;
 
 // Parse text TOON
 let text = r#"users[2]{id,name}:1,Alice;2,Bob"#;
-let table = ToonCodec::parse_text(text)?;
+let table = SochCodec::parse_text(text)?;
 
 // Parse binary TOON
 let binary = read_file("data.toon")?;
-let table = ToonCodec::parse_binary(&binary)?;
+let table = SochCodec::parse_binary(&binary)?;
 ```
 
 ### Python
 
 ```python
-from toondb import parse_toon
+from sochdb import parse_toon
 
 text = "users[2]{id,name}:1,Alice;2,Bob"
 table = parse_toon(text)
@@ -285,28 +285,28 @@ for row in table.rows:
 ### Rust
 
 ```rust
-use toondb_core::{ToonTable, ToonCodec};
+use sochdb_core::{SochTable, SochCodec};
 
-let table = ToonTable::new("users")
-    .field("id", ToonType::UInt)
-    .field("name", ToonType::Text)
+let table = SochTable::new("users")
+    .field("id", SochType::UInt)
+    .field("name", SochType::Text)
     .row(vec![1.into(), "Alice".into()])
     .row(vec![2.into(), "Bob".into()]);
 
 // To text
-let text = ToonCodec::encode_text(&table);
+let text = SochCodec::encode_text(&table);
 // "users[2]{id,name}:1,Alice;2,Bob"
 
 // To binary
-let binary = ToonCodec::encode_binary(&table);
+let binary = SochCodec::encode_binary(&table);
 ```
 
 ### Python
 
 ```python
-from toondb import ToonTable, encode_toon
+from sochdb import SochTable, encode_toon
 
-table = ToonTable("users", ["id", "name"])
+table = SochTable("users", ["id", "name"])
 table.add_row([1, "Alice"])
 table.add_row([2, "Bob"])
 
@@ -348,7 +348,7 @@ u[2]{i,n,e}:1,Alice,alice@ex.com;2,Bob,bob@ex.com
 
 ## See Also
 
-- [API Reference](/api-reference/python-api) — ToonCodec API
+- [API Reference](/api-reference/python-api) — SochCodec API
 - [Architecture](/concepts/architecture) — Internal format details
 - [Performance](/concepts/performance) — Optimization benchmarks
 

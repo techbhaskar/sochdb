@@ -1,10 +1,10 @@
 # SQL API Reference
 
-ToonDB provides full SQL support for relational data operations alongside its native key-value and vector search capabilities.
+SochDB provides full SQL support for relational data operations alongside its native key-value and vector search capabilities.
 
 ## Overview
 
-ToonDB's SQL engine supports:
+SochDB's SQL engine supports:
 - **SQL-92** core syntax
 - **DDL**: CREATE TABLE, DROP TABLE, CREATE INDEX, DROP INDEX
 - **DML**: SELECT, INSERT, UPDATE, DELETE
@@ -18,14 +18,14 @@ ToonDB's SQL engine supports:
 SQL Query → Parser → AST → Optimizer → Executor → Storage Layer
 ```
 
-The SQL engine is built in `toondb-query/src/sql/` and integrates seamlessly with ToonDB's storage layer.
+The SQL engine is built in `sochdb-query/src/sql/` and integrates seamlessly with SochDB's storage layer.
 
 ## Quick Start
 
 ### Python
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 db = Database("./mydb")
 
@@ -59,7 +59,7 @@ db.close()
 ### Rust
 
 ```rust
-use toondb_client::Client;
+use sochdb_client::Client;
 
 let mut client = Client::open("./mydb")?;
 
@@ -88,7 +88,7 @@ Ok(())
 ### TypeScript/Node.js
 
 ```typescript
-import { Database } from '@sushanth/toondb';
+import { Database } from '@sushanth/sochdb';
 
 const db = new Database('./mydb');
 
@@ -117,9 +117,9 @@ await db.close();
 ### Go
 
 ```go
-import "github.com/toondb/toondb-go"
+import "github.com/sochdb/sochdb-go"
 
-db, err := toondb.Open("./mydb")
+db, err := sochdb.Open("./mydb")
 if err != nil {
     log.Fatal(err)
 }
@@ -483,7 +483,7 @@ For advanced use cases, parse SQL directly:
 ### Rust
 
 ```rust
-use toondb_query::sql::{Parser, Statement};
+use sochdb_query::sql::{Parser, Statement};
 
 // Parse SQL into AST
 let sql = "SELECT * FROM users WHERE age > 25";
@@ -510,7 +510,7 @@ for stmt in stmts {
 Standalone SQL execution without database:
 
 ```rust
-use toondb_query::sql::{SqlExecutor, ExecutionResult};
+use sochdb_query::sql::{SqlExecutor, ExecutionResult};
 
 let mut executor = SqlExecutor::new();
 
@@ -548,7 +548,7 @@ match result {
 ```python
 try:
     result = db.execute("SELECT * FROM nonexistent")
-except toondb.DatabaseError as e:
+except sochdb.DatabaseError as e:
     print(f"SQL error: {e}")
 ```
 
@@ -573,7 +573,7 @@ try {
 
 ## SQL vs Key-Value API
 
-ToonDB supports both paradigms:
+SochDB supports both paradigms:
 
 | Feature | SQL API | Key-Value API |
 |---------|---------|---------------|

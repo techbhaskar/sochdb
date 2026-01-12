@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Code Search with ToonDB
+Code Search with SochDB
 
 Demonstrates:
 - Code embedding search
@@ -25,7 +25,7 @@ from dataclasses import dataclass
 import numpy as np
 import requests
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -61,7 +61,7 @@ class CodeSearch:
     """Semantic code search with hybrid keyword matching."""
     
     def __init__(self):
-        from toondb import VectorIndex
+        from sochdb import VectorIndex
         
         self.dimension = 1536
         self.index = VectorIndex(dimension=self.dimension, max_connections=32, ef_construction=200)
@@ -174,7 +174,7 @@ def run_code_search_test():
     """Run code search test."""
     
     print("="*70)
-    print("  CODE SEARCH + TOONDB")
+    print("  CODE SEARCH + SOCHDB")
     print("  Semantic + Keyword Hybrid Search")
     print("="*70)
     

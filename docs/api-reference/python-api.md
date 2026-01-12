@@ -1,6 +1,6 @@
-# ToonDB API Reference
+# SochDB API Reference
 
-Complete API documentation for ToonDB developers.
+Complete API documentation for SochDB developers.
 
 ---
 
@@ -18,12 +18,12 @@ Complete API documentation for ToonDB developers.
 
 ## Core Types
 
-### ToonValue
+### SochValue
 
-The universal value type for ToonDB data.
+The universal value type for SochDB data.
 
 ```rust
-pub enum ToonValue {
+pub enum SochValue {
     Null,
     Bool(bool),
     Int(i64),
@@ -31,8 +31,8 @@ pub enum ToonValue {
     Float(f64),
     Text(String),
     Binary(Vec<u8>),
-    Array(Vec<ToonValue>),
-    Object(HashMap<String, ToonValue>),
+    Array(Vec<SochValue>),
+    Object(HashMap<String, SochValue>),
     Ref { table: String, id: u64 },
 }
 ```
@@ -45,15 +45,15 @@ pub enum ToonValue {
 | `as_int()` | `fn as_int(&self) -> Option<i64>` | Extract integer |
 | `as_text()` | `fn as_text(&self) -> Option<&str>` | Extract string reference |
 | `to_toon()` | `fn to_toon(&self) -> String` | Convert to TOON format |
-| `type_tag()` | `fn type_tag(&self) -> ToonTypeTag` | Get binary type tag |
+| `type_tag()` | `fn type_tag(&self) -> SochTypeTag` | Get binary type tag |
 
 #### Conversions
 
 ```rust
 // From Rust types
-let v = ToonValue::from(42i64);
-let v = ToonValue::from("hello");
-let v = ToonValue::from(vec![1, 2, 3]);
+let v = SochValue::from(42i64);
+let v = SochValue::from("hello");
+let v = SochValue::from(vec![1, 2, 3]);
 
 // To Rust types
 let i: i64 = v.try_into()?;
@@ -62,12 +62,12 @@ let s: String = v.try_into()?;
 
 ---
 
-### ToonType
+### SochType
 
 Schema type definitions.
 
 ```rust
-pub enum ToonType {
+pub enum SochType {
     Int,
     UInt,
     Float,
@@ -75,10 +75,10 @@ pub enum ToonType {
     Bool,
     Bytes,
     Vector(usize),                    // Dimensionality
-    Array(Box<ToonType>),
-    Optional(Box<ToonType>),
+    Array(Box<SochType>),
+    Optional(Box<SochType>),
     Ref(String),                      // Referenced table
-    Object(Vec<(String, ToonType)>),
+    Object(Vec<(String, SochType)>),
 }
 ```
 
@@ -86,43 +86,43 @@ pub enum ToonType {
 
 ```rust
 // Parse from string
-ToonType::parse("int")          // Some(ToonType::Int)
-ToonType::parse("text?")        // Some(ToonType::Optional(Box::new(ToonType::Text)))
-ToonType::parse("ref(users)")   // Some(ToonType::Ref("users".into()))
-ToonType::parse("vec(384)")     // Some(ToonType::Vector(384))
+SochType::parse("int")          // Some(SochType::Int)
+SochType::parse("text?")        // Some(SochType::Optional(Box::new(SochType::Text)))
+SochType::parse("ref(users)")   // Some(SochType::Ref("users".into()))
+SochType::parse("vec(384)")     // Some(SochType::Vector(384))
 ```
 
 ---
 
-### ToonSchema
+### SochSchema
 
 Table schema definition.
 
 ```rust
-pub struct ToonSchema {
+pub struct SochSchema {
     pub name: String,
-    pub fields: Vec<ToonField>,
+    pub fields: Vec<SochField>,
     pub primary_key: Option<String>,
     pub indexes: Vec<IndexDef>,
 }
 
-pub struct ToonField {
+pub struct SochField {
     pub name: String,
-    pub field_type: ToonType,
+    pub field_type: SochType,
     pub nullable: bool,
-    pub default: Option<ToonValue>,
+    pub default: Option<SochValue>,
 }
 ```
 
 #### Builder Pattern
 
 ```rust
-let schema = ToonSchema::new("users")
-    .field("id", ToonType::UInt)
-    .field("name", ToonType::Text)
-    .field("email", ToonType::Text)
-    .field("age", ToonType::Optional(Box::new(ToonType::Int)))
-    .field("embedding", ToonType::Vector(384))
+let schema = SochSchema::new("users")
+    .field("id", SochType::UInt)
+    .field("name", SochType::Text)
+    .field("email", SochType::Text)
+    .field("age", SochType::Optional(Box::new(SochType::Int)))
+    .field("embedding", SochType::Vector(384))
     .primary_key("id")
     .index("email", IndexType::BTree)
     .index("embedding", IndexType::HNSW);
@@ -130,18 +130,18 @@ let schema = ToonSchema::new("users")
 
 ---
 
-### ToonTable
+### SochTable
 
 In-memory table representation.
 
 ```rust
-pub struct ToonTable {
-    pub schema: ToonSchema,
-    pub rows: Vec<ToonRow>,
+pub struct SochTable {
+    pub schema: SochSchema,
+    pub rows: Vec<SochRow>,
 }
 
-pub struct ToonRow {
-    pub values: Vec<ToonValue>,
+pub struct SochRow {
+    pub values: Vec<SochValue>,
 }
 ```
 
@@ -149,8 +149,8 @@ pub struct ToonRow {
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `new(schema)` | `fn new(schema: ToonSchema) -> Self` | Create empty table |
-| `push(row)` | `fn push(&mut self, row: ToonRow)` | Add a row |
+| `new(schema)` | `fn new(schema: SochSchema) -> Self` | Create empty table |
+| `push(row)` | `fn push(&mut self, row: SochRow)` | Add a row |
 | `len()` | `fn len(&self) -> usize` | Number of rows |
 | `format()` | `fn format(&self) -> String` | TOON string format |
 | `parse(s)` | `fn parse(s: &str) -> Result<Self>` | Parse from TOON |
@@ -159,12 +159,12 @@ pub struct ToonRow {
 
 ## Client SDK
 
-### ToonConnection
+### SochConnection
 
 Primary interface for database operations.
 
 ```rust
-pub struct ToonConnection {
+pub struct SochConnection {
     // Internal fields
 }
 ```
@@ -173,10 +173,10 @@ pub struct ToonConnection {
 
 ```rust
 // Basic open
-let conn = ToonConnection::open("./database")?;
+let conn = SochConnection::open("./database")?;
 
 // With configuration
-let conn = ToonConnection::open_with_config(
+let conn = SochConnection::open_with_config(
     "./database",
     ConnectionConfig {
         read_only: false,
@@ -214,7 +214,7 @@ let results = conn.query("users")
 
 // Update
 let updated = conn.update("users")
-    .set("status", ToonValue::Text("inactive".into()))
+    .set("status", SochValue::Text("inactive".into()))
     .where_eq("id", 42)
     .execute()?;
 
@@ -271,11 +271,11 @@ Fluent schema construction.
 
 ```rust
 let schema = SchemaBuilder::table("orders")
-    .field("id", ToonType::UInt)
-    .field("user_id", ToonType::Ref("users".into()))
-    .field("amount", ToonType::Float)
-    .field("status", ToonType::Text)
-    .field("created_at", ToonType::UInt)
+    .field("id", SochType::UInt)
+    .field("user_id", SochType::Ref("users".into()))
+    .field("amount", SochType::Float)
+    .field("status", SochType::Text)
+    .field("created_at", SochType::UInt)
     .primary_key("id")
     .foreign_key("user_id", "users", "id")
     .index("created_at", IndexType::BTree)
@@ -417,7 +417,7 @@ pub struct ContextQueryBuilder {
 #### Full Example
 
 ```rust
-use toondb::{
+use sochdb::{
     ContextQueryBuilder, ContextFormat, TruncationStrategy, ContextValue
 };
 
@@ -462,7 +462,7 @@ let result = ContextQueryBuilder::new()
         .done()
     
     // Output configuration
-    .format(ContextFormat::Toon)
+    .format(ContextFormat::Soch)
     .truncation(TruncationStrategy::PriorityDrop)
     .include_schema(false)
     
@@ -557,7 +557,7 @@ pub enum DistanceMetric {
 #### Client Integration
 
 ```rust
-// Via ToonConnection
+// Via SochConnection
 conn.vector_insert("documents", doc_id, &embedding, Some(metadata))?;
 
 let results = conn.vector_search("documents", &query_embedding, 10)?;
@@ -779,7 +779,7 @@ pub struct TxnHandle {
 ```rust
 pub struct QueryResult {
     pub columns: Vec<String>,
-    pub rows: Vec<HashMap<String, ToonValue>>,
+    pub rows: Vec<HashMap<String, SochValue>>,
     pub rows_scanned: usize,
     pub bytes_read: usize,
 }
@@ -985,4 +985,4 @@ pub fn version_info() -> VersionInfo {
 
 ---
 
-*For the latest documentation, see [docs.toondb.dev](https://docs.toondb.dev)*
+*For the latest documentation, see [docs.sochdb.dev](https://docs.sochdb.dev)*

@@ -1,19 +1,19 @@
-# SQL Support in ToonDB - Implementation Status
+# SQL Support in SochDB - Implementation Status
 
 ## Overview
 
-ToonDB has comprehensive SQL support integrated at the Rust client layer. All SDKs (Python, TypeScript, Go) have the execute() API in place, but full integration is pending due to architectural considerations.
+SochDB has comprehensive SQL support integrated at the Rust client layer. All SDKs (Python, TypeScript, Go) have the execute() API in place, but full integration is pending due to architectural considerations.
 
 ## Current Status
 
 ### ✅ Rust (Fully Working)
 
-The Rust client (`toondb-client`) has complete SQL support via the `QueryExecutor`:
+The Rust client (`sochdb-client`) has complete SQL support via the `QueryExecutor`:
 
 ```rust
-use toondb::ToonClient;
+use sochdb::SochClient;
 
-let client = ToonClient::open("/tmp/mydb")?;
+let client = SochClient::open("/tmp/mydb")?;
 
 // CREATE TABLE
 client.execute("CREATE TABLE products (id INT, name TEXT, price FLOAT)")?;
@@ -35,7 +35,7 @@ for row in result.rows().unwrap() {
 The Python SDK has the `execute()` API defined:
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 db = Database.open("/tmp/mydb")
 
@@ -45,7 +45,7 @@ print(f"Columns: {result.columns}")
 print(f"Rows: {result.rows}")
 ```
 
-**Status:** Returns stub data. Full integration blocked by circular dependency issue (toondb-storage → toondb-query → toondb-index → toondb-storage).
+**Status:** Returns stub data. Full integration blocked by circular dependency issue (sochdb-storage → sochdb-query → sochdb-index → sochdb-storage).
 
 **Example:** [examples/python/06_sql_queries.py](./python/06_sql_queries.py)
 
@@ -54,7 +54,7 @@ print(f"Rows: {result.rows}")
 The TypeScript SDK has the `execute()` API defined:
 
 ```typescript
-import { Database, SQLQueryResult } from '@toondb/toondb-js';
+import { Database, SQLQueryResult } from '@sochdb/sochdb-js';
 
 const db = await Database.open("/tmp/mydb");
 
@@ -78,11 +78,11 @@ The Go SDK has the `Execute()` API defined:
 package main
 
 import (
-    "github.com/toondb/toondb-go"
+    "github.com/sochdb/sochdb-go"
 )
 
 func main() {
-    db, _ := toondb.OpenDatabase("/tmp/mydb")
+    db, _ := sochdb.OpenDatabase("/tmp/mydb")
     defer db.Close()
     
     result, _ := db.Execute("SELECT * FROM users WHERE active = true")
@@ -103,33 +103,33 @@ func main() {
 ```
 User Code
    ↓
-ToonClient.execute(sql)
+SochClient.execute(sql)
    ↓
 QueryExecutor
    ↓
-toondb-query::sql::Parser
+sochdb-query::sql::Parser
    ↓
-toondb-query::sql::SqlExecutor
+sochdb-query::sql::SqlExecutor
    ↓
-ToonDB Storage Layer
+SochDB Storage Layer
 ```
 
 ### SDK Integration (Pending)
 
-The challenge is that non-Rust SDKs (Python, TypeScript, Go) communicate with ToonDB via:
+The challenge is that non-Rust SDKs (Python, TypeScript, Go) communicate with SochDB via:
 
 1. **Python**: FFI (Foreign Function Interface) - direct C bindings to Rust
 2. **TypeScript/Go**: IPC (Inter-Process Communication) - Unix socket protocol
 
-Both paths require adding SQL support at the `toondb-storage` layer, but `toondb-storage` → `toondb-query` creates a circular dependency:
-- `toondb-query` depends on `toondb-index`
-- `toondb-index` depends on `toondb-storage`
-- Adding `toondb-query` to `toondb-storage` closes the loop
+Both paths require adding SQL support at the `sochdb-storage` layer, but `sochdb-storage` → `sochdb-query` creates a circular dependency:
+- `sochdb-query` depends on `sochdb-index`
+- `sochdb-index` depends on `sochdb-storage`
+- Adding `sochdb-query` to `sochdb-storage` closes the loop
 
 ### Solution Options
 
 1. **Refactor Module Dependencies** (Preferred)
-   - Extract SQL parser/executor to `toondb-core` or standalone module
+   - Extract SQL parser/executor to `sochdb-core` or standalone module
    - Break circular dependency by reorganizing layers
 
 2. **SDK-Side Implementation**
@@ -198,7 +198,7 @@ cd examples/go && go run 06_sql_queries.go
 ## Next Steps
 
 1. Resolve circular dependency in module structure
-2. Add FFI binding `toondb_execute_sql()` for Python
+2. Add FFI binding `sochdb_execute_sql()` for Python
 3. Extend IPC protocol with `SQL_EXECUTE` opcode
 4. Wire SDK execute() methods to backend
 5. Comprehensive integration testing

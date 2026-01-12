@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-ToonDB Bulk Operations Example
+SochDB Bulk Operations Example
 ==============================
 
 This example demonstrates high-performance bulk operations that bypass
-Python FFI overhead by using the native toondb-bulk CLI.
+Python FFI overhead by using the native sochdb-bulk CLI.
 
 Key Benefits:
 - ~10x faster than FFI for large datasets
@@ -12,42 +12,42 @@ Key Benefits:
 - Memory-efficient streaming
 
 Expected Output:
-    ✓ Binary found at target/release/toondb-bulk
+    ✓ Binary found at target/release/sochdb-bulk
     ✓ Built 10000 vectors at ~1000+ vec/s
     ✓ Index saved to temp file
 
 Usage:
-    PYTHONPATH=toondb-python-sdk/src TOONDB_LIB_PATH=target/release python3 examples/python/03_bulk_operations.py
+    PYTHONPATH=sochdb-python-sdk/src SOCHDB_LIB_PATH=target/release python3 examples/python/03_bulk_operations.py
 """
 
 import os
 import sys
 import tempfile
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 import numpy as np
 
 
 def main():
     print("=" * 60)
-    print("  ToonDB Bulk Operations Example")
+    print("  SochDB Bulk Operations Example")
     print("=" * 60)
     
     try:
-        from toondb.bulk import bulk_build_index, get_toondb_bulk_path
+        from sochdb.bulk import bulk_build_index, get_sochdb_bulk_path
     except ImportError as e:
         print(f"❌ Import failed: {e}")
         return 1
     
     # 1. Check binary
-    print("\n[1] Checking toondb-bulk binary...")
+    print("\n[1] Checking sochdb-bulk binary...")
     try:
-        binary_path = get_toondb_bulk_path()
+        binary_path = get_sochdb_bulk_path()
         print(f"    ✓ Binary found at: {binary_path}")
     except RuntimeError as e:
         print(f"    ❌ Binary not found: {e}")
-        print("    Build with: cargo build --release -p toondb-tools")
+        print("    Build with: cargo build --release -p sochdb-tools")
         return 1
     
     # 2. Generate test vectors

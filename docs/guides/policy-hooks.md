@@ -1,6 +1,6 @@
 # Policy & Safety Hooks
 
-ToonDB provides a first-class policy enforcement system for AI agent safety.
+SochDB provides a first-class policy enforcement system for AI agent safety.
 This enables pre-write validation, post-read filtering, rate limiting, and
 audit logging to ensure agents operate within defined boundaries.
 
@@ -21,7 +21,7 @@ The `PolicyEngine` wraps database operations with configurable hooks:
 ### Python
 
 ```python
-from toondb import Database, PolicyEngine, PolicyAction
+from sochdb import Database, PolicyEngine, PolicyAction
 
 db = Database.open("./agent_data")
 policy = PolicyEngine(db)
@@ -47,15 +47,15 @@ policy.put(b"users/alice", b"data", context={"agent_id": "agent_001"})
 ### Go
 
 ```go
-db, _ := toondb.Open("./agent_data")
-policy := toondb.NewPolicyEngine(db)
+db, _ := sochdb.Open("./agent_data")
+policy := sochdb.NewPolicyEngine(db)
 
 // Block writes to system keys
-policy.BeforeWrite("system/*", func(ctx *toondb.PolicyContext) toondb.PolicyAction {
+policy.BeforeWrite("system/*", func(ctx *sochdb.PolicyContext) sochdb.PolicyAction {
     if ctx.AgentID != "" {
-        return toondb.PolicyDeny
+        return sochdb.PolicyDeny
     }
-    return toondb.PolicyAllow
+    return sochdb.PolicyAllow
 })
 
 // Use policy-wrapped operations
@@ -67,7 +67,7 @@ err := policy.Put([]byte("users/alice"), []byte("data"), map[string]string{
 ### TypeScript/Node.js
 
 ```typescript
-import { Database, PolicyEngine, PolicyAction } from '@sushanth/toondb';
+import { Database, PolicyEngine, PolicyAction } from '@sushanth/sochdb';
 
 const db = await Database.open('./agent_data');
 const policy = new PolicyEngine(db);
@@ -89,7 +89,7 @@ await policy.put(Buffer.from('users/alice'), Buffer.from('data'), {
 ### Rust
 
 ```rust
-use toondb_client::policy::{PolicyEngine, PolicyAction, PolicyContext};
+use sochdb_client::policy::{PolicyEngine, PolicyAction, PolicyContext};
 
 let conn = Connection::open("./agent_data")?;
 let policy = PolicyEngine::new(conn);
@@ -166,7 +166,7 @@ agent_entries = policy.get_audit_log(limit=100, agent_id="agent_001")
 Common patterns are provided as helpers:
 
 ```python
-from toondb.policy import deny_all, allow_all, require_agent_id, redact_value
+from sochdb.policy import deny_all, allow_all, require_agent_id, redact_value
 
 # Deny all operations matching pattern
 policy.before_write("readonly/*", deny_all)
@@ -183,7 +183,7 @@ policy.after_read("secrets/*", redact_value(b"[REDACTED]"))
 When a policy blocks an operation, a `PolicyViolation` error is raised:
 
 ```python
-from toondb import PolicyViolation
+from sochdb import PolicyViolation
 
 try:
     policy.put(b"system/config", b"malicious", context={"agent_id": "rogue"})

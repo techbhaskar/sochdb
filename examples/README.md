@@ -1,6 +1,6 @@
-# ToonDB Examples
+# SochDB Examples
 
-Real-world examples showing how to use ToonDB for AI/LLM applications.
+Real-world examples showing how to use SochDB for AI/LLM applications.
 
 ## Examples by Language
 
@@ -96,8 +96,8 @@ AZURE_EMEBEDDING_API_VERSION="2024-12-01-preview"
 
 ```bash
 # Set environment
-export PYTHONPATH=$(pwd)/toondb-python-sdk/src
-export TOONDB_LIB_PATH=$(pwd)/target/release
+export PYTHONPATH=$(pwd)/sochdb-python-sdk/src
+export SOCHDB_LIB_PATH=$(pwd)/target/release
 
 # Run any example
 python3 examples/python/langgraph_agent.py
@@ -110,7 +110,7 @@ python3 examples/python/semantic_search_api.py
 ### LangGraph Agent
 
 ```python
-from toondb import VectorIndex, Database
+from sochdb import VectorIndex, Database
 
 # Vector retrieval
 index = VectorIndex(dimension=1536)
@@ -126,7 +126,7 @@ with db.transaction() as txn:
 ### Semantic Search API
 
 ```python
-from toondb import VectorIndex
+from sochdb import VectorIndex
 
 # High-quality index settings
 index = VectorIndex(
@@ -180,7 +180,7 @@ class RAGChatbot:
    - Batch embedding API calls (16 texts per call for Azure)
 
 3. **Filtering**
-   - ToonDB uses post-filtering; over-fetch by 3x for filtered queries
+   - SochDB uses post-filtering; over-fetch by 3x for filtered queries
    - Store metadata externally for complex filter logic
 
 4. **Memory Management**

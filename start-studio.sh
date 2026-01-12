@@ -1,20 +1,20 @@
 #!/bin/bash
-# ToonDB Studio Launcher
-# Starts the ToonDB Studio as a Tauri desktop application
+# SochDB Studio Launcher
+# Starts the SochDB Studio as a Tauri desktop application
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-STUDIO_DIR="$SCRIPT_DIR/toondb-studio"
+STUDIO_DIR="$SCRIPT_DIR/sochdb-studio"
 
-echo "🎨 ToonDB Studio Launcher"
+echo "🎨 SochDB Studio Launcher"
 echo "========================="
 echo ""
 
 # Check if we're in the right directory
 if [ ! -d "$STUDIO_DIR" ]; then
-    echo "❌ Error: toondb-studio directory not found at $STUDIO_DIR"
-    echo "   Make sure you're running this script from the toondb root directory."
+    echo "❌ Error: sochdb-studio directory not found at $STUDIO_DIR"
+    echo "   Make sure you're running this script from the sochdb root directory."
     exit 1
 fi
 
@@ -46,7 +46,7 @@ fi
 
 # Check for --web flag to run web-only mode
 if [ "$1" == "--web" ]; then
-    echo "🌐 Starting ToonDB Studio (Web Mode)..."
+    echo "🌐 Starting SochDB Studio (Web Mode)..."
     echo ""
     echo "   Local:   http://localhost:$PORT/"
     echo ""
@@ -54,7 +54,7 @@ if [ "$1" == "--web" ]; then
     echo ""
     npm run dev
 else
-    echo "🚀 Starting ToonDB Studio (Tauri Desktop App)..."
+    echo "🚀 Starting SochDB Studio (Tauri Desktop App)..."
     echo ""
     echo "   This will compile Rust and launch the desktop app."
     echo "   Press Ctrl+C to stop."

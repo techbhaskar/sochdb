@@ -1,4 +1,4 @@
-# ToonDB v0.3.5 Release Notes
+# SochDB v0.3.5 Release Notes
 
 **Release Date**: January 2025  
 **Focus**: Sync-First Architecture, Enhanced SQL Support, SDK Improvements
@@ -7,7 +7,7 @@
 
 ## Overview
 
-ToonDB v0.3.5 represents a significant architectural evolution, moving to a **sync-first core** design that makes the async runtime (tokio) truly optional. This release follows SQLite's proven design pattern: synchronous storage core with async only at the edges.
+SochDB v0.3.5 represents a significant architectural evolution, moving to a **sync-first core** design that makes the async runtime (tokio) truly optional. This release follows SQLite's proven design pattern: synchronous storage core with async only at the edges.
 
 ## Major Changes
 
@@ -24,8 +24,8 @@ ToonDB v0.3.5 represents a significant architectural evolution, moving to a **sy
 ┌──────────────────────────────────────────────────┐
 │ Binary Size Reduction                             │
 ├──────────────────────────────────────────────────┤
-│ toondb-storage (default):      732 KB            │
-│ toondb-storage (with async): 1,200 KB            │
+│ sochdb-storage (default):      732 KB            │
+│ sochdb-storage (with async): 1,200 KB            │
 │ Savings: ~500 KB (40% reduction)                 │
 └──────────────────────────────────────────────────┘
 
@@ -56,7 +56,7 @@ ToonDB v0.3.5 represents a significant architectural evolution, moving to a **sy
                   │
                   ▼
     ┌─────────────────────────────┐
-    │    ToonDB Core (Sync)       │
+    │    SochDB Core (Sync)       │
     │  ✓ Storage Engine           │
     │  ✓ MVCC + WAL               │
     │  ✓ SQL Query Engine         │
@@ -75,19 +75,19 @@ ToonDB v0.3.5 represents a significant architectural evolution, moving to a **sy
 
 | Crate               | tokio Status       | Binary Size (approx) |
 |---------------------|-------------------|---------------------|
-| `toondb-storage`    | Optional          | 732 KB (no tokio)   |
-| `toondb-core`       | Not included      | 450 KB              |
-| `toondb-query`      | Not included      | 380 KB              |
-| `toondb-index`      | Not included      | 2.1 MB              |
-| `toondb-kernel`     | Optional          | 1.8 MB              |
-| `toondb-grpc`       | Required          | 3.5 MB              |
+| `sochdb-storage`    | Optional          | 732 KB (no tokio)   |
+| `sochdb-core`       | Not included      | 450 KB              |
+| `sochdb-query`      | Not included      | 380 KB              |
+| `sochdb-index`      | Not included      | 2.1 MB              |
+| `sochdb-kernel`     | Optional          | 1.8 MB              |
+| `sochdb-grpc`       | Required          | 3.5 MB              |
 
 ### 2. Enhanced SQL Support (AST-Based Executor)
 
 **New Features:**
 
 #### a) Multi-Dialect Support
-ToonDB now understands syntax from multiple SQL dialects and normalizes them internally:
+SochDB now understands syntax from multiple SQL dialects and normalizes them internally:
 
 ```sql
 -- PostgreSQL syntax
@@ -162,7 +162,7 @@ SQL Syntax Error at position 25:
 
 ```python
 # Old way (v0.3.4)
-from toondb import Database, VectorIndex
+from sochdb import Database, VectorIndex
 
 db = Database.open("./my_db")
 index = VectorIndex("./vectors/embeddings", dimension=384, metric="cosine")
@@ -175,7 +175,7 @@ results = index.search(query, k=10)
 
 ```python
 # New way (v0.3.5)
-from toondb import Database
+from sochdb import Database
 
 db = Database.open("./my_db")
 
@@ -200,7 +200,7 @@ results = db.search("embeddings", query, k=10)
 | `search()` | `(index_name: str, query: List[float], k: int) -> List[Dict]` | Search k-nearest neighbors |
 
 **Implementation Details:**
-- Index metadata stored in ToonDB's internal tables
+- Index metadata stored in SochDB's internal tables
 - Automatic index loading on database open
 - Reference counting for shared indexes
 - Thread-safe access via Rust mutex
@@ -219,14 +219,14 @@ db.create_index("embeddings", dimension=384)
 Full TypeScript support for graph operations previously only available in Python:
 
 ```typescript
-import { Database } from '@sushanth/toondb';
+import { Database } from '@sushanth/sochdb';
 
 const db = await Database.open('./my_db');
 
 // Add nodes
 await db.addNode('user_1', { type: 'user', name: 'Alice' });
 await db.addNode('user_2', { type: 'user', name: 'Bob' });
-await db.addNode('proj_1', { type: 'project', name: 'ToonDB' });
+await db.addNode('proj_1', { type: 'project', name: 'SochDB' });
 
 // Add relationships
 await db.addEdge('user_1', 'proj_1', { role: 'maintainer' });
@@ -274,15 +274,15 @@ await db.close();
 
 ```bash
 # v0.3.4
-cargo tree -p toondb-storage | wc -l
+cargo tree -p sochdb-storage | wc -l
 # Output: 102 crates
 
 # v0.3.5 (default)
-cargo tree -p toondb-storage --no-default-features | wc -l  
+cargo tree -p sochdb-storage --no-default-features | wc -l  
 # Output: 62 crates (-40%)
 
 # v0.3.5 (with async)
-cargo tree -p toondb-storage --features async | wc -l
+cargo tree -p sochdb-storage --features async | wc -l
 # Output: 102 crates
 ```
 
@@ -307,12 +307,12 @@ cargo tree -p toondb-storage --features async | wc -l
 ```toml
 # Cargo.toml
 [dependencies]
-toondb = "0.3.5"
+sochdb = "0.3.5"
 ```
 
 ```rust
 // Your code stays the same
-use toondb::Database;
+use sochdb::Database;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db = Database::open("./my_db")?;
@@ -328,12 +328,12 @@ Enable the `async` feature:
 ```toml
 # Cargo.toml
 [dependencies]
-toondb = { version = "0.3.5", features = ["async"] }
+sochdb = { version = "0.3.5", features = ["async"] }
 ```
 
 ```rust
 // Async code works as before
-use toondb::Database;
+use sochdb::Database;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -349,7 +349,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 **Old API (still works):**
 ```python
-from toondb import VectorIndex
+from sochdb import VectorIndex
 
 index = VectorIndex("./vectors", dimension=384)
 index.add("doc1", embedding)
@@ -357,7 +357,7 @@ index.add("doc1", embedding)
 
 **New API (recommended):**
 ```python
-from toondb import Database
+from sochdb import Database
 
 db = Database.open("./my_db")
 db.create_index("vectors", dimension=384)
@@ -380,7 +380,7 @@ db.insert_vectors("vectors", ["doc1"], [embedding])
 // Previously: only available in Python
 // Now: full TypeScript support
 
-import { Database } from '@sushanth/toondb';
+import { Database } from '@sushanth/sochdb';
 
 const db = await Database.open('./my_db');
 await db.addNode('node1', { attr: 'value' });
@@ -399,19 +399,19 @@ cargo test --workspace
 # Result: 1,697 tests passed
 
 # Storage without async
-cargo test -p toondb-storage --no-default-features
+cargo test -p sochdb-storage --no-default-features
 # Result: 636 tests passed
 
 # Storage with async
-cargo test -p toondb-storage --features async
+cargo test -p sochdb-storage --features async
 # Result: 636 tests passed
 
 # Python SDK
-cd toondb-python-sdk && python -m pytest
+cd sochdb-python-sdk && python -m pytest
 # Result: 156 tests passed
 
 # Node.js SDK
-cd toondb-nodejs-sdk && npm test
+cd sochdb-nodejs-sdk && npm test
 # Result: 89 tests passed
 ```
 
@@ -476,16 +476,16 @@ None in this release. All existing APIs remain supported.
 
 ## Resources
 
-- **Documentation**: [https://docs.toondb.dev](https://docs.toondb.dev)
-- **GitHub**: [https://github.com/toondb/toondb](https://github.com/toondb/toondb)
-- **Benchmarks**: [toondb-benchmarks](https://github.com/toondb/toondb-benchmarks)
-- **Discord**: [Community chat](https://discord.gg/toondb)
+- **Documentation**: [https://docs.sochdb.dev](https://docs.sochdb.dev)
+- **GitHub**: [https://github.com/sochdb/sochdb](https://github.com/sochdb/sochdb)
+- **Benchmarks**: [sochdb-benchmarks](https://github.com/sochdb/sochdb-benchmarks)
+- **Discord**: [Community chat](https://discord.gg/sochdb)
 
 ---
 
 ## Feedback
 
 We'd love to hear about your experience with v0.3.5:
-- Open issues on [GitHub](https://github.com/toondb/toondb/issues)
-- Join our [Discord](https://discord.gg/toondb)
-- Email: team@toondb.dev
+- Open issues on [GitHub](https://github.com/sochdb/sochdb/issues)
+- Join our [Discord](https://discord.gg/sochdb)
+- Email: team@sochdb.dev

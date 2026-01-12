@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script to verify ToonDB analytics integration.
+Test script to verify SochDB analytics integration.
 
 This sends several test events to PostHog to verify the integration works.
 Events should appear in PostHog dashboard at: https://us.posthog.com
@@ -10,9 +10,9 @@ import os
 import time
 
 # Ensure analytics is enabled
-os.environ['TOONDB_DISABLE_ANALYTICS'] = 'false'
+os.environ['SOCHDB_DISABLE_ANALYTICS'] = 'false'
 
-from toondb.analytics import (
+from sochdb.analytics import (
     capture,
     capture_error,
     track_database_open,
@@ -24,7 +24,7 @@ from toondb.analytics import (
 
 def main():
     print("=" * 60)
-    print("ToonDB Analytics Test")
+    print("SochDB Analytics Test")
     print("=" * 60)
     print()
     

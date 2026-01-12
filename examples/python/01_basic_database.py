@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-ToonDB Basic Usage Example
+SochDB Basic Usage Example
 ==========================
 
-This example demonstrates the core functionality of ToonDB:
+This example demonstrates the core functionality of SochDB:
 1. Database operations (put, get, delete)
 2. Path-based access
 3. Transactions
@@ -17,7 +17,7 @@ Expected Output:
     ✓ Database stats available
 
 Usage:
-    PYTHONPATH=toondb-python-sdk/src TOONDB_LIB_PATH=target/release python3 examples/python/01_basic_database.py
+    PYTHONPATH=sochdb-python-sdk/src SOCHDB_LIB_PATH=target/release python3 examples/python/01_basic_database.py
 """
 
 import os
@@ -25,19 +25,19 @@ import sys
 import tempfile
 
 # Setup path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 
 def main():
     print("=" * 60)
-    print("  ToonDB Basic Database Example")
+    print("  SochDB Basic Database Example")
     print("=" * 60)
     
     try:
-        from toondb import Database
+        from sochdb import Database
     except ImportError as e:
         print(f"❌ Import failed: {e}")
-        print("   Set TOONDB_LIB_PATH to target/release directory")
+        print("   Set SOCHDB_LIB_PATH to target/release directory")
         return 1
     
     # Create temp directory for test database
@@ -51,9 +51,9 @@ def main():
         
         # 2. Basic put/get
         print("\n[2] Testing basic put/get...")
-        db.put(b"greeting", b"Hello, ToonDB!")
+        db.put(b"greeting", b"Hello, SochDB!")
         value = db.get(b"greeting")
-        assert value == b"Hello, ToonDB!", f"Expected 'Hello, ToonDB!', got {value}"
+        assert value == b"Hello, SochDB!", f"Expected 'Hello, SochDB!', got {value}"
         print("    ✓ Basic put/get works")
         
         # 3. Path-based access

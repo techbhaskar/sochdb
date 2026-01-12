@@ -1,15 +1,15 @@
 # =============================================================================
-# ToonDB Azure Pipeline - Python SDK Release (All-in-One)
+# SochDB Azure Pipeline - Python SDK Release (All-in-One)
 # =============================================================================
 #
 # Single pipeline that builds wheels for all platforms and publishes to PyPI.
 # All artifacts come from the same commit/version - no cross-pipeline issues.
 #
 # Produces:
-#   - toondb-X.Y.Z-py3-none-manylinux_2_17_x86_64.whl
-#   - toondb-X.Y.Z-py3-none-macosx_11_0_arm64.whl
-#   - toondb-X.Y.Z-py3-none-win_amd64.whl
-#   - toondb-X.Y.Z.tar.gz (source distribution)
+#   - sochdb-X.Y.Z-py3-none-manylinux_2_17_x86_64.whl
+#   - sochdb-X.Y.Z-py3-none-macosx_11_0_arm64.whl
+#   - sochdb-X.Y.Z-py3-none-win_amd64.whl
+#   - sochdb-X.Y.Z.tar.gz (source distribution)
 #
 # Prerequisites:
 #   - Add PYPI_API_TOKEN as a secret variable in Azure DevOps
@@ -56,20 +56,20 @@ stages:
             displayName: 'Install Rust'
 
           - script: |
-              cargo build --release -p toondb-tools -p toondb-storage -p toondb-index
+              cargo build --release -p sochdb-tools -p sochdb-storage -p sochdb-index
             displayName: 'Build Rust libraries'
 
           - script: |
-              mkdir -p toondb-python-sdk/src/toondb/lib/x86_64-unknown-linux-gnu
-              mkdir -p toondb-python-sdk/src/toondb/_bin/x86_64-unknown-linux-gnu
-              cp target/release/libtoondb_storage.so toondb-python-sdk/src/toondb/lib/x86_64-unknown-linux-gnu/
-              cp target/release/libtoondb_index.so toondb-python-sdk/src/toondb/lib/x86_64-unknown-linux-gnu/
-              cp target/release/toondb-bulk toondb-python-sdk/src/toondb/_bin/x86_64-unknown-linux-gnu/
-              chmod +x toondb-python-sdk/src/toondb/_bin/x86_64-unknown-linux-gnu/toondb-bulk
+              mkdir -p sochdb-python-sdk/src/sochdb/lib/x86_64-unknown-linux-gnu
+              mkdir -p sochdb-python-sdk/src/sochdb/_bin/x86_64-unknown-linux-gnu
+              cp target/release/libsochdb_storage.so sochdb-python-sdk/src/sochdb/lib/x86_64-unknown-linux-gnu/
+              cp target/release/libsochdb_index.so sochdb-python-sdk/src/sochdb/lib/x86_64-unknown-linux-gnu/
+              cp target/release/sochdb-bulk sochdb-python-sdk/src/sochdb/_bin/x86_64-unknown-linux-gnu/
+              chmod +x sochdb-python-sdk/src/sochdb/_bin/x86_64-unknown-linux-gnu/sochdb-bulk
             displayName: 'Copy binaries to SDK'
 
           - script: |
-              cd toondb-python-sdk
+              cd sochdb-python-sdk
               pip install build wheel
               python -m build
               # Rename wheel with platform tag
@@ -83,7 +83,7 @@ stages:
 
           - task: PublishPipelineArtifact@1
             inputs:
-              targetPath: 'toondb-python-sdk/dist'
+              targetPath: 'sochdb-python-sdk/dist'
               artifactName: 'dist-linux-x64'
 
       # -----------------------------------------------------------------------
@@ -107,20 +107,20 @@ stages:
 
           - script: |
               rustup target add aarch64-apple-darwin
-              cargo build --release -p toondb-tools -p toondb-storage -p toondb-index --target aarch64-apple-darwin
+              cargo build --release -p sochdb-tools -p sochdb-storage -p sochdb-index --target aarch64-apple-darwin
             displayName: 'Build Rust libraries'
 
           - script: |
-              mkdir -p toondb-python-sdk/src/toondb/lib/aarch64-apple-darwin
-              mkdir -p toondb-python-sdk/src/toondb/_bin/aarch64-apple-darwin
-              cp target/aarch64-apple-darwin/release/libtoondb_storage.dylib toondb-python-sdk/src/toondb/lib/aarch64-apple-darwin/
-              cp target/aarch64-apple-darwin/release/libtoondb_index.dylib toondb-python-sdk/src/toondb/lib/aarch64-apple-darwin/
-              cp target/aarch64-apple-darwin/release/toondb-bulk toondb-python-sdk/src/toondb/_bin/aarch64-apple-darwin/
-              chmod +x toondb-python-sdk/src/toondb/_bin/aarch64-apple-darwin/toondb-bulk
+              mkdir -p sochdb-python-sdk/src/sochdb/lib/aarch64-apple-darwin
+              mkdir -p sochdb-python-sdk/src/sochdb/_bin/aarch64-apple-darwin
+              cp target/aarch64-apple-darwin/release/libsochdb_storage.dylib sochdb-python-sdk/src/sochdb/lib/aarch64-apple-darwin/
+              cp target/aarch64-apple-darwin/release/libsochdb_index.dylib sochdb-python-sdk/src/sochdb/lib/aarch64-apple-darwin/
+              cp target/aarch64-apple-darwin/release/sochdb-bulk sochdb-python-sdk/src/sochdb/_bin/aarch64-apple-darwin/
+              chmod +x sochdb-python-sdk/src/sochdb/_bin/aarch64-apple-darwin/sochdb-bulk
             displayName: 'Copy binaries to SDK'
 
           - script: |
-              cd toondb-python-sdk
+              cd sochdb-python-sdk
               pip install build wheel
               python -m build --wheel
               # Rename wheel with platform tag
@@ -134,7 +134,7 @@ stages:
 
           - task: PublishPipelineArtifact@1
             inputs:
-              targetPath: 'toondb-python-sdk/dist'
+              targetPath: 'sochdb-python-sdk/dist'
               artifactName: 'wheel-macos-arm64'
 
       # -----------------------------------------------------------------------
@@ -166,19 +166,19 @@ stages:
             displayName: 'Install Rust'
 
           - script: |
-              cargo build --release -p toondb-tools -p toondb-storage -p toondb-index
+              cargo build --release -p sochdb-tools -p sochdb-storage -p sochdb-index
             displayName: 'Build Rust libraries'
 
           - powershell: |
-              New-Item -ItemType Directory -Force -Path toondb-python-sdk\src\toondb\lib\x86_64-pc-windows-msvc
-              New-Item -ItemType Directory -Force -Path toondb-python-sdk\src\toondb\_bin\x86_64-pc-windows-msvc
-              Copy-Item target\release\toondb_storage.dll toondb-python-sdk\src\toondb\lib\x86_64-pc-windows-msvc\
-              Copy-Item target\release\toondb_index.dll toondb-python-sdk\src\toondb\lib\x86_64-pc-windows-msvc\
-              Copy-Item target\release\toondb-bulk.exe toondb-python-sdk\src\toondb\_bin\x86_64-pc-windows-msvc\
+              New-Item -ItemType Directory -Force -Path sochdb-python-sdk\src\sochdb\lib\x86_64-pc-windows-msvc
+              New-Item -ItemType Directory -Force -Path sochdb-python-sdk\src\sochdb\_bin\x86_64-pc-windows-msvc
+              Copy-Item target\release\sochdb_storage.dll sochdb-python-sdk\src\sochdb\lib\x86_64-pc-windows-msvc\
+              Copy-Item target\release\sochdb_index.dll sochdb-python-sdk\src\sochdb\lib\x86_64-pc-windows-msvc\
+              Copy-Item target\release\sochdb-bulk.exe sochdb-python-sdk\src\sochdb\_bin\x86_64-pc-windows-msvc\
             displayName: 'Copy binaries to SDK'
 
           - powershell: |
-              cd toondb-python-sdk
+              cd sochdb-python-sdk
               pip install build wheel
               python -m build --wheel
               # Rename wheel with platform tag
@@ -192,7 +192,7 @@ stages:
 
           - task: PublishPipelineArtifact@1
             inputs:
-              targetPath: 'toondb-python-sdk\dist'
+              targetPath: 'sochdb-python-sdk\dist'
               artifactName: 'wheel-windows-x64'
 
   # ===========================================================================

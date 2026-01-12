@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-CrewAI + ToonDB Integration Example
+CrewAI + SochDB Integration Example
 
 Demonstrates a multi-agent research crew with:
-- ToonDB VectorIndex for knowledge retrieval
+- SochDB VectorIndex for knowledge retrieval
 - CrewAI for multi-agent orchestration
 - Real embeddings via Azure OpenAI
 
@@ -22,22 +22,22 @@ import numpy as np
 import requests
 from typing import List, Dict
 
-# Add ToonDB SDK to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+# Add SochDB SDK to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 from dotenv import load_dotenv
 load_dotenv()
 
 
 # =============================================================================
-# ToonDB + Azure OpenAI Setup
+# SochDB + Azure OpenAI Setup
 # =============================================================================
 
-class ToonDBRetriever:
-    """ToonDB-powered retrieval tool for CrewAI agents."""
+class SochDBRetriever:
+    """SochDB-powered retrieval tool for CrewAI agents."""
     
     def __init__(self):
-        from toondb import VectorIndex
+        from sochdb import VectorIndex
         
         # Azure embeddings
         self.embed_endpoint = os.getenv("AZURE_EMEBEDDING_ENDPOINT")
@@ -87,27 +87,27 @@ def run_crewai_style_research():
     2. Create Task instances
     3. Create a Crew and execute
     
-    This example shows the ToonDB integration pattern.
+    This example shows the SochDB integration pattern.
     """
     
     print("="*70)
-    print("  CREWAI-STYLE RESEARCH CREW + TOONDB")
+    print("  CREWAI-STYLE RESEARCH CREW + SOCHDB")
     print("="*70)
     
     # Setup retriever
-    print("\n1. Setting up ToonDB knowledge base...")
-    retriever = ToonDBRetriever()
+    print("\n1. Setting up SochDB knowledge base...")
+    retriever = SochDBRetriever()
     
     # Add knowledge documents
     knowledge = [
-        "ToonDB is a high-performance database designed for AI agents and LLM applications.",
-        "ToonDB achieves 117,000 vector inserts per second and 0.03ms search latency.",
-        "ToonDB uses a Trie-Columnar Hybrid (TCH) storage engine for hierarchical data.",
-        "ToonDB is 24x faster than ChromaDB on vector search benchmarks.",
-        "ToonDB supports session management, context queries, and token budget enforcement.",
-        "ToonDB provides an MCP (Model Context Protocol) integration for LLM tools.",
-        "ToonDB's HNSW index uses SIMD acceleration for fast similarity search.",
-        "ToonDB can handle 10M+ vectors with consistent sub-millisecond latency.",
+        "SochDB is a high-performance database designed for AI agents and LLM applications.",
+        "SochDB achieves 117,000 vector inserts per second and 0.03ms search latency.",
+        "SochDB uses a Trie-Columnar Hybrid (TCH) storage engine for hierarchical data.",
+        "SochDB is 24x faster than ChromaDB on vector search benchmarks.",
+        "SochDB supports session management, context queries, and token budget enforcement.",
+        "SochDB provides an MCP (Model Context Protocol) integration for LLM tools.",
+        "SochDB's HNSW index uses SIMD acceleration for fast similarity search.",
+        "SochDB can handle 10M+ vectors with consistent sub-millisecond latency.",
     ]
     
     count = retriever.add_documents(knowledge)
@@ -143,13 +143,13 @@ def run_crewai_style_research():
     
     # Agent 1: Researcher
     print("   [Researcher Agent]")
-    research_query = "What makes ToonDB fast for AI applications?"
+    research_query = "What makes SochDB fast for AI applications?"
     research_context = retriever.search(research_query, k=3)
     print(f"   Retrieved {len(research_context)} relevant docs")
     
     research_result = call_llm(
         role="Research Analyst specializing in database technologies",
-        task=f"Based on this information, summarize ToonDB's key performance characteristics:\n\n{chr(10).join(research_context)}",
+        task=f"Based on this information, summarize SochDB's key performance characteristics:\n\n{chr(10).join(research_context)}",
     )
     print(f"   Research: {research_result[:100]}...")
     
@@ -157,7 +157,7 @@ def run_crewai_style_research():
     print("\n   [Writer Agent]")
     write_result = call_llm(
         role="Technical Writer creating documentation",
-        task=f"Write a brief product description for ToonDB based on this research:\n\n{research_result}",
+        task=f"Write a brief product description for SochDB based on this research:\n\n{research_result}",
     )
     print(f"   Article: {write_result[:100]}...")
     
@@ -181,14 +181,14 @@ def run_crewai_style_research():
 
 from crewai import Agent, Task, Crew
 from crewai.tools import BaseTool
-from toondb import VectorIndex
+from sochdb import VectorIndex
 
-# Create a ToonDB retrieval tool
-class ToonDBSearchTool(BaseTool):
-    name: str = "toondb_search"
-    description: str = "Search ToonDB knowledge base for relevant information"
+# Create a SochDB retrieval tool
+class SochDBSearchTool(BaseTool):
+    name: str = "sochdb_search"
+    description: str = "Search SochDB knowledge base for relevant information"
     
-    def __init__(self, retriever: ToonDBRetriever):
+    def __init__(self, retriever: SochDBRetriever):
         self.retriever = retriever
     
     def _run(self, query: str) -> str:
@@ -200,7 +200,7 @@ researcher = Agent(
     role="Research Analyst",
     goal="Find accurate information about the topic",
     backstory="Expert at finding and synthesizing information",
-    tools=[ToonDBSearchTool(retriever)],
+    tools=[SochDBSearchTool(retriever)],
 )
 
 writer = Agent(
@@ -211,7 +211,7 @@ writer = Agent(
 
 # Create tasks
 research_task = Task(
-    description="Research ToonDB's performance characteristics",
+    description="Research SochDB's performance characteristics",
     agent=researcher,
 )
 

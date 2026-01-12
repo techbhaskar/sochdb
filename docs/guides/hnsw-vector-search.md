@@ -1,6 +1,6 @@
 # HNSW Vector Search with Filtering
 
-ToonDB provides high-performance vector search using HNSW (Hierarchical Navigable Small World) graphs, with support for session and timestamp filtering. This enables efficient semantic search over agent memory systems, chat histories, and other temporal data.
+SochDB provides high-performance vector search using HNSW (Hierarchical Navigable Small World) graphs, with support for session and timestamp filtering. This enables efficient semantic search over agent memory systems, chat histories, and other temporal data.
 
 ## Overview
 
@@ -25,7 +25,7 @@ The HNSW index provides:
 ### Basic Vector Search
 
 ```python
-from toondb import HnswIndex
+from sochdb import HnswIndex
 import numpy as np
 
 # Create index with 1536 dimensions (text-embedding-3-small)
@@ -54,7 +54,7 @@ for id, dist in zip(ids, distances):
 For agent memory systems, you often need to search within a specific session and time window:
 
 ```python
-from toondb import Database, HnswIndex
+from sochdb import Database, HnswIndex
 import numpy as np
 import time
 import json
@@ -213,7 +213,7 @@ for content, score in results:
 ## JavaScript/TypeScript SDK
 
 ```typescript
-import { VectorIndex } from '@sushanth/toondb';
+import { VectorIndex } from '@sushanth/sochdb';
 
 // Create HNSW index
 const index = new VectorIndex({

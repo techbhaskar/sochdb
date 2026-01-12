@@ -1,8 +1,8 @@
-# ToonDB Developer Usage Guide
+# SochDB Developer Usage Guide
 
 > **AI-Native Database for Agentic Applications**
 > 
-> A comprehensive guide for integrating ToonDB into modern LLM-powered systems.
+> A comprehensive guide for integrating SochDB into modern LLM-powered systems.
 
 ---
 
@@ -24,21 +24,21 @@
 
 ```bash
 # Build from source
-git clone https://github.com/toondb/toondb
-cd toondb
+git clone https://github.com/sochdb/sochdb
+cd sochdb
 cargo build --release
 
 # Install Python SDK
-pip install toondb-client
+pip install sochdb-client
 
 # Set library path (required for FFI)
-export TOONDB_LIB_PATH=/path/to/toondb/target/release
+export SOCHDB_LIB_PATH=/path/to/sochdb/target/release
 ```
 
 ### Your First Database
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 # Open database (creates if not exists)
 db = Database.open("./my_agent_data")
@@ -66,8 +66,8 @@ Add to your MCP configuration:
 ```json
 {
   "mcpServers": {
-    "toondb": {
-      "command": "toondb-mcp",
+    "sochdb": {
+      "command": "sochdb-mcp",
       "args": ["--db", "./agent_memory"]
     }
   }
@@ -80,7 +80,7 @@ Add to your MCP configuration:
 
 ### 1. Path-Based Data Model
 
-ToonDB uses hierarchical paths instead of tables, enabling O(|path|) lookups:
+SochDB uses hierarchical paths instead of tables, enabling O(|path|) lookups:
 
 ```
 /users/{user_id}/profile
@@ -103,7 +103,7 @@ db.scan(b"users/alice/history/", b"users/alice/history/~")  # Range scan
 
 ### 2. TOON Format (40-66% Token Savings)
 
-ToonDB's wire format is optimized for LLM consumption:
+SochDB's wire format is optimized for LLM consumption:
 
 ```
 # JSON (7,500 tokens for 100 rows × 5 fields)
@@ -119,7 +119,7 @@ table[100]{f1,f2,f3,f4,f5}:
 **Request TOON format in queries:**
 
 ```python
-result = toondb.context_query(
+result = sochdb.context_query(
     sections=[...],
     format="toon"  # Default, 40-66% fewer tokens
 )
@@ -130,7 +130,7 @@ result = toondb.context_query(
 Assemble LLM context in a single call with automatic token budgeting:
 
 ```python
-context = toondb.context_query(
+context = sochdb.context_query(
     sections=[
         # Priority 0 (highest): Always include
         {
@@ -197,12 +197,12 @@ from typing import TypedDict
 import subprocess
 import json
 
-class ToonDBMCPClient:
-    """MCP client for ToonDB integration with LangGraph"""
+class SochDBMCPClient:
+    """MCP client for SochDB integration with LangGraph"""
     
     def __init__(self, db_path: str):
         self.proc = subprocess.Popen(
-            ["toondb-mcp", "--db", db_path],
+            ["sochdb-mcp", "--db", db_path],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             text=True
@@ -244,7 +244,7 @@ class ToonDBMCPClient:
     def context_query(self, sections: list, token_budget: int = 4000) -> str:
         """Build context with automatic token budgeting"""
         result = self._send_request("tools/call", {
-            "name": "toondb_context_query",
+            "name": "sochdb_context_query",
             "arguments": {
                 "sections": sections,
                 "token_budget": token_budget,
@@ -270,13 +270,13 @@ class AgentState(TypedDict):
 
 
 # Build the graph
-def build_agent_graph(toondb: ToonDBMCPClient):
+def build_agent_graph(sochdb: SochDBMCPClient):
     
     def retrieve_context(state: AgentState) -> AgentState:
-        """Retrieve relevant context from ToonDB"""
+        """Retrieve relevant context from SochDB"""
         user_query = state["messages"][-1]["content"]
         
-        context = toondb.context_query(
+        context = sochdb.context_query(
             sections=[
                 {"name": "user", "kind": "get", "path": f"/users/{state['user_id']}/preferences"},
                 {"name": "history", "kind": "last", "table": "messages", "top_k": 5},
@@ -303,8 +303,8 @@ def build_agent_graph(toondb: ToonDBMCPClient):
 
 
 # Usage
-toondb = ToonDBMCPClient("./agent_memory")
-agent = build_agent_graph(toondb)
+sochdb = SochDBMCPClient("./agent_memory")
+agent = build_agent_graph(sochdb)
 result = agent.invoke({
     "messages": [{"role": "user", "content": "How do I reset my password?"}],
     "user_id": "alice"
@@ -319,8 +319,8 @@ from crewai_tools import BaseTool
 import subprocess
 import json
 
-class ToonDBContextTool(BaseTool):
-    name: str = "toondb_context"
+class SochDBContextTool(BaseTool):
+    name: str = "sochdb_context"
     description: str = "Retrieve relevant context from the knowledge base with automatic token budgeting"
     
     def __init__(self, db_path: str):
@@ -330,7 +330,7 @@ class ToonDBContextTool(BaseTool):
     
     def _start_server(self):
         self.proc = subprocess.Popen(
-            ["toondb-mcp", "--db", self.db_path],
+            ["sochdb-mcp", "--db", self.db_path],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             text=True
@@ -343,15 +343,15 @@ class ToonDBContextTool(BaseTool):
             {"name": "knowledge", "kind": "search", "query": query, "top_k": 5},
             {"name": "recent", "kind": "last", "table": "interactions", "top_k": 3}
         ]
-        # MCP call to toondb_context_query
-        return self._call_mcp("toondb_context_query", {
+        # MCP call to sochdb_context_query
+        return self._call_mcp("sochdb_context_query", {
             "sections": sections,
             "token_budget": token_budget
         })
 
 
-class ToonDBMemoryTool(BaseTool):
-    name: str = "toondb_memory"
+class SochDBMemoryTool(BaseTool):
+    name: str = "sochdb_memory"
     description: str = "Store and retrieve agent memories"
     
     def _run(self, action: str, **kwargs) -> str:
@@ -361,18 +361,18 @@ class ToonDBMemoryTool(BaseTool):
             return self._recall_memory(kwargs["key"])
 
 
-# Create agents with ToonDB tools
+# Create agents with SochDB tools
 researcher = Agent(
     role="Research Analyst",
     goal="Find relevant information from the knowledge base",
-    tools=[ToonDBContextTool("./research_db")],
+    tools=[SochDBContextTool("./research_db")],
     verbose=True
 )
 
 writer = Agent(
     role="Content Writer", 
     goal="Write reports based on research",
-    tools=[ToonDBMemoryTool("./research_db")],
+    tools=[SochDBMemoryTool("./research_db")],
     verbose=True
 )
 
@@ -392,11 +392,11 @@ crew = Crew(
 import openai
 import json
 
-class ToonDBOpenAIBridge:
-    """Bridge ToonDB MCP tools to OpenAI function calling format"""
+class SochDBOpenAIBridge:
+    """Bridge SochDB MCP tools to OpenAI function calling format"""
     
     def __init__(self, db_path: str):
-        self.toondb = ToonDBMCPClient(db_path)
+        self.sochdb = SochDBMCPClient(db_path)
         self.client = openai.OpenAI()
     
     def get_tools_schema(self) -> list:
@@ -435,9 +435,9 @@ class ToonDBOpenAIBridge:
         ]
     
     def execute_function(self, name: str, arguments: dict) -> str:
-        """Execute a function call via ToonDB"""
+        """Execute a function call via SochDB"""
         if name == "search_knowledge":
-            return self.toondb.context_query(
+            return self.sochdb.context_query(
                 sections=[{
                     "name": "results",
                     "kind": "search",
@@ -457,7 +457,7 @@ class ToonDBOpenAIBridge:
                     "table": f"users/{arguments['user_id']}/history",
                     "top_k": 10
                 })
-            return self.toondb.context_query(sections=sections, token_budget=1500)
+            return self.sochdb.context_query(sections=sections, token_budget=1500)
     
     def chat(self, messages: list) -> str:
         """Chat with function calling support"""
@@ -495,13 +495,13 @@ class ToonDBOpenAIBridge:
 
 ### Core Database Tools
 
-#### `toondb_context_query`
+#### `sochdb_context_query`
 
 Fetch AI-optimized context with token budgeting.
 
 ```json
 {
-  "name": "toondb_context_query",
+  "name": "sochdb_context_query",
   "arguments": {
     "sections": [
       {"name": "system", "kind": "literal", "text": "..."},
@@ -516,13 +516,13 @@ Fetch AI-optimized context with token budgeting.
 }
 ```
 
-#### `toondb_query`
+#### `sochdb_query`
 
-Execute ToonQL queries with TOON output.
+Execute SochQL queries with TOON output.
 
 ```json
 {
-  "name": "toondb_query",
+  "name": "sochdb_query",
   "arguments": {
     "query": "SELECT id, name, score FROM users WHERE score > 80 ORDER BY score DESC",
     "format": "toon",
@@ -531,19 +531,19 @@ Execute ToonQL queries with TOON output.
 }
 ```
 
-#### `toondb_get` / `toondb_put` / `toondb_delete`
+#### `sochdb_get` / `sochdb_put` / `sochdb_delete`
 
 Path-based CRUD operations.
 
 ```json
 // GET
-{"name": "toondb_get", "arguments": {"path": "/users/alice/profile"}}
+{"name": "sochdb_get", "arguments": {"path": "/users/alice/profile"}}
 
 // PUT
-{"name": "toondb_put", "arguments": {"path": "/users/alice/profile", "value": {"name": "Alice"}}}
+{"name": "sochdb_put", "arguments": {"path": "/users/alice/profile", "value": {"name": "Alice"}}}
 
 // DELETE
-{"name": "toondb_delete", "arguments": {"path": "/users/alice/temp_data"}}
+{"name": "sochdb_delete", "arguments": {"path": "/users/alice/temp_data"}}
 ```
 
 ### Memory Tools
@@ -622,7 +622,7 @@ Get recent rows from a log table.
 ### Basic Operations
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 # Open database
 db = Database.open("./data")
@@ -660,7 +660,7 @@ db.close()
 ### Vector Operations
 
 ```python
-from toondb import VectorIndex
+from sochdb import VectorIndex
 import numpy as np
 
 # Create index
@@ -690,7 +690,7 @@ loaded_index = VectorIndex.load("./vectors.hnsw")
 ### Bulk Operations
 
 ```python
-from toondb.bulk import bulk_build_index
+from sochdb.bulk import bulk_build_index
 import numpy as np
 
 # Generate embeddings
@@ -717,14 +717,14 @@ print(f"Throughput: {stats.rate:.0f} vectors/sec")
 
 ```python
 # Conservative: Prioritize completeness
-context = toondb.context_query(
+context = sochdb.context_query(
     sections=[...],
     token_budget=6000,        # Higher budget
     truncation="proportional" # Preserve all sections
 )
 
 # Aggressive: Prioritize speed/cost
-context = toondb.context_query(
+context = sochdb.context_query(
     sections=[...],
     token_budget=2000,        # Tight budget
     truncation="tail_drop"    # Drop low-priority first
@@ -749,7 +749,7 @@ with db.transaction() as txn:
 
 ```python
 from concurrent.futures import ThreadPoolExecutor
-from toondb import Database
+from sochdb import Database
 
 # Shared database instance (thread-safe)
 db = Database.open("./data")
@@ -806,7 +806,7 @@ SYSTEM_PROMPT_TOKENS = 500
 OUTPUT_RESERVE = 1000
 AVAILABLE_CONTEXT = MODEL_CONTEXT - SYSTEM_PROMPT_TOKENS - OUTPUT_RESERVE  # 6692
 
-context = toondb.context_query(
+context = sochdb.context_query(
     sections=[
         {"name": "critical", "priority": 0, ...},   # Always included
         {"name": "important", "priority": 1, ...},  # Included if room
@@ -846,7 +846,7 @@ for i, message in enumerate(messages):
 ### 4. Error Handling
 
 ```python
-from toondb import Database, ToonDBError
+from sochdb import Database, SochDBError
 
 try:
     db = Database.open("./data")
@@ -855,7 +855,7 @@ try:
         txn.put(b"key", b"value")
         # If exception here, auto-rollback
         
-except ToonDBError as e:
+except SochDBError as e:
     if "transaction conflict" in str(e):
         # Retry with backoff
         pass
@@ -900,7 +900,7 @@ while True:
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| `Library not found` | `TOONDB_LIB_PATH` not set | Export path to `libtoondb_storage.so/dylib` |
+| `Library not found` | `SOCHDB_LIB_PATH` not set | Export path to `libsochdb_storage.so/dylib` |
 | `Transaction conflict` | Concurrent write to same key | Implement retry with exponential backoff |
 | `Token budget exceeded` | Sections too large | Increase budget or reduce `top_k` |
 | `Vector search returns wrong results` | Known HNSW bug | Check GitHub issues, apply patches |
@@ -909,17 +909,17 @@ while True:
 
 ```bash
 # Enable verbose logging
-RUST_LOG=toondb=debug toondb-mcp --db ./data
+RUST_LOG=sochdb=debug sochdb-mcp --db ./data
 
 # MCP protocol debugging
-RUST_LOG=toondb_mcp=trace toondb-mcp --db ./data
+RUST_LOG=sochdb_mcp=trace sochdb-mcp --db ./data
 ```
 
 ---
 
 ## Version Compatibility
 
-| ToonDB Version | Python | Rust | MCP Protocol |
+| SochDB Version | Python | Rust | MCP Protocol |
 |----------------|--------|------|--------------|
 | 0.1.x | 3.9+ | 1.75+ | 2024-11-05 |
 
@@ -927,6 +927,6 @@ RUST_LOG=toondb_mcp=trace toondb-mcp --db ./data
 
 ## Resources
 
-- **GitHub**: https://github.com/toondb/toondb
+- **GitHub**: https://github.com/sochdb/sochdb
 - **MCP Specification**: https://modelcontextprotocol.io
-- **Issue Tracker**: https://github.com/toondb/toondb/issues
+- **Issue Tracker**: https://github.com/sochdb/sochdb/issues

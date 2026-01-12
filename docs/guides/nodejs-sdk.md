@@ -4,22 +4,22 @@
 > **⏱️ Time Required:** 20 minutes  
 > **📦 Requirements:** Node.js 18+, TypeScript 5+
 
-Complete guide to ToonDB's JavaScript SDK with embedded/external modes, TypeScript support, and multi-tenant patterns.
+Complete guide to SochDB's JavaScript SDK with embedded/external modes, TypeScript support, and multi-tenant patterns.
 
 ---
 
 ## 📦 Installation
 
 ```bash
-npm install toondb
+npm install sochdb
 # or
-yarn add toondb
+yarn add sochdb
 ```
 
 **Package includes:**
 - Native binaries for all major platforms
 - Full TypeScript definitions
-- CLI tools: `toondb-server`, `toondb-bulk`, `toondb-grpc-server`
+- CLI tools: `sochdb-server`, `sochdb-bulk`, `sochdb-grpc-server`
 
 ---
 
@@ -28,7 +28,7 @@ yarn add toondb
 ### Embedded Mode (Recommended)
 
 ```javascript
-import { Database } from 'toondb';
+import { Database } from 'sochdb';
 
 async function main() {
   // Open database with embedded engine
@@ -59,7 +59,7 @@ main();
 
 ### Embedded Mode (Default)
 
-Runs ToonDB engine in-process:
+Runs SochDB engine in-process:
 
 ```javascript
 const db = await Database.open('./my_db');
@@ -74,12 +74,12 @@ Connects to standalone server:
 
 ```bash
 # Terminal 1: Start server
-toondb-server --db ./my_database --host 127.0.0.1 --port 5555
+sochdb-server --db ./my_database --host 127.0.0.1 --port 5555
 ```
 
 ```javascript
 // Terminal 2: Connect
-import { IpcClient } from 'toondb';
+import { IpcClient } from 'sochdb';
 
 const client = await IpcClient.connect({
   host: '127.0.0.1',
@@ -335,7 +335,7 @@ products/mouse: result[1]{name,price}:Mouse,25
 ### Type-Safe Operations
 
 ```typescript
-import { Database, Transaction } from 'toondb';
+import { Database, Transaction } from 'sochdb';
 
 interface User {
   name: string;
@@ -512,7 +512,7 @@ await db.put('key', '\x00\x01\x02'); // May corrupt data
 ### Example 1: Multi-Tenant SaaS Application
 
 ```javascript
-import { Database } from 'toondb';
+import { Database } from 'sochdb';
 
 interface TenantUser {
   id: string;
@@ -582,7 +582,7 @@ Globex Inc (1 users):
 ### Example 2: SQL-Like Operations with K-V
 
 ```javascript
-import { Database } from 'toondb';
+import { Database } from 'sochdb';
 
 interface Product {
   id: string;
@@ -673,7 +673,7 @@ Deleted Mouse
 ### Example 3: Session Cache
 
 ```javascript
-import { Database } from 'toondb';
+import { Database } from 'sochdb';
 
 interface Session {
   userId: string;
@@ -842,9 +842,9 @@ const end = Buffer.from('users;'); // ';' is after '/' in ASCII
 
 ## Resources
 
-- [JavaScript SDK GitHub](https://github.com/toondb/toondb/tree/main/toondb-js)
-- [npm Package](https://www.npmjs.com/package/toondb)
-- [TypeScript Definitions](https://github.com/toondb/toondb/blob/main/toondb-js/src/index.ts)
+- [JavaScript SDK GitHub](https://github.com/sochdb/sochdb/tree/main/sochdb-js)
+- [npm Package](https://www.npmjs.com/package/sochdb)
+- [TypeScript Definitions](https://github.com/sochdb/sochdb/blob/main/sochdb-js/src/index.ts)
 - [Go SDK](./go-sdk.md)
 - [Python SDK](./python-sdk.md)
 - [Rust SDK](./rust-sdk.md)

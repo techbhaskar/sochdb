@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report a bug or unexpected behavior in ToonDB
+description: Report a bug or unexpected behavior in SochDB
 title: "[Bug]: "
 labels: ["bug", "needs-triage"]
 body:
@@ -62,8 +62,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: ToonDB Version
-      description: Which version of ToonDB are you using?
+      label: SochDB Version
+      description: Which version of SochDB are you using?
       placeholder: "e.g., 0.1.0, latest, main branch"
     validations:
       required: true
@@ -119,7 +119,7 @@ body:
     id: deployment
     attributes:
       label: Deployment Mode
-      description: How are you running ToonDB?
+      description: How are you running SochDB?
       options:
         - Embedded (in-process)
         - Client-Server (local)
@@ -166,7 +166,7 @@ body:
       options:
         - label: I have searched existing issues to ensure this bug hasn't been reported
           required: true
-        - label: I have tested with the latest version of ToonDB
+        - label: I have tested with the latest version of SochDB
           required: false
         - label: I have provided a minimal reproducible example
           required: false

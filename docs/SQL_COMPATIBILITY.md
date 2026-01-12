@@ -1,6 +1,6 @@
-# ToonDB SQL Surface & Compatibility
+# SochDB SQL Surface & Compatibility
 
-This document defines ToonDB's SQL dialect support and the canonical pipeline for SQL execution.
+This document defines SochDB's SQL dialect support and the canonical pipeline for SQL execution.
 
 ## Architecture Overview
 
@@ -72,7 +72,7 @@ This document defines ToonDB's SQL dialect support and the canonical pipeline fo
 
 ## Dialect Compatibility (Conflict/Upsert Family)
 
-ToonDB normalizes dialect-specific INSERT variants to a canonical AST representation.
+SochDB normalizes dialect-specific INSERT variants to a canonical AST representation.
 
 ### PostgreSQL Style
 ```sql
@@ -124,7 +124,7 @@ InsertStmt {
 
 ## Parameterized Queries
 
-ToonDB supports two placeholder styles:
+SochDB supports two placeholder styles:
 
 ### Positional Placeholders (`$1`, `$2`, ...)
 ```sql
@@ -142,7 +142,7 @@ Question marks are automatically indexed (1, 2, 3...) during lexing.
 ```rust
 let result = executor.execute_with_params(
     "SELECT * FROM users WHERE id = $1",
-    &[ToonValue::Int(42)]
+    &[SochValue::Int(42)]
 )?;
 ```
 
@@ -169,7 +169,7 @@ let result = executor.execute_with_params(
 - `CAST(expr AS type)`
 - Function calls: `COUNT()`, `SUM()`, `AVG()`, etc.
 
-### ToonDB Extensions
+### SochDB Extensions
 - `VECTOR(dimensions)` data type
 - `EMBEDDING(dimensions)` data type
 - `VECTOR_SEARCH(column, query, k, metric)` function
@@ -208,10 +208,10 @@ let result = executor.execute_with_params(
 The recommended way to execute SQL is via the AST-based query executor:
 
 ```rust
-use toondb::connection::ToonConnection;
-use toondb::ast_query::QueryResult;
+use sochdb::connection::SochConnection;
+use sochdb::ast_query::QueryResult;
 
-let conn = ToonConnection::open("./data")?;
+let conn = SochConnection::open("./data")?;
 
 // Execute SQL using AST-based parser (recommended)
 match conn.query_ast("SELECT * FROM users WHERE active = true")? {
@@ -226,7 +226,7 @@ match conn.query_ast("SELECT * FROM users WHERE active = true")? {
 // Execute with parameters
 let result = conn.query_ast_params(
     "INSERT INTO users (id, name) VALUES ($1, $2)",
-    &[ToonValue::Int(1), ToonValue::Text("Alice".to_string())]
+    &[SochValue::Int(1), SochValue::Text("Alice".to_string())]
 )?;
 
 // Execute non-query SQL (INSERT, UPDATE, DELETE)
@@ -252,12 +252,12 @@ conn.execute_ast("INSERT OR IGNORE INTO users VALUES (1, 'Alice')")?;
 
 ## Files
 
-- `toondb-query/src/sql/compatibility.rs` - Feature matrix and dialect detection
-- `toondb-query/src/sql/token.rs` - Token types including dialect keywords
-- `toondb-query/src/sql/lexer.rs` - Tokenizer with placeholder indexing
-- `toondb-query/src/sql/ast.rs` - Canonical AST definitions
-- `toondb-query/src/sql/parser.rs` - Recursive descent parser
-- `toondb-query/src/sql/bridge.rs` - Unified execution pipeline
-- `toondb-query/src/sql/error.rs` - Error types
-- `toondb-query/src/sql/mod.rs` - Module exports
-- `toondb-client/src/ast_query.rs` - AST-based client query executor
+- `sochdb-query/src/sql/compatibility.rs` - Feature matrix and dialect detection
+- `sochdb-query/src/sql/token.rs` - Token types including dialect keywords
+- `sochdb-query/src/sql/lexer.rs` - Tokenizer with placeholder indexing
+- `sochdb-query/src/sql/ast.rs` - Canonical AST definitions
+- `sochdb-query/src/sql/parser.rs` - Recursive descent parser
+- `sochdb-query/src/sql/bridge.rs` - Unified execution pipeline
+- `sochdb-query/src/sql/error.rs` - Error types
+- `sochdb-query/src/sql/mod.rs` - Module exports
+- `sochdb-client/src/ast_query.rs` - AST-based client query executor

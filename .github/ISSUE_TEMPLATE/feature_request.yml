@@ -1,12 +1,12 @@
 name: Feature Request
-description: Suggest a new feature or enhancement for ToonDB
+description: Suggest a new feature or enhancement for SochDB
 title: "[Feature]: "
 labels: ["enhancement", "needs-triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for your interest in improving ToonDB! Please describe your feature request below.
+        Thanks for your interest in improving SochDB! Please describe your feature request below.
 
   - type: textarea
     id: problem
@@ -25,7 +25,7 @@ body:
       label: Proposed Solution
       description: Describe the solution you'd like to see
       placeholder: |
-        I would like ToonDB to support...
+        I would like SochDB to support...
         Add a new API that allows...
     validations:
       required: true
@@ -43,7 +43,7 @@ body:
     id: component
     attributes:
       label: Component
-      description: Which part of ToonDB does this feature relate to?
+      description: Which part of SochDB does this feature relate to?
       options:
         - Vector Search/Indexing
         - SQL Query Engine

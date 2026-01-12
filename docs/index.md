@@ -4,9 +4,9 @@ slug: /
 title: Introduction
 ---
 
-# ToonDB Documentation
+# SochDB Documentation
 
-Welcome to the official ToonDB documentation. ToonDB is **The LLM-Native Database** — a high-performance embedded database designed specifically for AI applications.
+Welcome to the official SochDB documentation. SochDB is **The LLM-Native Database** — a high-performance embedded database designed specifically for AI applications.
 
 ---
 
@@ -38,11 +38,11 @@ import TabItem from '@theme/TabItem';
 <TabItem value="rust" label="Rust" default>
 
 ```bash
-cargo add toondb
+cargo add sochdb
 ```
 
 ```rust
-use toondb::Database;
+use sochdb::Database;
 
 fn main() -> anyhow::Result<()> {
     let db = Database::open("./my_app_db")?;
@@ -64,11 +64,11 @@ fn main() -> anyhow::Result<()> {
 <TabItem value="python" label="Python">
 
 ```bash
-pip install toondb-client
+pip install sochdb-client
 ```
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 db = Database.open("./my_app_db")
 
@@ -85,11 +85,11 @@ db.close()
 <TabItem value="nodejs" label="Node.js">
 
 ```bash
-npm install @sushanth/toondb
+npm install @sushanth/sochdb
 ```
 
 ```typescript
-import { Database } from '@sushanth/toondb';
+import { Database } from '@sushanth/sochdb';
 
 const db = await Database.open('./my_app_db');
 
@@ -107,7 +107,7 @@ await db.close();
 <TabItem value="go" label="Go">
 
 ```bash
-go get github.com/toondb/toondb-go
+go get github.com/sochdb/sochdb-go
 ```
 
 ```go
@@ -115,14 +115,14 @@ package main
 
 import (
     "fmt"
-    toondb "github.com/toondb/toondb-go"
+    sochdb "github.com/sochdb/sochdb-go"
 )
 
 func main() {
-    db, _ := toondb.Open("./my_app_db")
+    db, _ := sochdb.Open("./my_app_db")
     defer db.Close()
 
-    db.WithTransaction(func(txn *toondb.Transaction) error {
+    db.WithTransaction(func(txn *sochdb.Transaction) error {
         return txn.Put("users/alice", []byte(`{"name": "Alice", "role": "admin"}`))
     })
 
@@ -171,7 +171,7 @@ Task-oriented guides for specific use cases.
 - [Context Query](/guides/context-query) — Token-aware retrieval for LLMs
 
 ### 💡 Concepts
-Deep dives into ToonDB's architecture and design.
+Deep dives into SochDB's architecture and design.
 
 - [Architecture](/concepts/architecture) — System design
 - [TOON Format](/concepts/toon-format) — Token-optimized format
@@ -187,7 +187,7 @@ Complete technical specifications.
 - [Go API](/api-reference/go-api) — Go package documentation
 
 ### 🛠️ Server Reference
-Deep technical documentation for ToonDB servers and tools.
+Deep technical documentation for SochDB servers and tools.
 
 - [IPC Server](/servers/IPC_SERVER.md) — Wire protocol & architecture
 - [gRPC Server](/servers/GRPC_SERVER.md) — Vector search service
@@ -224,6 +224,6 @@ Recipes for common tasks.
 
 ## External Links
 
-- [**toondb.dev**](https://toondb.dev) — Main website
-- [**GitHub**](https://github.com/toondb/toondb) — Source code
-- [**Discussions**](https://github.com/toondb/toondb/discussions) — Community Q&A
+- [**sochdb.dev**](https://sochdb.dev) — Main website
+- [**GitHub**](https://github.com/sochdb/sochdb) — Source code
+- [**Discussions**](https://github.com/sochdb/sochdb/discussions) — Community Q&A

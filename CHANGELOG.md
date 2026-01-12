@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to ToonDB will be documented in this file.
+All notable changes to SochDB will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -14,16 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### 🎯 Core Infrastructure Improvements
 
 - **Monotonic Commit Timestamps** — End-to-end HLC (Hybrid Logical Clock) integration
-  - FFI: New `C_CommitResult` struct with `commit_ts` and `error_code` in `toondb_commit()`
+  - FFI: New `C_CommitResult` struct with `commit_ts` and `error_code` in `sochdb_commit()`
   - Python: `Transaction.commit()` now returns real `u64` commit timestamp (was hardcoded `0`)
   - Go: Updated `Transaction.Commit()` to retrieve commit timestamp from FFI
   - Node.js: `Transaction.commit()` returns timestamp
-  - Rust: Already correct in `toondb-client`
+  - Rust: Already correct in `sochdb-client`
   - Enables MVCC observability, replication with causal ordering, and deterministic replay
 
 - **Configuration Plumbing** — 13 tunable parameters now applied via FFI
   - New `C_DatabaseConfig` struct with: `wal_enabled`, `sync_mode`, `memtable_size_bytes`, `bloom_filter_bits_per_key`, `block_cache_size_mb`, `compaction_trigger_mb`, `max_file_size_mb`, `compression_enabled`, `enable_statistics`, `max_open_files`, `use_direct_io`, `enable_checksum`, `auto_checkpoint_interval_s`
-  - New `toondb_open_with_config()` FFI function
+  - New `sochdb_open_with_config()` FFI function
   - Python: `Database.open()` applies config via FFI (previously accepted but ignored)
   - Go: Config support added to `OpenWithConfig()`
   - Node.js: Config interface and application in `Database.open()`
@@ -68,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Syntax: `CREATE INDEX idx_name ON table(column)`, `DROP INDEX idx_name`
 
 - **Hardened MCP Query Execution** — Real parser with prefix safety
-  - MCP (Rust): Complete rewrite of `exec_query()` in `toondb-mcp/src/tools.rs`
+  - MCP (Rust): Complete rewrite of `exec_query()` in `sochdb-mcp/src/tools.rs`
   - MCP (Rust): New `SqlParser` with PEG-style grammar
   - MCP (Rust): `ParsedQuery` struct with validated table/columns/conditions
   - MCP (Rust): Scan operations enforce prefix bounds at MCP boundary
@@ -82,7 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Python: New `connect(uri)` function with auto-detection
   - Go: Unified connection in `Connect()`
   - Node.js: `connect()` with TypeScript types
-  - URI patterns: `file://./data`, `ipc:///tmp/toondb.sock`, `grpc://localhost:50051`, `grpcs://prod.example.com:443`
+  - URI patterns: `file://./data`, `ipc:///tmp/sochdb.sock`, `grpc://localhost:50051`, `grpcs://prod.example.com:443`
   - Easy migration from laptop → server deployments
 
 #### 🕸️ Agent-Specific Features
@@ -194,11 +194,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `database_opened` event — Track database initialization across SDKs
   - `error` event — Static error tracking (error type + code location only, no sensitive data)
   - Stable anonymous machine ID (SHA-256 hash, no PII)
-  - Environment variable opt-out: `TOONDB_DISABLE_ANALYTICS=true`
+  - Environment variable opt-out: `SOCHDB_DISABLE_ANALYTICS=true`
   - Graceful degradation when analytics dependencies unavailable
   - Python: Optional `posthog` dependency in `[analytics]` extra
   - JavaScript: Optional `posthog-node` in `optionalDependencies`
-  - Rust: Feature flag `analytics` for `toondb-core`
+  - Rust: Feature flag `analytics` for `sochdb-core`
 
 ### Changed
 - **Analytics Privacy-First Design** — No sensitive data collection
@@ -214,7 +214,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **JavaScript Analytics Import** — Fixed ESM import path in `database.ts` (`.js` extension required)
 - **Rust Analytics Feature** — Enabled `analytics` feature by default in client crates
-  - Added to `toondb-client`, `toondb-python`, `toondb-grpc`
+  - Added to `sochdb-client`, `sochdb-python`, `sochdb-grpc`
   - Added `json` feature to `ureq` dependency for PostHog integration
 - **Test Version Mismatch** — Updated JavaScript test expectations to match 0.3.1 version
 
@@ -267,13 +267,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Node.js VERSION Bug** — VERSION constant was stuck at 0.2.8 instead of matching package.json
-  - Fixed `toondb-js/src/index.ts` VERSION export
+  - Fixed `sochdb-js/src/index.ts` VERSION export
   - Updated `database.test.ts` to test correct version
 
 ### Breaking Changes
 - Namespace API requires explicit namespace creation before use
 - Collection configuration is immutable after creation
-- Python SDK: Import path remains `toondb` (package name: `toondb-client`)
+- Python SDK: Import path remains `sochdb` (package name: `sochdb-client`)
 
 ---
 
@@ -281,8 +281,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Comprehensive benchmark suite** with real-world LLM embeddings (Azure OpenAI)
-  - ToonDB vs ChromaDB: **3× faster** vector search
-  - ToonDB vs LanceDB: **22× faster** vector search
+  - SochDB vs ChromaDB: **3× faster** vector search
+  - SochDB vs LanceDB: **22× faster** vector search
   - Recall@k benchmarks showing **>98% recall** with sub-millisecond latency
   - End-to-end RAG bottleneck analysis (API is 333× slower than database)
 - **Full SQL engine support in Go SDK** with DDL/DML operations matching Python/JS SDKs
@@ -311,7 +311,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Full SQL engine support** in Python SDK with DDL/DML operations (CREATE/DROP TABLE, INSERT, SELECT, UPDATE, DELETE)
 - **Full SQL engine support** in JavaScript SDK with complete SQL parser and executor
-- **Go embedded server mode** - automatically starts/stops toondb-server without external setup
+- **Go embedded server mode** - automatically starts/stops sochdb-server without external setup
 - **Transaction SQL support** - execute() method added to Transaction class in Python SDK
 - SQL storage using KV backend with `_sql/tables/` prefix (tables and rows stored as JSON)
 - WHERE clause support with operators: =, !=, <, >, >=, <=, LIKE, NOT LIKE
@@ -336,7 +336,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Enhanced scan() method** across all SDKs for efficient prefix-based iteration and multi-tenant isolation
 - **Full SQL support** in Python SDK (CREATE TABLE, INSERT, SELECT, JOIN, WHERE, GROUP BY, aggregations)
-- **SQL integration** in Rust SDK via toondb-query crate with async IPC
+- **SQL integration** in Rust SDK via sochdb-query crate with async IPC
 - **Bulk vector API** in Python SDK (~1,600 vec/s, 12× faster than FFI loop)
 - **Zero-copy reads** in Rust SDK for large value optimization
 - **Async IPC client** in Rust SDK with Tokio runtime
@@ -362,7 +362,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.3] - 2025-12-31
 
 ### Added
-- Go SDK in-repo (`toondb-go/`) with examples
+- Go SDK in-repo (`sochdb-go/`) with examples
 - Rust SDK guide and multi-language docs index updates
 
 ### Fixed
@@ -393,8 +393,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pre-built wheels for Linux (x86_64, aarch64), macOS (universal2), Windows (x64)
 
 #### MCP Integration
-- **toondb-mcp** server for Claude Desktop, Cursor, and Goose
-- Tools: `toondb_put`, `toondb_get`, `toondb_scan`, `toondb_delete`, `toondb_context_query`
+- **sochdb-mcp** server for Claude Desktop, Cursor, and Goose
+- Tools: `sochdb_put`, `sochdb_get`, `sochdb_scan`, `sochdb_delete`, `sochdb_context_query`
 
 #### Indexing
 - **HNSW** vector index with configurable M, ef_construction, ef_search
@@ -408,7 +408,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Known Limitations
 - Single-node only (no distributed mode, replication, or clustering)
-- Python SDK requires `TOONDB_LIB_PATH` environment variable for FFI mode
+- Python SDK requires `SOCHDB_LIB_PATH` environment variable for FFI mode
 
 ---
 
@@ -431,7 +431,7 @@ This is the initial release. No upgrade path required.
 
 ## Contributors
 
-Thanks to all contributors who helped make ToonDB possible!
+Thanks to all contributors who helped make SochDB possible!
 
 <!-- ALL-CONTRIBUTORS-LIST:START -->
 <!-- ALL-CONTRIBUTORS-LIST:END -->

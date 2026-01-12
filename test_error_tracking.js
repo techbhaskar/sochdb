@@ -1,6 +1,6 @@
 // Test error tracking in JavaScript/Node.js
 
-const { captureError, isAnalyticsDisabled } = require('./toondb-js/dist/cjs/index.js');
+const { captureError, isAnalyticsDisabled } = require('./sochdb-js/dist/cjs/index.js');
 
 async function testErrorTracking() {
   console.log('='.repeat(60));

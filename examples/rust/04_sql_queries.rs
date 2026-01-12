@@ -1,21 +1,21 @@
-// Copyright 2025 ToonDB Authors
+// Copyright 2025 SochDB Authors
 //
 // Licensed under the Apache License, Version 2.0
 
 //! SQL Query Examples
 //!
-//! Demonstrates SQL support in ToonDB:
+//! Demonstrates SQL support in SochDB:
 //! - CREATE TABLE, INSERT, UPDATE, DELETE
 //! - SELECT with WHERE, ORDER BY, LIMIT
 //! - Prepared statements
 //! - Schema management
 
-use toondb_client::{Client, ClientConfig, QueryResult};
-use toondb_query::sql::{Parser, Statement, ExecutionResult};
+use sochdb_client::{Client, ClientConfig, QueryResult};
+use sochdb_query::sql::{Parser, Statement, ExecutionResult};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=".repeat(60));
-    println!("ToonDB SQL Query Examples");
+    println!("SochDB SQL Query Examples");
     println!("=".repeat(60));
 
     // Open database
@@ -103,7 +103,7 @@ fn insert_data(client: &mut Client) -> Result<(), Box<dyn std::error::Error>> {
     // Insert posts
     let posts = vec![
         (1, 1, "First Post", "Hello World!", 10, "2024-01-05"),
-        (2, 1, "Second Post", "ToonDB is awesome", 25, "2024-01-06"),
+        (2, 1, "Second Post", "SochDB is awesome", 25, "2024-01-06"),
         (3, 2, "Bob's Thoughts", "SQL queries are easy", 15, "2024-01-07"),
         (4, 3, "Charlie's Guide", "Database tips", 30, "2024-01-08"),
         (5, 3, "Advanced Topics", "Performance tuning", 50, "2024-01-09"),

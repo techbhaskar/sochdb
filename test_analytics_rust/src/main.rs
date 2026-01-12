@@ -3,11 +3,11 @@ use std::collections::HashMap;
 
 fn main() {
     println!("============================================================");
-    println!("ToonDB Analytics Test (Rust - Static Errors)");
+    println!("SochDB Analytics Test (Rust - Static Errors)");
     println!("============================================================\n");
 
     // Check if analytics is disabled
-    let disabled = std::env::var("TOONDB_DISABLE_ANALYTICS")
+    let disabled = std::env::var("SOCHDB_DISABLE_ANALYTICS")
         .map(|v| {
             let v = v.to_lowercase();
             v == "true" || v == "1" || v == "yes" || v == "on"
@@ -17,7 +17,7 @@ fn main() {
     println!("Analytics disabled: {}\n", disabled);
 
     if disabled {
-        println!("⚠️  Analytics disabled via TOONDB_DISABLE_ANALYTICS");
+        println!("⚠️  Analytics disabled via SOCHDB_DISABLE_ANALYTICS");
         return;
     }
 

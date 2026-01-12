@@ -4,7 +4,7 @@
 > **⏱️ Time Required:** 25 minutes  
 > **📦 Requirements:** Rust 1.70+, Tokio runtime
 
-Complete guide to ToonDB's Rust SDK with async IPC client, SQL integration, and zero-copy operations.
+Complete guide to SochDB's Rust SDK with async IPC client, SQL integration, and zero-copy operations.
 
 ---
 
@@ -14,17 +14,17 @@ Add to `Cargo.toml`:
 
 ```toml
 [dependencies]
-toondb-client = "0.3.1"
+sochdb-client = "0.3.1"
 tokio = { version = "1", features = ["full"] }
 
 # Optional: For SQL support
-toondb-query = "0.3.1"
+sochdb-query = "0.3.1"
 ```
 
 **What's New in 0.2.6:**
 - ✅ Async IPC client with Tokio
 - ✅ Enhanced scan() method for multi-tenant isolation
-- ✅ SQL integration via toondb-query
+- ✅ SQL integration via sochdb-query
 - ✅ Zero-copy read optimizations
 - ✅ Improved error types
 
@@ -35,11 +35,11 @@ toondb-query = "0.3.1"
 Install the official CLI tools using Cargo:
 
 ```bash
-# Install toondb-server and toondb-bulk
-cargo install toondb-tools
+# Install sochdb-server and sochdb-bulk
+cargo install sochdb-tools
 
-# Install toondb-grpc-server
-cargo install toondb-grpc
+# Install sochdb-grpc-server
+cargo install sochdb-grpc
 ```
 
 These binaries provide the same functionality as the Python/Node/Go wrappers but are compiled directly from source.
@@ -53,12 +53,12 @@ These binaries provide the same functionality as the Python/Node/Go wrappers but
 ### Async IPC Client
 
 ```rust
-use toondb_client::IpcClient;
+use sochdb_client::IpcClient;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Connect to ToonDB server
-    let client = IpcClient::connect("./my_database/toondb.sock").await?;
+    // Connect to SochDB server
+    let client = IpcClient::connect("./my_database/sochdb.sock").await?;
     
     // Put and Get
     client.put(b"user:123", b"{\"name\":\"Alice\",\"age\":30}").await?;
@@ -82,24 +82,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Async IPC Client
 
-⭐ **ToonDB uses async IPC** — no blocking operations:
+⭐ **SochDB uses async IPC** — no blocking operations:
 
 ### Start Server
 
 ```bash
-# Terminal 1: Start ToonDB server
-toondb-server --db ./my_database
-# Server listens at: ./my_database/toondb.sock
+# Terminal 1: Start SochDB server
+sochdb-server --db ./my_database
+# Server listens at: ./my_database/sochdb.sock
 ```
 
 ### Connect from Rust
 
 ```rust
-use toondb_client::IpcClient;
+use sochdb_client::IpcClient;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = IpcClient::connect("./my_database/toondb.sock").await?;
+    let client = IpcClient::connect("./my_database/sochdb.sock").await?;
     
     // Check latency
     let latency = client.ping().await?;
@@ -123,17 +123,17 @@ Ping: 0.12ms
 
 ## SQL Integration
 
-⭐ **Full SQL via toondb-query:**
+⭐ **Full SQL via sochdb-query:**
 
 ### CREATE TABLE
 
 ```rust
-use toondb_client::IpcClient;
-use toondb_query::SqlExecutor;
+use sochdb_client::IpcClient;
+use sochdb_query::SqlExecutor;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = IpcClient::connect("./my_db/toondb.sock").await?;
+    let client = IpcClient::connect("./my_db/sochdb.sock").await?;
     let executor = SqlExecutor::new(client);
     
     // Create table
@@ -282,11 +282,11 @@ Bob: 1 orders, $75.00 total
 ### Basic Operations
 
 ```rust
-use toondb_client::IpcClient;
+use sochdb_client::IpcClient;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = IpcClient::connect("./my_db/toondb.sock").await?;
+    let client = IpcClient::connect("./my_db/sochdb.sock").await?;
     
     // Put
     client.put(b"key", b"value").await?;
@@ -483,7 +483,7 @@ key2: value2
 Returns results in **TOON format** (token-optimized):
 
 ```rust
-use toondb_client::query::QueryBuilder;
+use sochdb_client::query::QueryBuilder;
 
 // Insert structured data
 client.put(
@@ -620,8 +620,8 @@ let value = client.get(b"key").await.unwrap().unwrap();
 ### Example 1: Multi-Tenant SaaS with SQL + K-V
 
 ```rust
-use toondb_client::IpcClient;
-use toondb_query::SqlExecutor;
+use sochdb_client::IpcClient;
+use sochdb_query::SqlExecutor;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -639,7 +639,7 @@ struct TenantUser {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = IpcClient::connect("./saas_db/toondb.sock").await?;
+    let client = IpcClient::connect("./saas_db/sochdb.sock").await?;
     let executor = SqlExecutor::new(client.clone());
     
     // SQL for tenant metadata
@@ -710,8 +710,8 @@ Globex Inc (1 users):
 ### Example 2: E-commerce with SQL
 
 ```rust
-use toondb_client::IpcClient;
-use toondb_query::SqlExecutor;
+use sochdb_client::IpcClient;
+use sochdb_query::SqlExecutor;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -723,7 +723,7 @@ struct CategoryStats {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = IpcClient::connect("./ecommerce/toondb.sock").await?;
+    let client = IpcClient::connect("./ecommerce/sochdb.sock").await?;
     let executor = SqlExecutor::new(client);
     
     // Create schema
@@ -783,7 +783,7 @@ Electronics: 2 orders, $2124.98
 ### Example 3: Session Cache
 
 ```rust
-use toondb_client::IpcClient;
+use sochdb_client::IpcClient;
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -857,7 +857,7 @@ impl SessionStore {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = IpcClient::connect("./sessions/toondb.sock").await?;
+    let client = IpcClient::connect("./sessions/sochdb.sock").await?;
     let store = SessionStore::new(client);
     
     // Create sessions
@@ -930,9 +930,9 @@ Cleaned up 0 expired sessions
 
 ## Resources
 
-- [Rust SDK GitHub](https://github.com/toondb/toondb/tree/main/toondb-client)
-- [Crates.io](https://crates.io/crates/toondb-client)
-- [API Documentation](https://docs.rs/toondb-client/)
+- [Rust SDK GitHub](https://github.com/sochdb/sochdb/tree/main/sochdb-client)
+- [Crates.io](https://crates.io/crates/sochdb-client)
+- [API Documentation](https://docs.rs/sochdb-client/)
 - [Go SDK](./go-sdk.md)
 - [Python SDK](./python-sdk.md)
 - [JavaScript SDK](./nodejs-sdk.md)

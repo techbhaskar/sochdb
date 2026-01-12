@@ -1,4 +1,4 @@
-# ToonDB v0.2.9 Release Notes
+# SochDB v0.2.9 Release Notes
 
 **Release Date:** January 2, 2026  
 **Focus:** Comprehensive benchmarking, SQL engine maturity, and community infrastructure
@@ -32,7 +32,7 @@
 
 | Database | Search p50 | Search p99 | Insert Rate |
 |----------|------------|------------|-------------|
-| **ToonDB** | **0.45ms** ✅ | **0.61ms** ✅ | 7,502 vec/s |
+| **SochDB** | **0.45ms** ✅ | **0.61ms** ✅ | 7,502 vec/s |
 | ChromaDB | 1.37ms | 1.73ms | 3,237 vec/s |
 | LanceDB | 9.86ms | 21.63ms | 18,106 vec/s |
 
@@ -44,15 +44,15 @@
 | M=16, ef_c=100 | 98.2% | 0.47ms |
 | M=16, ef_c=200 | 98.8% | 0.44ms |
 
-**Key Finding**: ToonDB achieves >98% recall with real embeddings while maintaining sub-millisecond search latency.
+**Key Finding**: SochDB achieves >98% recall with real embeddings while maintaining sub-millisecond search latency.
 
 ### End-to-End RAG Bottleneck
 
 | Operation | Time | % of Total |
 |-----------|------|------------|
 | Embedding API (Azure OpenAI) | 59.5s | 99.7% |
-| ToonDB Insert (1K vectors) | 0.133s | 0.2% |
-| ToonDB Search (100 queries) | 0.046s | 0.1% |
+| SochDB Insert (1K vectors) | 0.133s | 0.2% |
+| SochDB Search (100 queries) | 0.046s | 0.1% |
 
 **Insight**: The database is never the bottleneck in production RAG systems—your LLM API calls are.
 
@@ -110,30 +110,30 @@
 
 ### Python
 ```bash
-pip install toondb-client
+pip install sochdb-client
 ```
 
 ### Node.js / TypeScript
 ```bash
-npm install @sushanth/toondb
+npm install @sushanth/sochdb
 ```
 
 ### Go
 ```bash
-go get github.com/toondb/toondb-go@latest
+go get github.com/sochdb/sochdb-go@latest
 ```
 
 ### Rust
 ```toml
 [dependencies]
-toondb = "0.2.9"
+sochdb = "0.2.9"
 ```
 
 ---
 
 ## 📚 Resources
 
-- **Documentation**: [docs.toondb.dev](https://docs.toondb.dev)
+- **Documentation**: [docs.sochdb.dev](https://docs.sochdb.dev)
 - **Benchmarks**: See [benchmarks/BENCHMARK_RESULTS_2024-12-27.md](../benchmarks/BENCHMARK_RESULTS_2024-12-27.md)
 - **SDK Guides**: 
   - [Go SDK Guide](guides/go-sdk.md)
@@ -158,5 +158,5 @@ toondb = "0.2.9"
 Thanks to all contributors and the open source community for feedback, testing, and support!
 
 For questions or support:
-- GitHub Issues: [toondb/toondb/issues](https://github.com/toondb/toondb/issues)
-- Email: sushanth@toondb.dev
+- GitHub Issues: [sochdb/sochdb/issues](https://github.com/sochdb/sochdb/issues)
+- Email: sushanth@sochdb.dev

@@ -26,7 +26,7 @@ wheels/
 *.egg
 
 # Python compiled binaries (built during CI/CD)
-toondb-python-sdk/src/toondb/_bin/
+sochdb-python-sdk/src/sochdb/_bin/
 
 # IDE
 .idea/
@@ -51,7 +51,7 @@ toondb-python-sdk/src/toondb/_bin/
 
 # Test data
 test_ffi_db/
-toondb_data/
+sochdb_data/
 /tmp/
 
 # Build artifacts
@@ -60,13 +60,13 @@ toondb_data/
 *.dll
 
 # Misc
-toondb_rust.txt
+sochdb_rust.txt
 build_errors.txt
 target/
-toondb_demo_db/
-toondb_demo_db_real/
+sochdb_demo_db/
+sochdb_demo_db_real/
 bench_sqlite.db*
 c-code.py
 demo_sql_db/
 task.md
-toondb_agent_memory/
+sochdb_agent_memory/

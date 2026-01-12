@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Comprehensive Real-World Test Suite for ToonDB
+Comprehensive Real-World Test Suite for SochDB
 
 Tests all major capabilities:
 1. KV User Profile Store
@@ -31,8 +31,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 import numpy as np
 
-# Add ToonDB SDK to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../toondb-python-sdk/src"))
+# Add SochDB SDK to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../sochdb-python-sdk/src"))
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -113,9 +113,9 @@ def test_kv_user_profiles(n: int = 1000) -> TestResult:
     print("  TEST 1: KV User Profile Store")
     print("="*70)
     
-    from toondb import Database
+    from sochdb import Database
     
-    db_path = tempfile.mktemp(prefix="toondb_kv_test_")
+    db_path = tempfile.mktemp(prefix="sochdb_kv_test_")
     db = Database.open(db_path)
     
     # Generate user data
@@ -206,7 +206,7 @@ def test_vector_similarity(n_vectors: int = 1000, n_queries: int = 50, dim: int 
     print("  TEST 2: Vector Similarity Search")
     print("="*70)
     
-    from toondb import VectorIndex
+    from sochdb import VectorIndex
     
     # Generate vectors
     print(f"\n  Generating {n_vectors} vectors ({dim}-dim)...")
@@ -227,8 +227,8 @@ def test_vector_similarity(n_vectors: int = 1000, n_queries: int = 50, dim: int 
         gt_indices = np.argsort(similarities)[::-1][:k]  # highest similarity first
         ground_truth.append(gt_indices.tolist())
     
-    # Build ToonDB index
-    print("  Building ToonDB index...")
+    # Build SochDB index
+    print("  Building SochDB index...")
     index = VectorIndex(dimension=dim, max_connections=16, ef_construction=100)
     
     start = time.perf_counter()
@@ -295,7 +295,7 @@ def test_agent_memory_real() -> TestResult:
     print("  TEST 3: Agent Memory (Real Embeddings)")
     print("="*70)
     
-    from toondb import VectorIndex
+    from sochdb import VectorIndex
     
     embeddings = AzureEmbeddings()
     
@@ -304,7 +304,7 @@ def test_agent_memory_real() -> TestResult:
         {"id": 0, "agent": "A", "topic": "user_preference", "text": "User prefers dark mode and minimal UI.", "importance": 0.9},
         {"id": 1, "agent": "A", "topic": "task", "text": "User asked to build a REST API for their app.", "importance": 0.7},
         {"id": 2, "agent": "A", "topic": "learning", "text": "User mentioned they're learning Rust programming.", "importance": 0.6},
-        {"id": 3, "agent": "B", "topic": "conversation", "text": "Discussed ToonDB performance benchmarks.", "importance": 0.8},
+        {"id": 3, "agent": "B", "topic": "conversation", "text": "Discussed SochDB performance benchmarks.", "importance": 0.8},
         {"id": 4, "agent": "A", "topic": "user_preference", "text": "User likes concise responses without lengthy explanations.", "importance": 0.85},
         {"id": 5, "agent": "A", "topic": "reminder", "text": "User has a meeting at 3pm tomorrow.", "importance": 0.5},
     ]
@@ -370,18 +370,18 @@ def test_rag_retrieval() -> TestResult:
     print("  TEST 4: RAG Retrieval with Filters")
     print("="*70)
     
-    from toondb import VectorIndex
+    from sochdb import VectorIndex
     
     embeddings = AzureEmbeddings()
     
     # RAG chunks with metadata
     chunks = [
-        {"id": 0, "doc_id": 1, "lang": "en", "access": 0, "source": "docs", "text": "ToonDB is a database optimized for AI agents."},
-        {"id": 1, "doc_id": 1, "lang": "en", "access": 0, "source": "docs", "text": "ToonDB uses HNSW for vector search with SIMD acceleration."},
+        {"id": 0, "doc_id": 1, "lang": "en", "access": 0, "source": "docs", "text": "SochDB is a database optimized for AI agents."},
+        {"id": 1, "doc_id": 1, "lang": "en", "access": 0, "source": "docs", "text": "SochDB uses HNSW for vector search with SIMD acceleration."},
         {"id": 2, "doc_id": 2, "lang": "en", "access": 1, "source": "internal", "text": "Internal roadmap: Add PQ compression by Q2."},
-        {"id": 3, "doc_id": 3, "lang": "es", "access": 0, "source": "docs", "text": "ToonDB es una base de datos para agentes de IA."},
+        {"id": 3, "doc_id": 3, "lang": "es", "access": 0, "source": "docs", "text": "SochDB es una base de datos para agentes de IA."},
         {"id": 4, "doc_id": 4, "lang": "en", "access": 2, "source": "confidential", "text": "Security audit results are pending review."},
-        {"id": 5, "doc_id": 5, "lang": "en", "access": 0, "source": "blog", "text": "ToonDB achieves 24x faster search than competitors."},
+        {"id": 5, "doc_id": 5, "lang": "en", "access": 0, "source": "blog", "text": "SochDB achieves 24x faster search than competitors."},
     ]
     
     print(f"\n  Embedding {len(chunks)} chunks...")
@@ -394,10 +394,10 @@ def test_rag_retrieval() -> TestResult:
     ids = np.array([c["id"] for c in chunks], dtype=np.uint64)
     index.insert_batch(ids, chunk_embeddings)
     
-    # Test with filters (post-filter since ToonDB doesn't have server-side filtering yet)
+    # Test with filters (post-filter since SochDB doesn't have server-side filtering yet)
     print("\n  Testing filtered retrieval...")
     
-    query = "What is ToonDB's performance advantage?"
+    query = "What is SochDB's performance advantage?"
     query_embed = embeddings.embed_single(query)
     
     # Get all results
@@ -440,7 +440,7 @@ def test_rag_retrieval() -> TestResult:
 # =============================================================================
 
 def test_langgraph_integration() -> TestResult:
-    """Test LangGraph agent with ToonDB retrieval."""
+    """Test LangGraph agent with SochDB retrieval."""
     print("\n" + "="*70)
     print("  TEST 5: LangGraph Integration")
     print("="*70)
@@ -451,17 +451,17 @@ def test_langgraph_integration() -> TestResult:
     except ImportError as e:
         return TestResult("LangGraph Integration", False, f"Import error: {e}")
     
-    from toondb import VectorIndex, Database
+    from sochdb import VectorIndex, Database
     
     embeddings = AzureEmbeddings()
     llm = AzureLLM()
     
     # Setup knowledge base
     kb_docs = [
-        "ToonDB is a high-performance database optimized for AI agents and LLM context retrieval.",
-        "ToonDB's vector search achieves 117,000 inserts per second and 0.03ms search latency.",
-        "ToonDB supports session management, context queries, and token budget enforcement.",
-        "ToonDB uses a Trie-Columnar Hybrid (TCH) storage engine for efficient hierarchical data access.",
+        "SochDB is a high-performance database optimized for AI agents and LLM context retrieval.",
+        "SochDB's vector search achieves 117,000 inserts per second and 0.03ms search latency.",
+        "SochDB supports session management, context queries, and token budget enforcement.",
+        "SochDB uses a Trie-Columnar Hybrid (TCH) storage engine for efficient hierarchical data access.",
     ]
     
     print("\n  Setting up knowledge base...")
@@ -486,7 +486,7 @@ def test_langgraph_integration() -> TestResult:
     
     # Node functions
     def retrieve_context(state: AgentState) -> dict:
-        """Retrieve relevant context from ToonDB."""
+        """Retrieve relevant context from SochDB."""
         last_message = state["messages"][-1].content
         query_embed = embeddings.embed_single(last_message)
         results = index.search(query_embed, k=2)
@@ -537,8 +537,8 @@ def test_langgraph_integration() -> TestResult:
     
     # Run test queries
     test_queries = [
-        "What is ToonDB optimized for?",
-        "How fast is ToonDB's vector search?",
+        "What is SochDB optimized for?",
+        "How fast is SochDB's vector search?",
     ]
     
     print("\n  Running LangGraph queries...")
@@ -582,10 +582,10 @@ def test_mixed_workload(duration_s: int = 10) -> TestResult:
     print(f"  TEST 6: Mixed Workload ({duration_s}s)")
     print("="*70)
     
-    from toondb import VectorIndex, Database
+    from sochdb import VectorIndex, Database
     
     # Setup
-    db_path = tempfile.mktemp(prefix="toondb_mixed_")
+    db_path = tempfile.mktemp(prefix="sochdb_mixed_")
     db = Database.open(db_path)
     
     dim = 128
@@ -667,7 +667,7 @@ def test_mixed_workload(duration_s: int = 10) -> TestResult:
 def run_all_tests():
     """Run all tests and print summary."""
     print("\n" + "="*70)
-    print("  TOONDB COMPREHENSIVE TEST SUITE")
+    print("  SOCHDB COMPREHENSIVE TEST SUITE")
     print("  Real-World Tests with Azure OpenAI")
     print("="*70)
     

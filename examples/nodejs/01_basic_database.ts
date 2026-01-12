@@ -1,5 +1,5 @@
 /**
- * Basic ToonDB Operations Example
+ * Basic SochDB Operations Example
  * 
  * Demonstrates fundamental key-value operations:
  * - Opening a database
@@ -8,7 +8,7 @@
  * - Prefix scan queries
  */
 
-import { Database } from '@sushanth/toondb';
+import { Database } from '@sushanth/sochdb';
 
 async function main() {
   // Open or create a database
@@ -17,7 +17,7 @@ async function main() {
 
   try {
     // Basic key-value operations
-    await db.put('greeting', 'Hello, ToonDB!');
+    await db.put('greeting', 'Hello, SochDB!');
     console.log("✓ Key 'greeting' written");
 
     const value = await db.get('greeting');

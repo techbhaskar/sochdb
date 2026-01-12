@@ -1,4 +1,4 @@
-//! Basic ToonDB Operations Example
+//! Basic SochDB Operations Example
 //! 
 //! This example demonstrates fundamental key-value operations:
 //! - Opening a database
@@ -6,7 +6,7 @@
 //! - Path-based hierarchical keys
 //! - Context manager pattern
 
-use toondb::Database;
+use sochdb::Database;
 use anyhow::Result;
 
 fn main() -> Result<()> {
@@ -15,7 +15,7 @@ fn main() -> Result<()> {
     println!("✓ Database opened");
 
     // Basic key-value operations
-    db.put(b"greeting", b"Hello, ToonDB!")?;
+    db.put(b"greeting", b"Hello, SochDB!")?;
     println!("✓ Key 'greeting' written");
 
     let value = db.get(b"greeting")?;

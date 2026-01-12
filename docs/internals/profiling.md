@@ -1,8 +1,8 @@
-# ToonDB End-to-End Profiling Documentation
+# SochDB End-to-End Profiling Documentation
 
 ## Overview
 
-This document describes the comprehensive end-to-end profiling infrastructure for ToonDB's HNSW vector index, covering the entire pipeline from Python SDK through FFI to Rust core.
+This document describes the comprehensive end-to-end profiling infrastructure for SochDB's HNSW vector index, covering the entire pipeline from Python SDK through FFI to Rust core.
 
 ## Architecture
 
@@ -20,7 +20,7 @@ This document describes the comprehensive end-to-end profiling infrastructure fo
 │                                    ▼                                         │
 │  ┌─────────────────────────────────────────────────────────────────────┐   │
 │  │ vector.py (FFI bindings)                                             │   │
-│  │  - ctypes bindings to libtoondb_index.dylib                          │   │
+│  │  - ctypes bindings to libsochdb_index.dylib                          │   │
 │  │  - insert_batch → hnsw_insert_batch                                  │   │
 │  │  - Profiling control: enable_profiling(), dump_profiling()           │   │
 │  └─────────────────────────────────────────────────────────────────────┘   │
@@ -64,7 +64,7 @@ This document describes the comprehensive end-to-end profiling infrastructure fo
 
 ### Python-Side Profiling
 
-**File**: `toondb-python-sdk/examples/10_e2e_profiling.py`
+**File**: `sochdb-python-sdk/examples/10_e2e_profiling.py`
 
 ```python
 # Key components
@@ -86,11 +86,11 @@ class ProfiledVectorIndex:
 
 ### Rust-Side Profiling
 
-**File**: `toondb-index/src/profiling.rs`
+**File**: `sochdb-index/src/profiling.rs`
 
 ```rust
 // Enabling profiling
-TOONDB_PROFILING=1  // Environment variable
+SOCHDB_PROFILING=1  // Environment variable
 
 // Key components
 pub struct Timer { /* start, stop, record */ }
@@ -98,23 +98,23 @@ pub struct OpStats { count, total_ns, min_ns, max_ns, item_count }
 pub struct ProfileCollector { /* global singleton with thread-safe stats */ }
 
 // FFI exports
-pub extern "C" fn toondb_profiling_enable();
-pub extern "C" fn toondb_profiling_disable();
-pub extern "C" fn toondb_profiling_dump();
+pub extern "C" fn sochdb_profiling_enable();
+pub extern "C" fn sochdb_profiling_disable();
+pub extern "C" fn sochdb_profiling_dump();
 ```
 
-**Output**: `/tmp/toondb_profile.json`
+**Output**: `/tmp/sochdb_profile.json`
 
 ## Running Profiling
 
 ### Basic Usage
 
 ```bash
-cd toondb-python-sdk
+cd sochdb-python-sdk
 
 # Enable profiling and run
-export TOONDB_PROFILING=1
-export TOONDB_LIB_PATH=/path/to/target/release/libtoondb_index.dylib
+export SOCHDB_PROFILING=1
+export SOCHDB_LIB_PATH=/path/to/target/release/libsochdb_index.dylib
 python3 examples/10_e2e_profiling.py
 
 # Analyze results
@@ -214,11 +214,11 @@ The RNG check for each candidate can be parallelized since it's independent.
 
 | File | Purpose |
 |------|---------|
-| `toondb-python-sdk/examples/10_e2e_profiling.py` | Main profiling script |
-| `toondb-python-sdk/examples/11_profiling_analysis.py` | Analysis and visualization |
-| `toondb-index/src/profiling.rs` | Rust profiling infrastructure |
+| `sochdb-python-sdk/examples/10_e2e_profiling.py` | Main profiling script |
+| `sochdb-python-sdk/examples/11_profiling_analysis.py` | Analysis and visualization |
+| `sochdb-index/src/profiling.rs` | Rust profiling infrastructure |
 | `profiling_results.json` | Python-side profiling output |
-| `/tmp/toondb_profile.json` | Rust-side profiling output |
+| `/tmp/sochdb_profile.json` | Rust-side profiling output |
 
 ## JSON Output Format
 
@@ -249,7 +249,7 @@ The RNG check for each candidate can be parallelized since it's independent.
 }
 ```
 
-### Rust Profile (/tmp/toondb_profile.json)
+### Rust Profile (/tmp/sochdb_profile.json)
 
 ```json
 {

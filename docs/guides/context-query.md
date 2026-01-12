@@ -1,6 +1,6 @@
 # Token-Aware Context Query
 
-ToonDB provides a `ContextQuery` builder for retrieving context optimized for
+SochDB provides a `ContextQuery` builder for retrieving context optimized for
 LLM prompts. It handles token budgeting, relevance scoring, deduplication, and
 structured output.
 
@@ -19,8 +19,8 @@ The ContextQuery builder provides:
 ### Python
 
 ```python
-from toondb import Database
-from toondb.context import ContextQuery, DeduplicationStrategy
+from sochdb import Database
+from sochdb.context import ContextQuery, DeduplicationStrategy
 
 db = Database.open("./my_data")
 
@@ -46,12 +46,12 @@ print(f"Chunks: {len(result.chunks)}, Dropped: {result.dropped_count}")
 ### Go
 
 ```go
-query := toondb.NewContextQuery(db, "documents").
+query := sochdb.NewContextQuery(db, "documents").
     AddVectorQuery(embedding, 0.7).
     AddKeywordQuery("machine learning", 0.3).
     WithTokenBudget(4000).
     WithMinRelevance(0.5).
-    WithDeduplication(toondb.DeduplicationSemantic, 0.9)
+    WithDeduplication(sochdb.DeduplicationSemantic, 0.9)
 
 result, err := query.Execute()
 if err != nil {
@@ -68,7 +68,7 @@ fmt.Printf("Tokens: %d/%d\n", result.TotalTokens, result.BudgetTokens)
 ### TypeScript/Node.js
 
 ```typescript
-import { ContextQuery, DeduplicationStrategy } from '@sushanth/toondb';
+import { ContextQuery, DeduplicationStrategy } from '@sushanth/sochdb';
 
 const result = await new ContextQuery(db, 'documents')
   .addVectorQuery(embedding, 0.7)
@@ -88,7 +88,7 @@ console.log(`Tokens: ${result.totalTokens}/${result.budgetTokens}`);
 ### Rust
 
 ```rust
-use toondb_client::context_query::{ContextQueryBuilder, TruncationStrategy};
+use sochdb_client::context_query::{ContextQueryBuilder, TruncationStrategy};
 
 let result = ContextQueryBuilder::with_connection(conn.clone())
     .for_session("session_123")
@@ -109,7 +109,7 @@ For accuracy, provide a tokenizer:
 ### Python (with tiktoken)
 
 ```python
-from toondb.context import TokenEstimator
+from sochdb.context import TokenEstimator
 
 # Use tiktoken for accurate counting
 estimator = TokenEstimator.tiktoken(model="gpt-4")
@@ -125,7 +125,7 @@ result = (
 ### Node.js (with tiktoken)
 
 ```typescript
-import { TokenEstimator } from '@sushanth/toondb';
+import { TokenEstimator } from '@sushanth/sochdb';
 
 const estimator = TokenEstimator.tiktoken('gpt-4');
 
@@ -204,7 +204,7 @@ When token budget is exceeded:
 | `STRICT` | Fail if budget exceeded |
 
 ```python
-from toondb.context import TruncationStrategy
+from sochdb.context import TruncationStrategy
 
 query.with_truncation(TruncationStrategy.PROPORTIONAL)
 ```
@@ -312,7 +312,7 @@ query.with_max_chunks(20)  # Maximum 20 chunks regardless of budget
 ### Estimate Tokens
 
 ```python
-from toondb.context import estimate_tokens
+from sochdb.context import estimate_tokens
 
 tokens = estimate_tokens("Hello, world!")
 # ~3 tokens
@@ -321,7 +321,7 @@ tokens = estimate_tokens("Hello, world!")
 ### Split by Tokens
 
 ```python
-from toondb.context import split_by_tokens
+from sochdb.context import split_by_tokens
 
 chunks = split_by_tokens(long_text, max_tokens_per_chunk=500, overlap=50)
 ```

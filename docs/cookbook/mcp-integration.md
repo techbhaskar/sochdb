@@ -1,26 +1,26 @@
 # How to Integrate with MCP (Model Context Protocol)
 
-> Use ToonDB as persistent memory for Claude, Cursor, and other MCP clients.
+> Use SochDB as persistent memory for Claude, Cursor, and other MCP clients.
 
 ---
 
 ## Problem
 
-You want to give your LLM agent (Claude Desktop, Cursor, Goose, etc.) persistent memory using ToonDB.
+You want to give your LLM agent (Claude Desktop, Cursor, Goose, etc.) persistent memory using SochDB.
 
 ---
 
 ## Solution
 
-### 1. Install ToonDB MCP Server
+### 1. Install SochDB MCP Server
 
 ```bash
 # Build from source
-cd toondb
-cargo build --release -p toondb-mcp
+cd sochdb
+cargo build --release -p sochdb-mcp
 
 # Or install binary
-cp target/release/toondb-mcp /usr/local/bin/
+cp target/release/sochdb-mcp /usr/local/bin/
 ```
 
 ### 2. Configure Claude Desktop
@@ -30,11 +30,11 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 ```json
 {
   "mcpServers": {
-    "toondb": {
-      "command": "toondb-mcp",
-      "args": ["--db", "~/.toondb/claude_memory"],
+    "sochdb": {
+      "command": "sochdb-mcp",
+      "args": ["--db", "~/.sochdb/claude_memory"],
       "env": {
-        "RUST_LOG": "toondb=info"
+        "RUST_LOG": "sochdb=info"
       }
     }
   }
@@ -48,9 +48,9 @@ Add to Cursor MCP settings:
 ```json
 {
   "mcpServers": {
-    "toondb": {
-      "command": "/usr/local/bin/toondb-mcp",
-      "args": ["--db", "~/.toondb/cursor_memory"]
+    "sochdb": {
+      "command": "/usr/local/bin/sochdb-mcp",
+      "args": ["--db", "~/.sochdb/cursor_memory"]
     }
   }
 }
@@ -63,9 +63,9 @@ Add to `~/.config/goose/mcp.json`:
 ```json
 {
   "servers": {
-    "toondb": {
-      "command": "toondb-mcp",
-      "args": ["--db", "~/.toondb/goose_memory"]
+    "sochdb": {
+      "command": "sochdb-mcp",
+      "args": ["--db", "~/.sochdb/goose_memory"]
     }
   }
 }
@@ -77,55 +77,55 @@ Add to `~/.config/goose/mcp.json`:
 
 Once configured, your LLM has access to these tools:
 
-### `toondb_put`
+### `sochdb_put`
 
 Store a value at a path.
 
 ```
-Tool: toondb_put
+Tool: sochdb_put
 Arguments:
   path: "users/alice/preferences"
   value: '{"theme": "dark", "language": "en"}'
 ```
 
-### `toondb_get`
+### `sochdb_get`
 
 Retrieve a value by path.
 
 ```
-Tool: toondb_get
+Tool: sochdb_get
 Arguments:
   path: "users/alice/preferences"
 ```
 
-### `toondb_delete`
+### `sochdb_delete`
 
 Delete a key.
 
 ```
-Tool: toondb_delete
+Tool: sochdb_delete
 Arguments:
   path: "users/alice/old_data"
 ```
 
-### `toondb_query`
+### `sochdb_query`
 
-Execute a ToonQL query. Returns results in TOON format.
+Execute a SochQL query. Returns results in TOON format.
 
 ```
-Tool: toondb_query
+Tool: sochdb_query
 Arguments:
   query: "SELECT id,name FROM users WHERE score > 80"
   format: "toon"
   limit: 100
 ```
 
-### `toondb_context_query`
+### `sochdb_context_query`
 
 Assemble LLM context with token budgeting.
 
 ```
-Tool: toondb_context_query
+Tool: sochdb_context_query
 Arguments:
   sections:
     - name: "user_prefs"
@@ -142,22 +142,22 @@ Arguments:
   truncation: "tail_drop"
 ```
 
-### `toondb_list_tables`
+### `sochdb_list_tables`
 
 List all tables with semantic metadata.
 
 ```
-Tool: toondb_list_tables
+Tool: sochdb_list_tables
 Arguments:
   include_metadata: true
 ```
 
-### `toondb_describe`
+### `sochdb_describe`
 
 Get detailed schema for a table.
 
 ```
-Tool: toondb_describe
+Tool: sochdb_describe
 Arguments:
   table: "users"
 ```
@@ -173,7 +173,7 @@ The MCP server also provides specialized memory tools:
 
 ## Example: Agent with Persistent Memory
 
-Here's how an agent might use ToonDB for memory:
+Here's how an agent might use SochDB for memory:
 
 ### Storing Conversation
 
@@ -181,7 +181,7 @@ Here's how an agent might use ToonDB for memory:
 User: Remember that I prefer dark mode
 
 Claude thinks: I should store this preference
-Claude uses tool: toondb_put
+Claude uses tool: sochdb_put
   path: "user/preferences/theme"
   value: "dark"
 
@@ -194,7 +194,7 @@ Claude: I've noted your preference for dark mode. I'll remember this for future 
 User: What theme do I prefer?
 
 Claude thinks: Let me check stored preferences
-Claude uses tool: toondb_get
+Claude uses tool: sochdb_get
   path: "user/preferences/theme"
   result: "dark"
 
@@ -207,7 +207,7 @@ Claude: You prefer dark mode.
 User: Summarize what we discussed yesterday
 
 Claude thinks: I need to retrieve conversation history
-Claude uses tool: toondb_context_query
+Claude uses tool: sochdb_context_query
   sections:
     - name: "history"
       kind: "last"
@@ -241,7 +241,7 @@ Create `mcp-tools.json` for custom tool schemas:
   ],
   "mappings": {
     "remember": {
-      "tool": "toondb_put",
+      "tool": "sochdb_put",
       "path_template": "memory/{key}"
     }
   }
@@ -251,10 +251,10 @@ Create `mcp-tools.json` for custom tool schemas:
 ### Server Options
 
 ```bash
-toondb-mcp --help
+sochdb-mcp --help
 
 Options:
-  --db <PATH>           Database path [default: ~/.toondb/mcp]
+  --db <PATH>           Database path [default: ~/.sochdb/mcp]
   --socket <PATH>       Unix socket path for IPC mode
   --read-only           Disable write operations
   --max-value-size <N>  Maximum value size in bytes [default: 1048576]
@@ -269,15 +269,15 @@ Options:
 
 Check logs:
 ```bash
-RUST_LOG=debug toondb-mcp --db ./test_db
+RUST_LOG=debug sochdb-mcp --db ./test_db
 ```
 
 ### Permission Denied
 
 Ensure the database directory is writable:
 ```bash
-mkdir -p ~/.toondb
-chmod 755 ~/.toondb
+mkdir -p ~/.sochdb
+chmod 755 ~/.sochdb
 ```
 
 ### Claude Not Seeing Tools
@@ -292,11 +292,11 @@ Add to MCP config:
 ```json
 {
   "mcpServers": {
-    "toondb": {
-      "command": "toondb-mcp",
-      "args": ["--db", "~/.toondb/debug", "--log-level", "debug"],
+    "sochdb": {
+      "command": "sochdb-mcp",
+      "args": ["--db", "~/.sochdb/debug", "--log-level", "debug"],
       "env": {
-        "RUST_LOG": "toondb=trace",
+        "RUST_LOG": "sochdb=trace",
         "RUST_BACKTRACE": "1"
       }
     }

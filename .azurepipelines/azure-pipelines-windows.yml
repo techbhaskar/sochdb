@@ -1,5 +1,5 @@
 # =============================================================================
-# ToonDB Azure Pipeline - Windows Build
+# SochDB Azure Pipeline - Windows Build
 # =============================================================================
 # Manual trigger only
 
@@ -30,7 +30,7 @@ steps:
     displayName: 'Install Rust'
 
   - script: |
-      cargo build --release --workspace --exclude toondb-studio --exclude benchmarks
+      cargo build --release --workspace --exclude sochdb-studio --exclude benchmarks
     displayName: 'Build Rust libraries'
 
   # Tests disabled to speed up CI - run locally before pushing
@@ -51,15 +51,15 @@ steps:
     displayName: 'Use Python 3.12'
 
   - powershell: |
-      New-Item -ItemType Directory -Force -Path toondb-python-sdk/src/toondb/lib/windows-x86_64
-      New-Item -ItemType Directory -Force -Path toondb-python-sdk/src/toondb/_bin/windows-x86_64
-      Copy-Item target/release/toondb_storage.dll toondb-python-sdk/src/toondb/lib/windows-x86_64/
-      Copy-Item target/release/toondb_index.dll toondb-python-sdk/src/toondb/lib/windows-x86_64/
-      Copy-Item target/release/toondb-bulk.exe toondb-python-sdk/src/toondb/_bin/windows-x86_64/ -ErrorAction SilentlyContinue
+      New-Item -ItemType Directory -Force -Path sochdb-python-sdk/src/sochdb/lib/windows-x86_64
+      New-Item -ItemType Directory -Force -Path sochdb-python-sdk/src/sochdb/_bin/windows-x86_64
+      Copy-Item target/release/sochdb_storage.dll sochdb-python-sdk/src/sochdb/lib/windows-x86_64/
+      Copy-Item target/release/sochdb_index.dll sochdb-python-sdk/src/sochdb/lib/windows-x86_64/
+      Copy-Item target/release/sochdb-bulk.exe sochdb-python-sdk/src/sochdb/_bin/windows-x86_64/ -ErrorAction SilentlyContinue
     displayName: 'Copy native libraries to Python package'
 
   - script: |
-      cd toondb-python-sdk
+      cd sochdb-python-sdk
       pip install build wheel
       python -m build --wheel
       dir dist
@@ -68,5 +68,5 @@ steps:
   - task: PublishPipelineArtifact@1
     displayName: 'Publish Windows wheel'
     inputs:
-      targetPath: 'toondb-python-sdk\dist'
+      targetPath: 'sochdb-python-sdk\dist'
       artifact: 'python-windows-x64'

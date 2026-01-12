@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Test script to verify ToonDB analytics integration (Node.js).
+ * Test script to verify SochDB analytics integration (Node.js).
  * 
  * This sends several test events to PostHog to verify the integration works.
  * Events should appear in PostHog dashboard at: https://us.posthog.com
  */
 
 // Ensure analytics is enabled
-process.env.TOONDB_DISABLE_ANALYTICS = 'false';
+process.env.SOCHDB_DISABLE_ANALYTICS = 'false';
 
 const {
   captureAnalytics,
@@ -16,11 +16,11 @@ const {
   trackVectorSearch,
   trackBatchInsert,
   isAnalyticsDisabled
-} = require('./toondb-js/dist/cjs/index.js');
+} = require('./sochdb-js/dist/cjs/index.js');
 
 async function main() {
   console.log('='.repeat(60));
-  console.log('ToonDB Analytics Test (Node.js)');
+  console.log('SochDB Analytics Test (Node.js)');
   console.log('='.repeat(60));
   console.log();
   

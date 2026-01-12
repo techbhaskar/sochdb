@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Semantic Search API with ToonDB
+Semantic Search API with SochDB
 
 A production-ready semantic search service showing:
 - REST-style API patterns
@@ -25,8 +25,8 @@ from dataclasses import dataclass, field
 import numpy as np
 import requests
 
-# Add ToonDB SDK to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+# Add SochDB SDK to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -57,10 +57,10 @@ class SearchResult:
 # =============================================================================
 
 class SemanticSearchService:
-    """Production-ready semantic search service using ToonDB."""
+    """Production-ready semantic search service using SochDB."""
     
     def __init__(self, collection_name: str = "default"):
-        from toondb import VectorIndex
+        from sochdb import VectorIndex
         
         self.collection_name = collection_name
         self.dimension = 1536
@@ -72,7 +72,7 @@ class SemanticSearchService:
             ef_construction=200  # Higher for better index quality
         )
         
-        # Document storage (in production, use ToonDB KV)
+        # Document storage (in production, use SochDB KV)
         self.documents: Dict[str, Document] = {}
         self.id_to_idx: Dict[str, int] = {}
         self.idx_to_id: Dict[int, str] = {}
@@ -158,7 +158,7 @@ class SemanticSearchService:
         return self.documents.get(doc_id)
     
     def delete(self, doc_id: str) -> bool:
-        """Delete a document (marks as deleted, ToonDB doesn't support delete yet)."""
+        """Delete a document (marks as deleted, SochDB doesn't support delete yet)."""
         if doc_id in self.documents:
             del self.documents[doc_id]
             # Note: Vector remains in index but won't be returned
@@ -248,7 +248,7 @@ def run_search_api_demo():
     """Run the semantic search API demo."""
     
     print("="*70)
-    print("  SEMANTIC SEARCH API + TOONDB")
+    print("  SEMANTIC SEARCH API + SOCHDB")
     print("="*70)
     
     # Initialize service
@@ -260,14 +260,14 @@ def run_search_api_demo():
     print("\n2. Adding documents...")
     
     documents = [
-        {"text": "ToonDB is a high-performance database for AI agents.", "metadata": {"category": "overview", "priority": "high"}},
-        {"text": "ToonDB achieves 117,000 vector inserts per second.", "metadata": {"category": "performance", "priority": "high"}},
-        {"text": "ToonDB uses HNSW algorithm with SIMD acceleration.", "metadata": {"category": "architecture", "priority": "medium"}},
-        {"text": "ToonDB is 24x faster than ChromaDB on benchmarks.", "metadata": {"category": "performance", "priority": "high"}},
-        {"text": "ToonDB provides MCP integration for LLM tools.", "metadata": {"category": "integration", "priority": "medium"}},
-        {"text": "ToonDB is open source under Apache 2.0 license.", "metadata": {"category": "licensing", "priority": "low"}},
-        {"text": "ToonDB supports session management and context queries.", "metadata": {"category": "features", "priority": "medium"}},
-        {"text": "ToonDB's TCH storage engine provides O(path) resolution.", "metadata": {"category": "architecture", "priority": "high"}},
+        {"text": "SochDB is a high-performance database for AI agents.", "metadata": {"category": "overview", "priority": "high"}},
+        {"text": "SochDB achieves 117,000 vector inserts per second.", "metadata": {"category": "performance", "priority": "high"}},
+        {"text": "SochDB uses HNSW algorithm with SIMD acceleration.", "metadata": {"category": "architecture", "priority": "medium"}},
+        {"text": "SochDB is 24x faster than ChromaDB on benchmarks.", "metadata": {"category": "performance", "priority": "high"}},
+        {"text": "SochDB provides MCP integration for LLM tools.", "metadata": {"category": "integration", "priority": "medium"}},
+        {"text": "SochDB is open source under Apache 2.0 license.", "metadata": {"category": "licensing", "priority": "low"}},
+        {"text": "SochDB supports session management and context queries.", "metadata": {"category": "features", "priority": "medium"}},
+        {"text": "SochDB's TCH storage engine provides O(path) resolution.", "metadata": {"category": "architecture", "priority": "high"}},
     ]
     
     start = time.perf_counter()
@@ -282,7 +282,7 @@ def run_search_api_demo():
     print("-"*70)
     
     queries = [
-        {"query": "How fast is ToonDB?", "filter": None},
+        {"query": "How fast is SochDB?", "filter": None},
         {"query": "Tell me about the architecture", "filter": None},
         {"query": "Performance benchmarks", "filter": {"category": "performance"}},
         {"query": "What license?", "filter": None},
@@ -306,7 +306,7 @@ def run_search_api_demo():
     
     # Hybrid search
     print("\n4. Hybrid search example...")
-    results = service.hybrid_search("ToonDB performance speed fast", top_k=3)
+    results = service.hybrid_search("SochDB performance speed fast", top_k=3)
     print(f"\nHybrid search results:")
     for i, r in enumerate(results, 1):
         print(f"  {i}. [{r.score:.3f}] {r.document.text[:60]}...")

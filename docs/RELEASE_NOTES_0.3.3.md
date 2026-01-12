@@ -1,11 +1,11 @@
-# ToonDB v0.3.3 Release Notes
+# SochDB v0.3.3 Release Notes
 
 **Release Date:** January 5, 2026
 
 ## 🎉 New Features
 
 ### 🕸️ Graph Overlay System
-A lightweight graph layer built on top of ToonDB's KV storage for agent memory management:
+A lightweight graph layer built on top of SochDB's KV storage for agent memory management:
 
 **Features:**
 - Node operations: Add, Get, Update, Delete with typed nodes
@@ -62,17 +62,17 @@ Multi-agent coordination improvements:
 
 ## 📦 SDK Updates
 
-### Python SDK (toondb-client v0.3.3)
+### Python SDK (sochdb-client v0.3.3)
 - Added `GraphOverlay` class with full API
 - Enhanced `ContextQuery` with better token estimation
-- Updated examples in `toondb-python-examples/new_features/`
+- Updated examples in `sochdb-python-examples/new_features/`
 
-### Go SDK (github.com/toondb/toondb-go v0.3.3)
+### Go SDK (github.com/sochdb/sochdb-go v0.3.3)
 - Added `GraphOverlay` struct with 660 lines of implementation
 - Added `ContextQuery` struct with 545 lines of implementation
 - Full API parity with Python SDK
 
-### Node.js SDK (@sushanth/toondb v0.3.3)
+### Node.js SDK (@sushanth/sochdb v0.3.3)
 - Added `GraphOverlay` class with TypeScript types
 - Added `ContextQuery` class with async/await support
 - Updated TypeScript definitions
@@ -102,21 +102,21 @@ To use new features:
 
 **Python:**
 ```python
-from toondb import Database, GraphOverlay
+from sochdb import Database, GraphOverlay
 db = Database.open("./db")
 graph = GraphOverlay(db, namespace="demo")
 ```
 
 **Go:**
 ```go
-import toondb "github.com/toondb/toondb-go"
-db, _ := toondb.Open("./db")
-graph := toondb.NewGraphOverlay(db, "demo")
+import sochdb "github.com/sochdb/sochdb-go"
+db, _ := sochdb.Open("./db")
+graph := sochdb.NewGraphOverlay(db, "demo")
 ```
 
 **Node.js:**
 ```typescript
-import { Database, GraphOverlay } from '@sushanth/toondb';
+import { Database, GraphOverlay } from '@sushanth/sochdb';
 const db = await Database.open('./db');
 const graph = new GraphOverlay(db, 'demo');
 ```
@@ -131,11 +131,11 @@ See [CHANGELOG.md](CHANGELOG.md) for complete details.
 
 ## 🔗 Links
 
-- [Main Repository](https://github.com/toondb/toondb)
-- [Python SDK](https://github.com/toondb/toondb-python-sdk)
-- [Go SDK](https://github.com/toondb/toondb-go)
-- [Node.js SDK](https://github.com/toondb/toondb-nodejs-sdk)
-- [Documentation](https://docs.toondb.dev)
+- [Main Repository](https://github.com/sochdb/sochdb)
+- [Python SDK](https://github.com/sochdb/sochdb-python-sdk)
+- [Go SDK](https://github.com/sochdb/sochdb-go)
+- [Node.js SDK](https://github.com/sochdb/sochdb-nodejs-sdk)
+- [Documentation](https://docs.sochdb.dev)
 
 ## 📊 Stats
 
@@ -150,11 +150,11 @@ See [CHANGELOG.md](CHANGELOG.md) for complete details.
 
 ```bash
 # Python
-pip install --upgrade toondb-client
+pip install --upgrade sochdb-client
 
 # Go
-go get github.com/toondb/toondb-go@v0.3.3
+go get github.com/sochdb/sochdb-go@v0.3.3
 
 # Node.js
-npm install @sushanth/toondb@latest
+npm install @sushanth/sochdb@latest
 ```

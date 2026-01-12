@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-LangGraph + ToonDB Integration Example
+LangGraph + SochDB Integration Example
 
 Demonstrates a complete agentic workflow with:
-1. ToonDB VectorIndex for knowledge retrieval
-2. ToonDB Database for memory storage
+1. SochDB VectorIndex for knowledge retrieval
+2. SochDB Database for memory storage
 3. Azure OpenAI for embeddings and LLM
 4. LangGraph for workflow orchestration
 
@@ -24,8 +24,8 @@ from typing import TypedDict, Sequence, Dict, List
 import numpy as np
 import requests
 
-# Add ToonDB SDK to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../toondb-python-sdk/src"))
+# Add SochDB SDK to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../sochdb-python-sdk/src"))
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -77,18 +77,18 @@ class AzureLLM:
 # =============================================================================
 
 def run_langgraph_agent():
-    """Run a complete LangGraph agent with ToonDB retrieval and memory."""
+    """Run a complete LangGraph agent with SochDB retrieval and memory."""
     
     print("="*70)
-    print("  LANGGRAPH + TOONDB AGENT EXAMPLE")
+    print("  LANGGRAPH + SOCHDB AGENT EXAMPLE")
     print("="*70)
     
     # Import LangGraph
     from langgraph.graph import StateGraph, START, END
     from langchain_core.messages import HumanMessage, AIMessage
     
-    # Import ToonDB
-    from toondb import VectorIndex, Database
+    # Import SochDB
+    from sochdb import VectorIndex, Database
     
     # Initialize clients
     embeddings = AzureEmbeddings()
@@ -100,11 +100,11 @@ def run_langgraph_agent():
     print("\n1. Setting up knowledge base...")
     
     knowledge = [
-        "ToonDB is a high-performance database designed for AI agents and LLM applications.",
-        "ToonDB achieves 117,000 vector inserts per second and 0.03ms search latency.",
-        "ToonDB uses a Trie-Columnar Hybrid (TCH) storage engine for hierarchical data.",
-        "ToonDB supports session management, context queries, and token budget enforcement.",
-        "ToonDB is 24x faster than ChromaDB on vector search benchmarks.",
+        "SochDB is a high-performance database designed for AI agents and LLM applications.",
+        "SochDB achieves 117,000 vector inserts per second and 0.03ms search latency.",
+        "SochDB uses a Trie-Columnar Hybrid (TCH) storage engine for hierarchical data.",
+        "SochDB supports session management, context queries, and token budget enforcement.",
+        "SochDB is 24x faster than ChromaDB on vector search benchmarks.",
     ]
     
     kb_embeddings = embeddings.embed(knowledge)
@@ -120,7 +120,7 @@ def run_langgraph_agent():
     # Step 2: Setup Memory Store (KV)
     # ==========================================================================
     import tempfile
-    db_path = tempfile.mktemp(prefix="toondb_memory_")
+    db_path = tempfile.mktemp(prefix="sochdb_memory_")
     db = Database.open(db_path)
     print(f"   ✓ Memory store initialized")
     
@@ -140,7 +140,7 @@ def run_langgraph_agent():
     # ==========================================================================
     
     def retrieve_context(state: AgentState) -> dict:
-        """Retrieve relevant context from ToonDB vector index."""
+        """Retrieve relevant context from SochDB vector index."""
         query = state["messages"][-1].content
         query_embed = embeddings.embed_single(query)
         results = index.search(query_embed, k=2)
@@ -152,7 +152,7 @@ def run_langgraph_agent():
         return {"context": context}
     
     def load_memory(state: AgentState) -> dict:
-        """Load recent conversation memory from ToonDB KV store."""
+        """Load recent conversation memory from SochDB KV store."""
         user_id = state.get("user_id", "default")
         prefix = f"memory/{user_id}/".encode()
         
@@ -198,7 +198,7 @@ Be concise and accurate."""},
         }
     
     def save_memory(state: AgentState) -> dict:
-        """Save conversation turn to ToonDB memory store."""
+        """Save conversation turn to SochDB memory store."""
         user_id = state.get("user_id", "default")
         turn = state.get("turn_count", 0)
         
@@ -251,9 +251,9 @@ Be concise and accurate."""},
     print("-"*70)
     
     questions = [
-        "What is ToonDB designed for?",
-        "How fast is ToonDB compared to ChromaDB?",
-        "What storage engine does ToonDB use?",
+        "What is SochDB designed for?",
+        "How fast is SochDB compared to ChromaDB?",
+        "What storage engine does SochDB use?",
     ]
     
     for i, question in enumerate(questions, 1):

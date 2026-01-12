@@ -6,7 +6,7 @@
 
 ## Problem
 
-You're ready to deploy ToonDB to production and need to ensure reliability, performance, and security.
+You're ready to deploy SochDB to production and need to ensure reliability, performance, and security.
 
 ---
 
@@ -42,12 +42,12 @@ You're ready to deploy ToonDB to production and need to ensure reliability, perf
 
 ### 1. Production Configuration
 
-Create `toondb-server-config.toml`:
+Create `sochdb-server-config.toml`:
 
 ```toml
 [server]
 # IPC settings
-socket_path = "/var/run/toondb/toondb.sock"
+socket_path = "/var/run/sochdb/sochdb.sock"
 socket_permissions = "0660"
 max_connections = 1000
 connection_timeout_secs = 30
@@ -57,7 +57,7 @@ grpc_enabled = true
 grpc_bind = "127.0.0.1:50051"  # Localhost only, use reverse proxy for external
 
 [storage]
-path = "/var/lib/toondb/data"
+path = "/var/lib/sochdb/data"
 sync_mode = "normal"  # "full" for max durability, "off" for speed
 
 # WAL settings
@@ -84,7 +84,7 @@ write_buffer_size = 67108864  # 64 MB
 level = "info"
 format = "json"
 output = "file"
-file_path = "/var/log/toondb/toondb.log"
+file_path = "/var/log/sochdb/sochdb.log"
 max_size_mb = 100
 max_files = 10
 ```
@@ -93,19 +93,19 @@ max_files = 10
 
 ### 2. Systemd Service
 
-Create `/etc/systemd/system/toondb.service`:
+Create `/etc/systemd/system/sochdb.service`:
 
 ```ini
 [Unit]
-Description=ToonDB Database Server
+Description=SochDB Database Server
 After=network.target
-Documentation=https://github.com/toondb/toondb
+Documentation=https://github.com/sochdb/sochdb
 
 [Service]
 Type=simple
-User=toondb
-Group=toondb
-ExecStart=/usr/local/bin/toondb-server --config /etc/toondb/config.toml
+User=sochdb
+Group=sochdb
+ExecStart=/usr/local/bin/sochdb-server --config /etc/sochdb/config.toml
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=5
@@ -115,14 +115,14 @@ NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
-ReadWritePaths=/var/lib/toondb /var/log/toondb /var/run/toondb
+ReadWritePaths=/var/lib/sochdb /var/log/sochdb /var/run/sochdb
 
 # Resource limits
 LimitNOFILE=65536
 LimitMEMLOCK=infinity
 
 # Environment
-Environment=RUST_LOG=toondb=info
+Environment=RUST_LOG=sochdb=info
 Environment=RUST_BACKTRACE=1
 
 [Install]
@@ -133,8 +133,8 @@ Enable and start:
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable toondb
-sudo systemctl start toondb
+sudo systemctl enable sochdb
+sudo systemctl start sochdb
 ```
 
 ---
@@ -143,19 +143,19 @@ sudo systemctl start toondb
 
 ```bash
 # Create directories
-sudo mkdir -p /var/lib/toondb/data
-sudo mkdir -p /var/log/toondb
-sudo mkdir -p /var/run/toondb
-sudo mkdir -p /etc/toondb
+sudo mkdir -p /var/lib/sochdb/data
+sudo mkdir -p /var/log/sochdb
+sudo mkdir -p /var/run/sochdb
+sudo mkdir -p /etc/sochdb
 
 # Create service user
-sudo useradd -r -s /bin/false toondb
+sudo useradd -r -s /bin/false sochdb
 
 # Set permissions
-sudo chown -R toondb:toondb /var/lib/toondb
-sudo chown -R toondb:toondb /var/log/toondb
-sudo chown -R toondb:toondb /var/run/toondb
-sudo chmod 700 /var/lib/toondb/data
+sudo chown -R sochdb:sochdb /var/lib/sochdb
+sudo chown -R sochdb:sochdb /var/log/sochdb
+sudo chown -R sochdb:sochdb /var/run/sochdb
+sudo chmod 700 /var/lib/sochdb/data
 ```
 
 ---
@@ -166,9 +166,9 @@ sudo chmod 700 /var/lib/toondb/data
 
 ```bash
 #!/bin/bash
-# /usr/local/bin/toondb-healthcheck
+# /usr/local/bin/sochdb-healthcheck
 
-SOCKET="/var/run/toondb/toondb.sock"
+SOCKET="/var/run/sochdb/sochdb.sock"
 
 if [ ! -S "$SOCKET" ]; then
     echo "CRITICAL: Socket not found"
@@ -176,11 +176,11 @@ if [ ! -S "$SOCKET" ]; then
 fi
 
 # Check if server responds
-if timeout 5 toondb-client ping --socket "$SOCKET" > /dev/null 2>&1; then
-    echo "OK: ToonDB is healthy"
+if timeout 5 sochdb-client ping --socket "$SOCKET" > /dev/null 2>&1; then
+    echo "OK: SochDB is healthy"
     exit 0
 else
-    echo "CRITICAL: ToonDB not responding"
+    echo "CRITICAL: SochDB not responding"
     exit 2
 fi
 ```
@@ -188,12 +188,12 @@ fi
 #### Python Health Check
 
 ```python
-from toondb import IpcClient
+from sochdb import IpcClient
 import sys
 
 def health_check():
     try:
-        client = IpcClient("/var/run/toondb/toondb.sock")
+        client = IpcClient("/var/run/sochdb/sochdb.sock")
         stats = client.stats()
         
         # Check key metrics
@@ -216,10 +216,10 @@ sys.exit(health_check())
 
 ```bash
 #!/bin/bash
-# /usr/local/bin/toondb-backup
+# /usr/local/bin/sochdb-backup
 
-BACKUP_DIR="/var/backups/toondb"
-DATA_DIR="/var/lib/toondb/data"
+BACKUP_DIR="/var/backups/sochdb"
+DATA_DIR="/var/lib/sochdb/data"
 DATE=$(date +%Y%m%d_%H%M%S)
 RETENTION_DAYS=7
 
@@ -227,7 +227,7 @@ RETENTION_DAYS=7
 mkdir -p "$BACKUP_DIR"
 
 # Trigger checkpoint before backup
-toondb-client checkpoint --socket /var/run/toondb/toondb.sock
+sochdb-client checkpoint --socket /var/run/sochdb/sochdb.sock
 
 # Create backup (hot backup using hardlinks for SST files)
 rsync -a --link-dest="$BACKUP_DIR/latest" \
@@ -246,7 +246,7 @@ Add to crontab:
 
 ```bash
 # Daily backup at 3 AM
-0 3 * * * /usr/local/bin/toondb-backup >> /var/log/toondb/backup.log 2>&1
+0 3 * * * /usr/local/bin/sochdb-backup >> /var/log/sochdb/backup.log 2>&1
 ```
 
 ---
@@ -263,17 +263,17 @@ RUN cargo build --release
 FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /build/target/release/toondb-server /usr/local/bin/
-COPY --from=builder /build/target/release/toondb-client /usr/local/bin/
+COPY --from=builder /build/target/release/sochdb-server /usr/local/bin/
+COPY --from=builder /build/target/release/sochdb-client /usr/local/bin/
 
-RUN useradd -r -s /bin/false toondb
-USER toondb
+RUN useradd -r -s /bin/false sochdb
+USER sochdb
 
 VOLUME /data
 EXPOSE 50051
 
-ENTRYPOINT ["/usr/local/bin/toondb-server"]
-CMD ["--config", "/etc/toondb/config.toml"]
+ENTRYPOINT ["/usr/local/bin/sochdb-server"]
+CMD ["--config", "/etc/sochdb/config.toml"]
 ```
 
 ```yaml
@@ -281,22 +281,22 @@ CMD ["--config", "/etc/toondb/config.toml"]
 version: '3.8'
 
 services:
-  toondb:
+  sochdb:
     build: .
     volumes:
-      - toondb_data:/data
-      - ./config.toml:/etc/toondb/config.toml:ro
+      - sochdb_data:/data
+      - ./config.toml:/etc/sochdb/config.toml:ro
     ports:
       - "50051:50051"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "toondb-client", "ping"]
+      test: ["CMD", "sochdb-client", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
 
 volumes:
-  toondb_data:
+  sochdb_data:
 ```
 
 ---

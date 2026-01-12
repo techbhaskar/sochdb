@@ -4,7 +4,7 @@ authors:
   - family-names: "Vangala"
     given-names: "Sushanth Reddy"
     email: "sushanth53@gmail.com"
-title: "ToonDB"
+title: "SochDB"
 abstract: "The LLM-Native Database: Token-optimized context, columnar storage, built-in vector search, and embedded-first design."
 keywords:
   - database
@@ -16,7 +16,7 @@ keywords:
   - hnsw
   - columnar-storage
 license: Apache-2.0
-repository-code: "https://github.com/toondb/toondb"
-url: "https://docs.toondb.dev"
+repository-code: "https://github.com/sochdb/sochdb"
+url: "https://docs.sochdb.dev"
 type: software
 date-released: 2026-01-01

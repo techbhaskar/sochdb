@@ -1,4 +1,4 @@
-# RFD: ToonDB — AI‑Native Database for Agent Memory & Context
+# RFD: SochDB — AI‑Native Database for Agent Memory & Context
 
 **Author:** sushanth reddy vangala (https://github.com/sushanthpy)
 **Status:** Draft (Request for Discussion)
@@ -9,9 +9,9 @@
 
 ## 1. Summary
 
-**ToonDB** is an **LLM‑native database** designed to offload **contextual engineering** (context assembly, token budgeting, truncation, and compact serialization) so teams can focus on **agent orchestration** (routing, tool policy, planning, graph execution).
+**SochDB** is an **LLM‑native database** designed to offload **contextual engineering** (context assembly, token budgeting, truncation, and compact serialization) so teams can focus on **agent orchestration** (routing, tool policy, planning, graph execution).
 
-ToonDB combines:
+SochDB combines:
 
 * **Token‑optimized output** (TOON / tabular LLM‑friendly encoding)
 * **Context Query Builder** (assemble multi‑section context under a token budget)
@@ -19,7 +19,7 @@ ToonDB combines:
 * **Built‑in vector search (HNSW)**
 * **ACID durability** via MVCC + WAL
 
-**Proposed designation:** Adopt ToonDB as the default **agent memory + retrieval substrate** for projects that need reliable local/edge memory, deterministic context assembly, and fast retrieval without stitching multiple stores.
+**Proposed designation:** Adopt SochDB as the default **agent memory + retrieval substrate** for projects that need reliable local/edge memory, deterministic context assembly, and fast retrieval without stitching multiple stores.
 
 ---
 
@@ -78,7 +78,7 @@ Production agent stacks repeatedly re‑implement the same "boring middle":
 
 ### 4.1 Core concept: Offload contextual engineering
 
-Instead of each orchestrator implementing prompt assembly, ToonDB introduces **Context Queries**:
+Instead of each orchestrator implementing prompt assembly, SochDB introduces **Context Queries**:
 
 * The application declares **sections** (SYSTEM/USER/HISTORY/DOCS/etc.)
 * Each section declares how to fetch data (path lookups, projections, vector search)
@@ -109,7 +109,7 @@ This turns context construction into a **queryable primitive**—testable, repro
 
 ---
 
-## 5. How ToonDB fits into an agentic stack
+## 5. How SochDB fits into an agentic stack
 
 ### 5.1 LangGraph (graph orchestrators)
 
@@ -121,11 +121,11 @@ Recommended node pattern:
 
 2. **LLM node**
 
-* Execute the model call using ToonDB context output
+* Execute the model call using SochDB context output
 
 3. **Tool nodes**
 
-* Use ToonDB as a tool (via MCP) or as an internal library for writes
+* Use SochDB as a tool (via MCP) or as an internal library for writes
 
 4. **Commit node**
 
@@ -133,15 +133,15 @@ Recommended node pattern:
 
 ### 5.2 CrewAI / multi-agent role systems
 
-* Expose ToonDB as a shared "Memory & Retrieval Tool" with namespaced scopes
-* Agents write structured observations, retrieved evidence, and summaries back to ToonDB
+* Expose SochDB as a shared "Memory & Retrieval Tool" with namespaced scopes
+* Agents write structured observations, retrieved evidence, and summaries back to SochDB
 * Context queries enforce consistent packing and truncation across roles
 
 ### 5.3 Custom orchestrators
 
-* Treat ToonDB as the **memory plane**
+* Treat SochDB as the **memory plane**
 * Keep orchestration logic (routing, policies, plans) in the orchestrator
-* Move context selection, formatting, and budgeting into ToonDB
+* Move context selection, formatting, and budgeting into SochDB
 
 ---
 
@@ -305,6 +305,6 @@ Mitigations:
 
 ## 12. Discussion prompts
 
-* Would you adopt ToonDB as a default memory substrate in your agent stack? Why/why not?
+* Would you adopt SochDB as a default memory substrate in your agent stack? Why/why not?
 * Which integration path matters most: embedded, MCP, or gRPC?
 * What production blocker is most urgent: security, observability, replication, or tooling adapters?

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Real End-to-End LLM Test for ToonDB
+Real End-to-End LLM Test for SochDB
 
 Uses actual Azure OpenAI APIs to test:
 1. Embedding generation via Azure Cognitive Services
-2. Vector storage and retrieval with ToonDB
+2. Vector storage and retrieval with SochDB
 3. LLM-powered question answering with retrieved context
 
 Requires .env file with Azure credentials.
@@ -26,8 +26,8 @@ from dataclasses import dataclass
 from dotenv import load_dotenv
 import numpy as np
 
-# Add ToonDB SDK to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../toondb-python-sdk/src"))
+# Add SochDB SDK to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../sochdb-python-sdk/src"))
 
 # Load environment variables
 load_dotenv()
@@ -122,7 +122,7 @@ def run_real_e2e_test():
     
     print("="*70)
     print("  REAL END-TO-END LLM TEST")
-    print("  Using Azure OpenAI + ToonDB")
+    print("  Using Azure OpenAI + SochDB")
     print("="*70)
     
     # Initialize clients
@@ -132,42 +132,42 @@ def run_real_e2e_test():
     print("   ✓ Azure Embeddings connected")
     print("   ✓ Azure OpenAI connected")
     
-    # Initialize ToonDB
-    print("\n2. Initializing ToonDB...")
+    # Initialize SochDB
+    print("\n2. Initializing SochDB...")
     try:
-        from toondb import VectorIndex
+        from sochdb import VectorIndex
         if VectorIndex is None:
             raise ImportError("VectorIndex not available")
     except ImportError as e:
-        print(f"   ✗ ToonDB not available: {e}")
+        print(f"   ✗ SochDB not available: {e}")
         return
     
     # Test knowledge base
     knowledge_base = [
         {
             "id": 0,
-            "topic": "ToonDB Architecture",
-            "content": "ToonDB uses a Trie-Columnar Hybrid (TCH) storage engine that provides O(path) resolution time. It combines the benefits of tries for hierarchical key access with columnar storage for analytical queries."
+            "topic": "SochDB Architecture",
+            "content": "SochDB uses a Trie-Columnar Hybrid (TCH) storage engine that provides O(path) resolution time. It combines the benefits of tries for hierarchical key access with columnar storage for analytical queries."
         },
         {
             "id": 1,
             "topic": "Vector Search",
-            "content": "ToonDB's vector search uses HNSW (Hierarchical Navigable Small World) algorithm implemented in Rust with SIMD acceleration. It achieves 117,000 vectors per second insert rate and sub-millisecond search latency."
+            "content": "SochDB's vector search uses HNSW (Hierarchical Navigable Small World) algorithm implemented in Rust with SIMD acceleration. It achieves 117,000 vectors per second insert rate and sub-millisecond search latency."
         },
         {
             "id": 2,
             "topic": "AI Agent Integration",
-            "content": "ToonDB is designed for AI agents with built-in session management, context queries, and token budget enforcement. It supports MCP (Model Context Protocol) for seamless LLM integration."
+            "content": "SochDB is designed for AI agents with built-in session management, context queries, and token budget enforcement. It supports MCP (Model Context Protocol) for seamless LLM integration."
         },
         {
             "id": 3,
             "topic": "Performance",
-            "content": "ToonDB outperforms ChromaDB by 24x on search latency and 11x on insert throughput. It also beats SQLite by 24% on insert operations for key-value workloads."
+            "content": "SochDB outperforms ChromaDB by 24x on search latency and 11x on insert throughput. It also beats SQLite by 24% on insert operations for key-value workloads."
         },
         {
             "id": 4,
             "topic": "Context Queries",
-            "content": "ToonDB's ContextQuery system allows building prioritized context sections with token budgets. It supports SEARCH, LAST, GET, and SELECT operators for flexible context assembly."
+            "content": "SochDB's ContextQuery system allows building prioritized context sections with token budgets. It supports SEARCH, LAST, GET, and SELECT operators for flexible context assembly."
         }
     ]
     
@@ -182,8 +182,8 @@ def run_real_e2e_test():
     dim = doc_embeddings.shape[1]
     print(f"   ✓ Generated {len(texts)} embeddings ({dim}-dim) in {embed_time:.0f}ms")
     
-    # Build ToonDB index
-    print("\n4. Building ToonDB index...")
+    # Build SochDB index
+    print("\n4. Building SochDB index...")
     index = VectorIndex(dimension=dim, max_connections=16, ef_construction=100)
     
     ids = np.arange(len(knowledge_base), dtype=np.uint64)
@@ -196,15 +196,15 @@ def run_real_e2e_test():
     # Test questions
     test_cases = [
         {
-            "question": "What storage engine does ToonDB use?",
-            "expected_topic": "ToonDB Architecture"
+            "question": "What storage engine does SochDB use?",
+            "expected_topic": "SochDB Architecture"
         },
         {
-            "question": "How fast is ToonDB's vector search?",
+            "question": "How fast is SochDB's vector search?",
             "expected_topic": "Vector Search"
         },
         {
-            "question": "How does ToonDB compare to ChromaDB?",
+            "question": "How does SochDB compare to ChromaDB?",
             "expected_topic": "Performance"
         },
         {
@@ -212,7 +212,7 @@ def run_real_e2e_test():
             "expected_topic": "Context Queries"
         },
         {
-            "question": "Does ToonDB support AI agents?",
+            "question": "Does SochDB support AI agents?",
             "expected_topic": "AI Agent Integration"
         }
     ]
@@ -232,7 +232,7 @@ def run_real_e2e_test():
         # Generate query embedding
         query_embed = embeddings.embed_single(question)
         
-        # Retrieve from ToonDB
+        # Retrieve from SochDB
         start = time.perf_counter()
         search_results = index.search(query_embed, k=3)
         retrieval_ms = (time.perf_counter() - start) * 1000
@@ -307,14 +307,14 @@ def run_memory_test():
     embeddings = AzureEmbeddings()
     llm = AzureLLM()
     
-    from toondb import VectorIndex
+    from sochdb import VectorIndex
     
     # Simulate agent memory (session history)
     memories = [
         {"id": 0, "turn": 1, "role": "user", "content": "My name is Alice and I'm a software engineer."},
         {"id": 1, "turn": 2, "role": "assistant", "content": "Nice to meet you, Alice! What kind of software do you work on?"},
-        {"id": 2, "turn": 3, "role": "user", "content": "I work on database systems, specifically ToonDB."},
-        {"id": 3, "turn": 4, "role": "assistant", "content": "ToonDB sounds interesting! What makes it special?"},
+        {"id": 2, "turn": 3, "role": "user", "content": "I work on database systems, specifically SochDB."},
+        {"id": 3, "turn": 4, "role": "assistant", "content": "SochDB sounds interesting! What makes it special?"},
         {"id": 4, "turn": 5, "role": "user", "content": "It's optimized for AI agents with fast vector search."},
         {"id": 5, "turn": 6, "role": "user", "content": "My favorite programming language is Rust."},
         {"id": 6, "turn": 7, "role": "user", "content": "I live in San Francisco."},

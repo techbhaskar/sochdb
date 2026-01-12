@@ -1,4 +1,4 @@
-# ToonDB v0.3.1 Release Notes
+# SochDB v0.3.1 Release Notes
 
 **Release Date:** January 4, 2026  
 **Type:** Minor Release  
@@ -8,7 +8,7 @@
 
 ## 🎯 Overview
 
-ToonDB v0.3.1 introduces **optional, privacy-respecting usage analytics** to help improve the database while maintaining user privacy. This release adds anonymous usage information collection with full transparency and user control.
+SochDB v0.3.1 introduces **optional, privacy-respecting usage analytics** to help improve the database while maintaining user privacy. This release adds anonymous usage information collection with full transparency and user control.
 
 ---
 
@@ -16,7 +16,7 @@ ToonDB v0.3.1 introduces **optional, privacy-respecting usage analytics** to hel
 
 ### Anonymous Usage Analytics
 
-Optional telemetry to understand how ToonDB is used in production, with strict privacy guarantees:
+Optional telemetry to understand how SochDB is used in production, with strict privacy guarantees:
 
 #### Events Tracked
 
@@ -33,7 +33,7 @@ Optional telemetry to understand how ToonDB is used in production, with strict p
 
 ✅ **Anonymous ID** — Stable SHA-256 hash of machine info (hostname, OS, arch)  
 ✅ **No PII** — No usernames, file paths, query content, or error messages  
-✅ **Opt-out** — Set `TOONDB_DISABLE_ANALYTICS=true` to disable completely  
+✅ **Opt-out** — Set `SOCHDB_DISABLE_ANALYTICS=true` to disable completely  
 ✅ **Optional Dependencies** — Graceful degradation if analytics libraries unavailable  
 ✅ **Open Source** — All analytics code visible in repository
 
@@ -41,8 +41,8 @@ Optional telemetry to understand how ToonDB is used in production, with strict p
 
 **Python SDK:**
 ```python
-from toondb import Database
-from toondb.analytics import capture_error
+from sochdb import Database
+from sochdb.analytics import capture_error
 
 # Analytics automatically tracks database_opened
 db = Database.open("./mydb")
@@ -56,14 +56,14 @@ except Exception:
 
 Installation with analytics:
 ```bash
-pip install toondb[analytics]  # Includes posthog
+pip install sochdb[analytics]  # Includes posthog
 # or
-pip install toondb  # Works without analytics
+pip install sochdb  # Works without analytics
 ```
 
 **JavaScript SDK:**
 ```javascript
-import { Database, captureError } from '@sushanth/toondb';
+import { Database, captureError } from '@sushanth/sochdb';
 
 // Analytics automatically tracks database_opened
 const db = await Database.open('./mydb');
@@ -78,16 +78,16 @@ try {
 
 Installation:
 ```bash
-npm install @sushanth/toondb
+npm install @sushanth/sochdb
 # posthog-node is optionalDependency (works without it)
 ```
 
 **Rust SDK:**
 ```rust
-use toondb_core::analytics;
+use sochdb_core::analytics;
 
 // Enable analytics feature in Cargo.toml
-// toondb-core = { version = "0.3.1", features = ["analytics"] }
+// sochdb-core = { version = "0.3.1", features = ["analytics"] }
 
 let db = Database::open("./mydb")?;
 analytics::analytics().track_database_open("./mydb", "embedded");
@@ -103,11 +103,11 @@ if let Err(_) = db.query(sql) {
 Set environment variable before running your application:
 
 ```bash
-export TOONDB_DISABLE_ANALYTICS=true
+export SOCHDB_DISABLE_ANALYTICS=true
 python your_app.py
 
 # Or inline
-TOONDB_DISABLE_ANALYTICS=true ./your_binary
+SOCHDB_DISABLE_ANALYTICS=true ./your_binary
 ```
 
 No events will be sent when disabled.
@@ -126,7 +126,7 @@ No events will be sent when disabled.
 ### Build System
 
 - **Rust:** Analytics feature enabled by default in client crates
-  - `toondb-client`, `toondb-python`, `toondb-grpc` include analytics
+  - `sochdb-client`, `sochdb-python`, `sochdb-grpc` include analytics
   - Added `json` feature to `ureq` for PostHog API calls
 - **JavaScript:** Fixed ESM import paths for analytics module
 - **Python:** Analytics as optional dependency group
@@ -146,32 +146,32 @@ No events will be sent when disabled.
 ### Python
 
 ```bash
-pip install toondb==0.3.1
+pip install sochdb==0.3.1
 
 # With analytics support
-pip install toondb[analytics]==0.3.1
+pip install sochdb[analytics]==0.3.1
 ```
 
 ### JavaScript / Node.js
 
 ```bash
-npm install @sushanth/toondb@0.3.1
+npm install @sushanth/sochdb@0.3.1
 ```
 
 ### Rust
 
 ```toml
 [dependencies]
-toondb-client = "0.3.1"
+sochdb-client = "0.3.1"
 
 # Or with analytics
-toondb-core = { version = "0.3.1", features = ["analytics"] }
+sochdb-core = { version = "0.3.1", features = ["analytics"] }
 ```
 
 ### Go
 
 ```bash
-go get github.com/toondb/toondb-go@v0.3.1
+go get github.com/sochdb/sochdb-go@v0.3.1
 ```
 
 ---
@@ -278,14 +278,14 @@ npm install posthog-node
 
 ```bash
 # .env file
-TOONDB_DISABLE_ANALYTICS=true
+SOCHDB_DISABLE_ANALYTICS=true
 
 # Docker
-ENV TOONDB_DISABLE_ANALYTICS=true
+ENV SOCHDB_DISABLE_ANALYTICS=true
 
 # Kubernetes
 env:
-  - name: TOONDB_DISABLE_ANALYTICS
+  - name: SOCHDB_DISABLE_ANALYTICS
     value: "true"
 ```
 
@@ -293,9 +293,9 @@ env:
 
 ## 📚 Resources
 
-- **Documentation:** https://toondb.dev/docs/guides/analytics
+- **Documentation:** https://sochdb.dev/docs/guides/analytics
 - **Changelog:** [CHANGELOG.md](../CHANGELOG.md)
-- **Issue Tracker:** https://github.com/toondb/toondb/issues
+- **Issue Tracker:** https://github.com/sochdb/sochdb/issues
 - **Privacy Policy:** All analytics code is open source in this repository
 
 ---
@@ -315,7 +315,7 @@ Thank you to the community for feedback on privacy-preserving telemetry design. 
 
 ---
 
-**Full Changelog:** https://github.com/toondb/toondb/compare/v0.3.0...v0.3.1
+**Full Changelog:** https://github.com/sochdb/sochdb/compare/v0.3.0...v0.3.1
 
 ---
 

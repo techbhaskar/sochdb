@@ -1,6 +1,6 @@
-# ToonDB Architecture
+# SochDB Architecture
 
-Deep technical documentation for ToonDB's internal architecture.
+Deep technical documentation for SochDB's internal architecture.
 
 ---
 
@@ -22,7 +22,7 @@ Deep technical documentation for ToonDB's internal architecture.
 
 ## Design Philosophy
 
-ToonDB is built around four core principles:
+SochDB is built around four core principles:
 
 ### 1. Token Efficiency First
 
@@ -35,7 +35,7 @@ Traditional approach:
 │       ~150 tokens for 3 rows                            │
 └─────────────────────────────────────────────────────────┘
 
-ToonDB approach:
+SochDB approach:
 ┌─────────────────────────────────────────────────────────┐
 │  LLM ← TOON ← Columnar Scan ← Path Resolution          │
 │       ~50 tokens for 3 rows (66% reduction)            │
@@ -86,7 +86,7 @@ Single-file deployment with plugin architecture:
 ┌──────────────────────────────────────────────────────┐
 │                    Your Application                   │
 ├──────────────────────────────────────────────────────┤
-│  ToonDB (embedded)                                   │
+│  SochDB (embedded)                                   │
 │  ┌────────────┐ ┌─────────────┐ ┌─────────────────┐ │
 │  │   Core     │ │   Kernel    │ │    Plugins      │ │
 │  │  ~500 KB   │ │   ~1 MB     │ │   (optional)    │ │
@@ -243,7 +243,7 @@ ref          ::= "ref(" identifier "," integer ")"
 
 ```rust
 #[repr(u8)]
-pub enum ToonTypeTag {
+pub enum SochTypeTag {
     Null      = 0x00,
     False     = 0x01,
     True      = 0x02,
@@ -950,7 +950,7 @@ fn checkpoint(&self) -> Result<u64> {
 
 ## SDK Architecture
 
-ToonDB provides official SDKs for multiple languages. All SDKs communicate with the ToonDB server via IPC (Unix domain sockets on Linux/macOS, named pipes on Windows).
+SochDB provides official SDKs for multiple languages. All SDKs communicate with the SochDB server via IPC (Unix domain sockets on Linux/macOS, named pipes on Windows).
 
 ### Client-Server Architecture
 
@@ -959,18 +959,18 @@ ToonDB provides official SDKs for multiple languages. All SDKs communicate with 
 │                         Client Applications                               │
 │  ┌─────────────┐  ┌─────────────────┐  ┌──────────────┐  ┌────────────┐ │
 │  │   Python    │  │   JavaScript    │  │      Go      │  │    Rust    │ │
-│  │  toondb-py  │  │  @sushanth/     │  │  toondb-go   │  │   toondb   │ │
-│  │             │  │     toondb      │  │              │  │   crate    │ │
+│  │  sochdb-py  │  │  @sushanth/     │  │  sochdb-go   │  │   sochdb   │ │
+│  │             │  │     sochdb      │  │              │  │   crate    │ │
 │  └──────┬──────┘  └───────┬─────────┘  └──────┬───────┘  └─────┬──────┘ │
 └─────────┼─────────────────┼────────────────────┼─────────────────┼───────┘
           │                 │                    │                 │
           └─────────────────┼────────────────────┼─────────────────┘
                             │    IPC/Socket      │
-                            │   (toondb.sock)    │
+                            │   (sochdb.sock)    │
                             ▼                    ▼
                     ┌──────────────────────────────────┐
-                    │         ToonDB Server            │
-                    │         (toondb-mcp)             │
+                    │         SochDB Server            │
+                    │         (sochdb-mcp)             │
                     ├──────────────────────────────────┤
                     │  ┌─────────────────────────────┐ │
                     │  │      Protocol Handler       │ │
@@ -979,7 +979,7 @@ ToonDB provides official SDKs for multiple languages. All SDKs communicate with 
                     │                │                 │
                     │  ┌─────────────▼───────────────┐ │
                     │  │       Query Engine          │ │
-                    │  │    (toondb-query crate)     │ │
+                    │  │    (sochdb-query crate)     │ │
                     │  └─────────────┬───────────────┘ │
                     │                │                 │
                     │  ┌─────────────▼───────────────┐ │
@@ -1003,11 +1003,11 @@ ToonDB provides official SDKs for multiple languages. All SDKs communicate with 
 ### Embedded vs External Server Mode
 
 **Embedded Mode (Python & JavaScript):**
-The SDK automatically spawns and manages a `toondb-mcp` server process. The server is started on `Database.open()` and stopped on `Database.close()`.
+The SDK automatically spawns and manages a `sochdb-mcp` server process. The server is started on `Database.open()` and stopped on `Database.close()`.
 
 ```python
 # Python - embedded mode (default)
-db = ToonDB.open("./my_database")
+db = SochDB.open("./my_database")
 # Server started automatically
 db.close()
 # Server stopped automatically
@@ -1026,19 +1026,19 @@ The Go SDK requires manual server startup:
 
 ```bash
 # Start server first
-./toondb-mcp serve --db ./my_database
+./sochdb-mcp serve --db ./my_database
 ```
 
 ```go
 // Then connect from Go
-db, err := toondb.Open("./my_database")
+db, err := sochdb.Open("./my_database")
 ```
 
 ---
 
 ## Python SDK Architecture
 
-The Python SDK provides multiple access patterns to ToonDB:
+The Python SDK provides multiple access patterns to SochDB:
 
 ### Access Modes
 
@@ -1046,16 +1046,16 @@ The Python SDK provides multiple access patterns to ToonDB:
 ┌──────────────────────────────────────────────────────────────────┐
 │                     Python Application                            │
 ├──────────────────────────────────────────────────────────────────┤
-│                        toondb (PyPI)                              │
+│                        sochdb (PyPI)                              │
 │  ┌────────────┐  ┌────────────┐  ┌─────────────────────────────┐ │
 │  │  Embedded  │  │    IPC     │  │        Bulk API             │ │
-│  │    FFI     │  │   Client   │  │  (subprocess → toondb-bulk) │ │
+│  │    FFI     │  │   Client   │  │  (subprocess → sochdb-bulk) │ │
 │  └─────┬──────┘  └─────┬──────┘  └──────────────┬──────────────┘ │
 │        │               │                         │                │
 └────────┼───────────────┼─────────────────────────┼────────────────┘
          │               │                         │
     ┌────▼────┐    ┌─────▼─────┐           ┌───────▼───────┐
-    │  Rust   │    │    IPC    │           │  toondb-bulk  │
+    │  Rust   │    │    IPC    │           │  sochdb-bulk  │
     │  FFI    │    │  Server   │           │    binary     │
     │  (.so)  │    │           │           │               │
     └────┬────┘    └─────┬─────┘           └───────┬───────┘
@@ -1063,7 +1063,7 @@ The Python SDK provides multiple access patterns to ToonDB:
          └───────────────┴─────────────────────────┘
                          │
                    ┌─────▼─────┐
-                   │  ToonDB   │
+                   │  SochDB   │
                    │   Core    │
                    └───────────┘
 ```
@@ -1073,15 +1073,15 @@ The Python SDK provides multiple access patterns to ToonDB:
 Wheels contain pre-built Rust binaries, eliminating compilation requirements:
 
 ```
-toondb-0.2.3-py3-none-manylinux_2_17_x86_64.whl
-├── toondb/
+sochdb-0.2.3-py3-none-manylinux_2_17_x86_64.whl
+├── sochdb/
 │   ├── __init__.py
 │   ├── database.py      # Embedded FFI
 │   ├── ipc.py           # IPC client
 │   ├── bulk.py          # Bulk operations
 │   └── _bin/
 │       └── linux-x86_64/
-│           └── toondb-bulk  # Pre-built binary
+│           └── sochdb-bulk  # Pre-built binary
 └── METADATA
 ```
 
@@ -1103,7 +1103,7 @@ Python FFI path (130 vec/s):
 
 Bulk API path (1,600 vec/s):
 ┌─────────┐   mmap    ┌──────────────┐   fork    ┌──────────────┐
-│ numpy   │ ────────→ │  temp file   │ ────────→ │ toondb-bulk  │
+│ numpy   │ ────────→ │  temp file   │ ────────→ │ sochdb-bulk  │
 └─────────┘  1 write  └──────────────┘  1 proc   └──────────────┘
 ```
 
@@ -1111,4 +1111,4 @@ See [PYTHON_DISTRIBUTION.md](PYTHON_DISTRIBUTION.md) for full distribution archi
 
 ---
 
-*This document describes ToonDB v0.2.4 internals. Implementation details may change.*
+*This document describes SochDB v0.2.4 internals. Implementation details may change.*

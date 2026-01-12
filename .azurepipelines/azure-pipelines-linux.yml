@@ -1,5 +1,5 @@
 # =============================================================================
-# ToonDB Azure Pipeline - Linux Build
+# SochDB Azure Pipeline - Linux Build
 # =============================================================================
 # Manual trigger only
 
@@ -32,7 +32,7 @@ steps:
     displayName: 'Install Rust'
 
   - script: |
-      cargo build --release --workspace --exclude toondb-studio --exclude benchmarks
+      cargo build --release --workspace --exclude sochdb-studio --exclude benchmarks
     displayName: 'Build Rust libraries'
 
   # Tests disabled to speed up CI - run locally before pushing
@@ -53,16 +53,16 @@ steps:
     displayName: 'Use Python 3.12'
 
   - script: |
-      mkdir -p toondb-python-sdk/src/toondb/lib/linux-x86_64
-      mkdir -p toondb-python-sdk/src/toondb/_bin/linux-x86_64
-      cp target/release/libtoondb_storage.so toondb-python-sdk/src/toondb/lib/linux-x86_64/
-      cp target/release/libtoondb_index.so toondb-python-sdk/src/toondb/lib/linux-x86_64/
-      cp target/release/toondb-bulk toondb-python-sdk/src/toondb/_bin/linux-x86_64/ || true
-      chmod +x toondb-python-sdk/src/toondb/_bin/linux-x86_64/* || true
+      mkdir -p sochdb-python-sdk/src/sochdb/lib/linux-x86_64
+      mkdir -p sochdb-python-sdk/src/sochdb/_bin/linux-x86_64
+      cp target/release/libsochdb_storage.so sochdb-python-sdk/src/sochdb/lib/linux-x86_64/
+      cp target/release/libsochdb_index.so sochdb-python-sdk/src/sochdb/lib/linux-x86_64/
+      cp target/release/sochdb-bulk sochdb-python-sdk/src/sochdb/_bin/linux-x86_64/ || true
+      chmod +x sochdb-python-sdk/src/sochdb/_bin/linux-x86_64/* || true
     displayName: 'Copy native libraries to Python package'
 
   - script: |
-      cd toondb-python-sdk
+      cd sochdb-python-sdk
       pip install build wheel
       python -m build --wheel
       ls -la dist/
@@ -71,5 +71,5 @@ steps:
   - task: PublishPipelineArtifact@1
     displayName: 'Publish Linux wheel'
     inputs:
-      targetPath: 'toondb-python-sdk/dist'
+      targetPath: 'sochdb-python-sdk/dist'
       artifact: 'python-linux-x64'

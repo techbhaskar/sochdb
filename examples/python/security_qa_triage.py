@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Security-Safe QA Triage with ToonDB
+Security-Safe QA Triage with SochDB
 
 Demonstrates:
 - Injection detection before RAG retrieval
@@ -27,7 +27,7 @@ from datetime import datetime
 import numpy as np
 import requests
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -148,10 +148,10 @@ class RateLimiter:
 # =============================================================================
 
 class SecureQASystem:
-    """Security-hardened QA with ToonDB RAG."""
+    """Security-hardened QA with SochDB RAG."""
     
     def __init__(self):
-        from toondb import VectorIndex
+        from sochdb import VectorIndex
         
         self.dimension = 1536
         self.index = VectorIndex(dimension=self.dimension)
@@ -282,7 +282,7 @@ def run_security_qa_test():
     """Run security QA test."""
     
     print("="*70)
-    print("  SECURITY-SAFE QA TRIAGE + TOONDB")
+    print("  SECURITY-SAFE QA TRIAGE + SOCHDB")
     print("  Injection Detection + PII Redaction + Audit Logging")
     print("="*70)
     

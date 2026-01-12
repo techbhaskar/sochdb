@@ -4,14 +4,14 @@
 > **⏱️ Time Required:** 20 minutes  
 > **📦 Requirements:** Go 1.21+
 
-Complete guide to ToonDB's Go SDK with all features, patterns, and best practices.
+Complete guide to SochDB's Go SDK with all features, patterns, and best practices.
 
 ---
 
 ## 📦 Installation
 
 ```bash
-go get github.com/toondb/toondb-go@v0.2.9
+go get github.com/sochdb/sochdb-go@v0.2.9
 ```
 
 **What's New in 0.2.9:**
@@ -36,21 +36,21 @@ go get github.com/toondb/toondb-go@v0.2.9
 
 ## CLI Tools (v0.2.9+)
 
-ToonDB includes Go-native wrappers for installation via `go install`:
+SochDB includes Go-native wrappers for installation via `go install`:
 
-1. **`toondb-server`**: IPC server management.
+1. **`sochdb-server`**: IPC server management.
    ```bash
-   go install github.com/toondb/toondb-go/cmd/toondb-server@latest
+   go install github.com/sochdb/sochdb-go/cmd/sochdb-server@latest
    ```
 
-2. **`toondb-bulk`**: Bulk operations tool.
+2. **`sochdb-bulk`**: Bulk operations tool.
    ```bash
-   go install github.com/toondb/toondb-go/cmd/toondb-bulk@latest
+   go install github.com/sochdb/sochdb-go/cmd/sochdb-bulk@latest
    ```
 
-3. **`toondb-grpc-server`**: gRPC vector server.
+3. **`sochdb-grpc-server`**: gRPC vector server.
    ```bash
-   go install github.com/toondb/toondb-go/cmd/toondb-grpc-server@latest
+   go install github.com/sochdb/sochdb-go/cmd/sochdb-grpc-server@latest
    ```
 
 > **Deep Dive:** See [Server Reference](/servers/IPC_SERVER.md) for full usage.
@@ -63,12 +63,12 @@ package main
 import (
     "fmt"
     "log"
-    toondb "github.com/toondb/toondb-go"
+    sochdb "github.com/sochdb/sochdb-go"
 )
 
 func main() {
     // Open database (creates if doesn't exist)
-    db, err := toondb.Open("./my_database")
+    db, err := sochdb.Open("./my_database")
     if err != nil {
         log.Fatal(err)
     }
@@ -173,7 +173,7 @@ err = db.DeleteString("greeting")
 
 ## Path API
 
-ToonDB treats hierarchical paths as first-class citizens:
+SochDB treats hierarchical paths as first-class citizens:
 
 ```go
 // Store hierarchical data
@@ -273,7 +273,7 @@ Globex Corp: 1 items
 
 ```go
 // Context manager pattern
-err := db.WithTransaction(func(txn *toondb.Transaction) error {
+err := db.WithTransaction(func(txn *sochdb.Transaction) error {
     // All operations are atomic
     txn.Put([]byte("account:1:balance"), []byte("1000"))
     txn.Put([]byte("account:2:balance"), []byte("500"))
@@ -455,17 +455,17 @@ for _, kv := range results {
 ### HNSW Index
 
 ```go
-import "github.com/toondb/toondb/toondb-index"
+import "github.com/sochdb/sochdb/sochdb-index"
 
 // Create HNSW index
-config := &toondb.VectorIndexConfig{
+config := &sochdb.VectorIndexConfig{
     Dimension:      384,
-    Metric:         toondb.Cosine,
+    Metric:         sochdb.Cosine,
     M:              16,
     EfConstruction: 100,
 }
 
-index := toondb.NewVectorIndex("./my_index", config)
+index := sochdb.NewVectorIndex("./my_index", config)
 
 // Build from embeddings
 embeddings := [][]float32{
@@ -498,13 +498,13 @@ for i, r := range results {
 
 ```go
 // Cosine similarity
-config.Metric = toondb.Cosine
+config.Metric = sochdb.Cosine
 
 // Euclidean distance
-config.Metric = toondb.Euclidean
+config.Metric = sochdb.Euclidean
 
 // Dot product
-config.Metric = toondb.DotProduct
+config.Metric = sochdb.DotProduct
 ```
 
 ---
@@ -519,9 +519,9 @@ import "errors"
 value, err := db.Get([]byte("key"))
 if err != nil {
     // Check for specific errors
-    if errors.Is(err, toondb.ErrClosed) {
+    if errors.Is(err, sochdb.ErrClosed) {
         log.Println("Database is closed")
-    } else if errors.Is(err, toondb.ErrConnectionFailed) {
+    } else if errors.Is(err, sochdb.ErrConnectionFailed) {
         log.Println("Cannot connect to server")
     } else {
         log.Printf("Unknown error: %v", err)
@@ -548,7 +548,7 @@ if value == nil {
 ### Panic Recovery
 
 ```go
-func safeOperation(db *toondb.Database) (err error) {
+func safeOperation(db *sochdb.Database) (err error) {
     defer func() {
         if r := recover(); r != nil {
             err = fmt.Errorf("panic: %v", r)
@@ -568,7 +568,7 @@ func safeOperation(db *toondb.Database) (err error) {
 ### 1. Always Close Resources
 
 ```go
-db, err := toondb.Open("./my_database")
+db, err := sochdb.Open("./my_database")
 if err != nil {
     log.Fatal(err)
 }
@@ -583,7 +583,7 @@ db.Put([]byte("balance:1"), []byte("900"))
 db.Put([]byte("balance:2"), []byte("1100"))
 
 // ✅ Good: Atomic
-db.WithTransaction(func(txn *toondb.Transaction) error {
+db.WithTransaction(func(txn *sochdb.Transaction) error {
     txn.Put([]byte("balance:1"), []byte("900"))
     txn.Put([]byte("balance:2"), []byte("1100"))
     return nil
@@ -657,7 +657,7 @@ import (
     "encoding/json"
     "fmt"
     "log"
-    toondb "github.com/toondb/toondb-go"
+    sochdb "github.com/sochdb/sochdb-go"
 )
 
 type User struct {
@@ -667,7 +667,7 @@ type User struct {
 }
 
 func main() {
-    db, _ := toondb.Open("./users_db")
+    db, _ := sochdb.Open("./users_db")
     defer db.Close()
 
     // Create user
@@ -702,7 +702,7 @@ package main
 import (
     "encoding/json"
     "fmt"
-    toondb "github.com/toondb/toondb-go"
+    sochdb "github.com/sochdb/sochdb-go"
 )
 
 type TenantData struct {
@@ -711,7 +711,7 @@ type TenantData struct {
 }
 
 func main() {
-    db, _ := toondb.Open("./saas_db")
+    db, _ := sochdb.Open("./saas_db")
     defer db.Close()
 
     // Store tenant data
@@ -769,7 +769,7 @@ import (
     "encoding/json"
     "fmt"
     "time"
-    toondb "github.com/toondb/toondb-go"
+    sochdb "github.com/sochdb/sochdb-go"
 )
 
 type Session struct {
@@ -779,7 +779,7 @@ type Session struct {
 }
 
 func main() {
-    db, _ := toondb.Open("./sessions")
+    db, _ := sochdb.Open("./sessions")
     defer db.Close()
 
     // Create session
@@ -853,7 +853,7 @@ func main() {
 ## Configuration
 
 ```go
-config := &toondb.Config{
+config := &sochdb.Config{
     Path:              "./my_database",
     CreateIfMissing:   true,
     WALEnabled:        true,
@@ -861,7 +861,7 @@ config := &toondb.Config{
     MemtableSizeBytes: 64 * 1024 * 1024,
 }
 
-db, err := toondb.OpenWithConfig(config)
+db, err := sochdb.OpenWithConfig(config)
 ```
 
 ---
@@ -893,7 +893,7 @@ go test -run TestScan -v
 
 ## Resources
 
-- [Go SDK GitHub](https://github.com/toondb/toondb/tree/main/toondb-go)
+- [Go SDK GitHub](https://github.com/sochdb/sochdb/tree/main/sochdb-go)
 - [API Reference](../api-reference/go-api.md)
 - [Python SDK](./python-sdk.md)
 - [JavaScript SDK](./nodejs-sdk.md)

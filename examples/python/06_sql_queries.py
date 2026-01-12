@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-ToonDB SQL Query Examples
+SochDB SQL Query Examples
 
-Demonstrates SQL support in ToonDB:
+Demonstrates SQL support in SochDB:
 - CREATE TABLE, INSERT, UPDATE, DELETE
 - SELECT with WHERE, ORDER BY, LIMIT
 - Transactions with SQL
@@ -14,9 +14,9 @@ import os
 from typing import List, Dict, Any
 
 # Add parent directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'toondb-python', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'sochdb-python', 'src'))
 
-from toondb import Database
+from sochdb import Database
 
 
 def create_tables(db: Database) -> None:
@@ -73,7 +73,7 @@ def insert_data(db: Database) -> None:
     # Insert posts
     posts = [
         (1, 1, 'First Post', 'Hello World!', 10, '2024-01-05'),
-        (2, 1, 'Second Post', 'ToonDB is awesome', 25, '2024-01-06'),
+        (2, 1, 'Second Post', 'SochDB is awesome', 25, '2024-01-06'),
         (3, 2, 'Bob\'s Thoughts', 'SQL queries are easy', 15, '2024-01-07'),
         (4, 3, 'Charlie\'s Guide', 'Database tips', 30, '2024-01-08'),
         (5, 3, 'Advanced Topics', 'Performance tuning', 50, '2024-01-09'),
@@ -235,7 +235,7 @@ def complex_queries(db: Database) -> None:
 def main():
     """Main demonstration."""
     print("=" * 60)
-    print("ToonDB SQL Query Examples")
+    print("SochDB SQL Query Examples")
     print("=" * 60)
     print("\n⚠️  NOTE: SQL support is currently a stub implementation.")
     print("Full SQL functionality requires backend query engine integration.")

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Simple RAG Chatbot with ToonDB
+Simple RAG Chatbot with SochDB
 
 A minimal, production-ready RAG implementation showing:
 - Document ingestion with chunking
-- Vector search with ToonDB
+- Vector search with SochDB
 - Conversational memory
 - Streaming responses
 
@@ -24,8 +24,8 @@ from typing import List, Dict, Generator
 import numpy as np
 import requests
 
-# Add ToonDB SDK to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+# Add SochDB SDK to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -36,10 +36,10 @@ load_dotenv()
 # =============================================================================
 
 class RAGChatbot:
-    """Simple RAG chatbot powered by ToonDB."""
+    """Simple RAG chatbot powered by SochDB."""
     
     def __init__(self):
-        from toondb import VectorIndex, Database
+        from sochdb import VectorIndex, Database
         
         # Azure credentials
         self.embed_endpoint = os.getenv("AZURE_EMEBEDDING_ENDPOINT")
@@ -52,7 +52,7 @@ class RAGChatbot:
         self.llm_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4.1")
         self.llm_version = os.getenv("AZURE_OPENAI_API_VERSION", "2025-01-01-preview")
         
-        # ToonDB components
+        # SochDB components
         self.dimension = 1536
         self.vector_index = VectorIndex(dimension=self.dimension, max_connections=16, ef_construction=100)
         self.documents: List[Dict] = []
@@ -142,7 +142,7 @@ Be conversational and friendly. If you don't know something, say so."""}
             "assistant": response
         })
         
-        # Save to ToonDB memory
+        # Save to SochDB memory
         key = f"chat/{len(self.conversation_history)}".encode()
         with self.memory_db.transaction() as txn:
             txn.put(key, json.dumps(self.conversation_history[-1]).encode())
@@ -162,7 +162,7 @@ def run_chatbot():
     """Run the RAG chatbot demo."""
     
     print("="*70)
-    print("  SIMPLE RAG CHATBOT + TOONDB")
+    print("  SIMPLE RAG CHATBOT + SOCHDB")
     print("="*70)
     
     # Initialize chatbot
@@ -174,20 +174,20 @@ def run_chatbot():
     print("\n2. Ingesting knowledge base...")
     
     knowledge = [
-        """ToonDB is a high-performance database designed for AI agents and LLM applications.
+        """SochDB is a high-performance database designed for AI agents and LLM applications.
         It provides blazing-fast vector search with sub-millisecond latency, making it ideal 
-        for real-time AI systems. ToonDB achieves 117,000 vector inserts per second and 
+        for real-time AI systems. SochDB achieves 117,000 vector inserts per second and 
         0.03ms search latency.""",
         
-        """ToonDB uses a Trie-Columnar Hybrid (TCH) storage engine that provides O(path) 
+        """SochDB uses a Trie-Columnar Hybrid (TCH) storage engine that provides O(path) 
         resolution time. It combines tries for hierarchical key access with columnar storage
         for analytical queries. The HNSW index uses SIMD acceleration for fast similarity search.""",
         
-        """ToonDB is 24x faster than ChromaDB on vector search benchmarks. It outperforms 
+        """SochDB is 24x faster than ChromaDB on vector search benchmarks. It outperforms 
         SQLite by 24% on insert operations. The database supports session management, 
         context queries, and token budget enforcement for LLM applications.""",
         
-        """ToonDB provides MCP (Model Context Protocol) integration for seamless LLM tool usage.
+        """SochDB provides MCP (Model Context Protocol) integration for seamless LLM tool usage.
         It can handle 10M+ vectors with consistent sub-millisecond latency. The database
         is open source under the Apache 2.0 license.""",
     ]
@@ -200,7 +200,7 @@ def run_chatbot():
     print("-"*70)
     
     conversations = [
-        "Hi! What is ToonDB?",
+        "Hi! What is SochDB?",
         "How fast is it compared to other databases?",
         "What storage engine does it use?",
         "Is it open source?",

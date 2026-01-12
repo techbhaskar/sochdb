@@ -15,8 +15,8 @@ You have vector embeddings (from OpenAI, sentence-transformers, etc.) and need t
 ### 1. Create a Vector Index (Python)
 
 ```python
-from toondb import Database
-from toondb.bulk import bulk_build_index
+from sochdb import Database
+from sochdb.bulk import bulk_build_index
 import numpy as np
 
 # Generate or load embeddings
@@ -38,7 +38,7 @@ print(f"Built index: {stats.vectors} vectors in {stats.elapsed_secs:.2f}s")
 ### 2. Query the Index
 
 ```python
-from toondb.bulk import bulk_query_index
+from sochdb.bulk import bulk_query_index
 
 # Query vector (from your embedding model)
 query = np.random.randn(384).astype(np.float32)
@@ -58,16 +58,16 @@ for id, distance in results:
 ### 3. Integrated with Database (Rust)
 
 ```rust
-use toondb::{ToonConnection, SchemaBuilder, ToonType, ToonValue};
+use sochdb::{SochConnection, SchemaBuilder, SochType, SochValue};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let conn = ToonConnection::open("./vector_db")?;
+    let conn = SochConnection::open("./vector_db")?;
 
     // Create table with vector column
     let schema = SchemaBuilder::table("documents")
-        .field("id", ToonType::UInt)
-        .field("content", ToonType::Text)
-        .field("embedding", ToonType::Vector(384))
+        .field("id", SochType::UInt)
+        .field("content", SochType::Text)
+        .field("embedding", SochType::Vector(384))
         .primary_key("id")
         .index("embedding", IndexType::HNSW {
             m: 16,
@@ -80,9 +80,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Insert document with embedding
     let embedding: Vec<f32> = get_embedding("Hello world");
     conn.insert("documents", vec![
-        ("id", ToonValue::UInt(1)),
-        ("content", ToonValue::Text("Hello world".into())),
-        ("embedding", ToonValue::Vector(embedding)),
+        ("id", SochValue::UInt(1)),
+        ("content", SochValue::Text("Hello world".into())),
+        ("embedding", SochValue::Vector(embedding)),
     ])?;
 
     // Vector search
@@ -138,10 +138,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```python
 #!/usr/bin/env python3
-"""Semantic search over documents using ToonDB."""
+"""Semantic search over documents using SochDB."""
 
-from toondb import Database
-from toondb.bulk import bulk_build_index, bulk_query_index
+from sochdb import Database
+from sochdb.bulk import bulk_build_index, bulk_query_index
 import numpy as np
 
 # Simulated embedding function (replace with real model)
@@ -217,7 +217,7 @@ search = SemanticSearch("./search_db", "./search.hnsw")
 
 # Add documents
 search.add_documents([
-    {"content": "ToonDB is an LLM-native database"},
+    {"content": "SochDB is an LLM-native database"},
     {"content": "Vector search enables semantic queries"},
     {"content": "HNSW provides fast approximate nearest neighbor search"},
     {"content": "Python SDK makes integration easy"},

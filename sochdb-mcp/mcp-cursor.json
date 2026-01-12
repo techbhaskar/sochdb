@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "sochdb": {
+            "command": "/Users/sushanth/sochdb/target/release/sochdb-mcp",
+            "args": [
+                "--db",
+                "/Users/sushanth/sochdb/sochdb_data"
+            ]
+        }
+    }
+}

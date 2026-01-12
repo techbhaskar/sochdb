@@ -6,7 +6,7 @@
 //! - Finding nearest neighbors
 //! - Distance metrics
 
-use toondb::{VectorIndex, VectorIndexConfig, DistanceMetric};
+use sochdb::{VectorIndex, VectorIndexConfig, DistanceMetric};
 use anyhow::Result;
 
 fn main() -> Result<()> {
@@ -61,8 +61,8 @@ fn main() -> Result<()> {
     let a = vec![1.0, 0.0, 0.0];
     let b = vec![0.707, 0.707, 0.0];
 
-    let cosine_dist = toondb::vector::cosine_distance(&a, &b);
-    let euclidean_dist = toondb::vector::euclidean_distance(&a, &b);
+    let cosine_dist = sochdb::vector::cosine_distance(&a, &b);
+    let euclidean_dist = sochdb::vector::euclidean_distance(&a, &b);
 
     println!("\n✓ Distance calculations:");
     println!("  Cosine distance: {:.4}", cosine_dist);
@@ -70,7 +70,7 @@ fn main() -> Result<()> {
 
     // Normalize a vector
     let v = vec![3.0, 4.0];
-    let normalized = toondb::vector::normalize(&v);
+    let normalized = sochdb::vector::normalize(&v);
     println!("  Normalized [3, 4]: {:?}", normalized);
 
     Ok(())

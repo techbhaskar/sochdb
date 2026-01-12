@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Personalization / Similar Users with ToonDB
+Personalization / Similar Users with SochDB
 
 Demonstrates:
 - User vector updates (session-based)
@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import requests
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -68,7 +68,7 @@ class PersonalizationEngine:
     """Two-stage personalization with user and item vectors."""
     
     def __init__(self, dimension: int = 128):
-        from toondb import VectorIndex
+        from sochdb import VectorIndex
         
         self.dimension = dimension
         
@@ -240,7 +240,7 @@ def run_personalization_test():
     """Run personalization test."""
     
     print("="*70)
-    print("  PERSONALIZATION ENGINE + TOONDB")
+    print("  PERSONALIZATION ENGINE + SOCHDB")
     print("  User Vectors + Item Retrieval")
     print("="*70)
     

@@ -1,6 +1,6 @@
-# ToonDB Bulk Operations Tool
+# SochDB Bulk Operations Tool
 
-The `toondb-bulk` tool is a specialized high-performance utility designed for "offline" heavy lifting. It bypasses the standard transaction and RPC layers to interact directly with storage formats, enabling massive throughput for initialization and migration tasks.
+The `sochdb-bulk` tool is a specialized high-performance utility designed for "offline" heavy lifting. It bypasses the standard transaction and RPC layers to interact directly with storage formats, enabling massive throughput for initialization and migration tasks.
 
 ## Capabilities
 
@@ -10,7 +10,7 @@ The `toondb-bulk` tool is a specialized high-performance utility designed for "o
 
 ## Performance vs. Online APIs
 
-| Function | Online API (Python/RPC) | Bulk Tool (`toondb-bulk`) | Speedup |
+| Function | Online API (Python/RPC) | Bulk Tool (`sochdb-bulk`) | Speedup |
 |----------|-------------------------|--------------------------|---------|
 | Vector Indexing | ~130 vec/s | **~1,600+ vec/s** | **12x** |
 | Data Conversion | Python Loop | Memmapped C++ | **50x** |
@@ -32,7 +32,7 @@ It performs a parallelized graph construction.
 
 **Usage:**
 ```bash
-toondb-bulk build-index \
+sochdb-bulk build-index \
     --input large_dataset.npy \
     --output prod.hnsw \
     --dimension 1536 \
@@ -46,7 +46,7 @@ Runs queries against a specialized index file. Useful for validating recall/late
 
 **Usage:**
 ```bash
-toondb-bulk query \
+sochdb-bulk query \
     --index prod.hnsw \
     --query test_set.npy \
     --k 10 \
@@ -64,7 +64,7 @@ A utility for efficient format transcoding.
 
 **Usage:**
 ```bash
-toondb-bulk convert \
+sochdb-bulk convert \
     --input data.npy \
     --output data.raw \
     --to-format raw_f32 \
@@ -76,6 +76,6 @@ toondb-bulk convert \
 The typical workflow for a production deployment:
 
 1.  **Data Science Team**: Generates embeddings and saves as `.npy`.
-2.  **DevOps Pipeline**: Runs `toondb-bulk build-index` to generate the `.hnsw` artifact.
+2.  **DevOps Pipeline**: Runs `sochdb-bulk build-index` to generate the `.hnsw` artifact.
 3.  **Deployment**: copies the `.hnsw` file to the production server.
-4.  **Runtime**: `toondb-grpc-server` loads the pre-built `.hnsw` file instantly via `mmap`.
+4.  **Runtime**: `sochdb-grpc-server` loads the pre-built `.hnsw` file instantly via `mmap`.

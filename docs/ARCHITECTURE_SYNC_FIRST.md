@@ -1,4 +1,4 @@
-# ToonDB Sync-First Architecture
+# SochDB Sync-First Architecture
 
 **Version**: 0.3.5+  
 **Status**: Stable  
@@ -22,7 +22,7 @@
 
 ## Overview
 
-ToonDB v0.3.5 adopts a **sync-first core** architecture where the async runtime (tokio) is truly optional. This design follows the proven pattern established by SQLite: a synchronous storage engine with async capabilities only where needed (network I/O, async client APIs).
+SochDB v0.3.5 adopts a **sync-first core** architecture where the async runtime (tokio) is truly optional. This design follows the proven pattern established by SQLite: a synchronous storage engine with async capabilities only where needed (network I/O, async client APIs).
 
 ### Key Principles
 
@@ -44,7 +44,7 @@ SQLite is the most deployed database in the world, embedded in billions of devic
 - **Efficiency**: Direct system calls, no runtime overhead
 - **Predictability**: Synchronous operations, clear error handling
 
-ToonDB v0.3.5 adopts this philosophy while adding:
+SochDB v0.3.5 adopts this philosophy while adding:
 - Modern vector search capabilities
 - LLM-native features (TOON format, context queries)
 - Optional async for network-heavy workloads
@@ -97,7 +97,7 @@ ToonDB v0.3.5 adopts this philosophy while adding:
                   ▼
     ┌─────────────────────────────────┐
     │      Client API Layer           │
-    │  (toondb-client)                │
+    │  (sochdb-client)                │
     │  • Sync methods (default)       │
     │  • Async methods (optional)     │
     └────────────┬────────────────────┘
@@ -182,11 +182,11 @@ All core storage operations are synchronous:
 **Embedded Use Case:**
 ```bash
 # Without tokio (v0.3.5)
-cargo build --release -p toondb-storage
+cargo build --release -p sochdb-storage
 # Binary: 732 KB
 
 # With tokio (v0.3.4)
-cargo build --release -p toondb-storage --features async
+cargo build --release -p sochdb-storage --features async
 # Binary: 1,200 KB
 
 # Savings: 468 KB (39% reduction)
@@ -202,11 +202,11 @@ cargo build --release -p toondb-storage --features async
 
 ```bash
 # Sync-only (v0.3.5)
-cargo tree -p toondb-storage --no-default-features | wc -l
+cargo tree -p sochdb-storage --no-default-features | wc -l
 # 62 crates
 
 # With async
-cargo tree -p toondb-storage --features async | wc -l
+cargo tree -p sochdb-storage --features async | wc -l
 # 102 crates
 
 # Reduction: 40 fewer dependencies
@@ -223,10 +223,10 @@ cargo tree -p toondb-storage --features async | wc -l
 **Problem with async FFI:**
 ```python
 # Python calling Rust async function
-import toondb
+import sochdb
 
 # This is complex!
-db = toondb.Database.open("./my_db")  # Creates tokio runtime in Rust
+db = sochdb.Database.open("./my_db")  # Creates tokio runtime in Rust
 db.put_async(b"key", b"value")  # Needs event loop bridge
 # Python's asyncio ↔ Rust's tokio: impedance mismatch
 ```
@@ -234,9 +234,9 @@ db.put_async(b"key", b"value")  # Needs event loop bridge
 **Sync FFI is natural:**
 ```python
 # Python calling Rust sync function
-import toondb
+import sochdb
 
-db = toondb.Database.open("./my_db")  # Direct Rust call
+db = sochdb.Database.open("./my_db")  # Direct Rust call
 db.put(b"key", b"value")  # Direct Rust call, returns immediately
 # No async ceremony!
 ```
@@ -294,31 +294,31 @@ Async:  1.5ms (+25% overhead from runtime)
 ### Crate Structure
 
 ```
-toondb/
-├── toondb-storage/       # Sync-first storage engine
+sochdb/
+├── sochdb-storage/       # Sync-first storage engine
 │   ├── Cargo.toml        # default = [] (no tokio)
 │   └── src/
 │       ├── engine.rs     # Sync operations
 │       └── async_ext.rs  # Optional async wrappers
 │
-├── toondb-core/          # Core abstractions (sync)
+├── sochdb-core/          # Core abstractions (sync)
 │   ├── Cargo.toml        # No tokio dependency
 │   └── src/
 │       ├── transaction.rs
 │       └── mvcc.rs
 │
-├── toondb-query/         # SQL engine (sync)
+├── sochdb-query/         # SQL engine (sync)
 │   ├── Cargo.toml        # No tokio dependency
 │   └── src/
 │       ├── parser.rs
 │       └── executor.rs
 │
-├── toondb-index/         # Vector index (sync)
+├── sochdb-index/         # Vector index (sync)
 │   ├── Cargo.toml        # No tokio dependency
 │   └── src/
 │       └── hnsw.rs
 │
-└── toondb-grpc/          # gRPC server (async)
+└── sochdb-grpc/          # gRPC server (async)
     ├── Cargo.toml        # Requires tokio
     └── src/
         └── server.rs     # Async handlers
@@ -330,11 +330,11 @@ toondb/
 ```toml
 [workspace]
 members = [
-    "toondb-storage",
-    "toondb-core",
-    "toondb-query",
-    "toondb-index",
-    "toondb-grpc",
+    "sochdb-storage",
+    "sochdb-core",
+    "sochdb-query",
+    "sochdb-index",
+    "sochdb-grpc",
 ]
 
 [workspace.dependencies]
@@ -345,10 +345,10 @@ parking_lot = "0.12"
 crossbeam = "0.8"
 ```
 
-**Storage crate** (`toondb-storage/Cargo.toml`):
+**Storage crate** (`sochdb-storage/Cargo.toml`):
 ```toml
 [package]
-name = "toondb-storage"
+name = "sochdb-storage"
 
 [features]
 default = []  # ✅ No tokio by default (was ["async"] in v0.3.4)
@@ -366,13 +366,13 @@ tokio = { version = "1.35", features = ["rt-multi-thread", "sync"], optional = t
 criterion = "0.5"
 ```
 
-**gRPC server** (`toondb-grpc/Cargo.toml`):
+**gRPC server** (`sochdb-grpc/Cargo.toml`):
 ```toml
 [package]
-name = "toondb-grpc"
+name = "sochdb-grpc"
 
 [dependencies]
-toondb-storage = { path = "../toondb-storage", features = ["async"] }  # ✅ Requires async
+sochdb-storage = { path = "../sochdb-storage", features = ["async"] }  # ✅ Requires async
 tokio = { version = "1.35", features = ["rt-multi-thread", "net", "sync"] }  # ✅ Required
 tonic = "0.10"
 prost = "0.12"
@@ -430,11 +430,11 @@ tx.send(value)?;  // Blocking, but completes fast
 **Sync-Only (Default)**
 ```toml
 [dependencies]
-toondb = "0.3.5"
+sochdb = "0.3.5"
 ```
 
 ```rust
-use toondb::Database;
+use sochdb::Database;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db = Database::open("./my_db")?;
@@ -446,12 +446,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 **With Async**
 ```toml
 [dependencies]
-toondb = { version = "0.3.5", features = ["async"] }
+sochdb = { version = "0.3.5", features = ["async"] }
 tokio = { version = "1.35", features = ["rt-multi-thread"] }
 ```
 
 ```rust
-use toondb::Database;
+use sochdb::Database;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -504,14 +504,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 | Database | Core Architecture | Async Runtime | Binary Size |
 |----------|------------------|---------------|-------------|
-| **ToonDB v0.3.5** | Sync-first | Optional (tokio) | 732 KB |
+| **SochDB v0.3.5** | Sync-first | Optional (tokio) | 732 KB |
 | SQLite | Sync-only | None | ~600 KB |
 | DuckDB | Sync-only | None | ~3 MB |
 | RocksDB | Sync-only | None | ~8 MB |
 | Sled | Async-first | Built-in | ~2 MB |
 | SurrealDB | Async-first | Required (tokio) | ~15 MB |
 
-**ToonDB's Position:**
+**SochDB's Position:**
 - Follows SQLite/DuckDB pattern (sync-first)
 - But offers async opt-in for network workloads
 - Best of both worlds: small by default, scalable when needed
@@ -564,7 +564,7 @@ async fn main() {
 Use sync for storage, async for network:
 
 ```rust
-use toondb::Database;
+use sochdb::Database;
 use axum::{Router, routing::get};
 
 #[tokio::main]
@@ -618,7 +618,7 @@ async fn main() {
 
 ## Conclusion
 
-ToonDB's sync-first architecture provides:
+SochDB's sync-first architecture provides:
 
 ✅ **Simplicity**: No async complexity for most use cases  
 ✅ **Efficiency**: ~500KB smaller binaries, 40 fewer dependencies  
@@ -636,4 +636,4 @@ ToonDB's sync-first architecture provides:
 - [DuckDB Design](https://duckdb.org/why_duckdb)
 - [Tokio Overhead Analysis](https://tokio.rs/tokio/topics/bridging)
 - [Function Coloring Problem](https://journal.stuffwithstuff.com/2015/02/01/what-color-is-your-function/)
-- [ToonDB RFD-001](../rfds/RFD-001-ai-native-database.md)
+- [SochDB RFD-001](../rfds/RFD-001-ai-native-database.md)

@@ -5,7 +5,7 @@
 //! - Manual transaction control
 //! - Read operations within transactions
 
-use toondb::Database;
+use sochdb::Database;
 use anyhow::Result;
 
 fn main() -> Result<()> {

@@ -1,6 +1,6 @@
-# ToonDB IPC Server Architecture
+# SochDB IPC Server Architecture
 
-The ToonDB IPC Server (`toondb-server`) provides a high-performance, multi-process interface to the ToonDB storage engine. It allows multiple applications to access a single embedded database instance simultaneously using Unix domain sockets.
+The SochDB IPC Server (`sochdb-server`) provides a high-performance, multi-process interface to the SochDB storage engine. It allows multiple applications to access a single embedded database instance simultaneously using Unix domain sockets.
 
 ## Architecture
 
@@ -20,7 +20,7 @@ The server uses a thread-per-client model optimized for low-latency local commun
 │           │                    │                    │         │
 │  ┌────────┴────────────────────┴────────────────────┴────────┐│
 │  │              Unix Domain Socket Listener                  ││
-│  │                  /tmp/toondb-<id>.sock                    ││
+│  │                  /tmp/sochdb-<id>.sock                    ││
 │  └────────────────────────────────────────────────────────────────┘
 ```
 
@@ -95,7 +95,7 @@ The server maintains atomic counters for real-time monitoring. These are accessi
 
 If you are building a client driver for a new language (e.g., Go, Ruby, Node.js), follow these steps:
 
-1.  **Connect**: Open a Unix domain socket connection to the path (default: `./toondb_data/toondb.sock`).
+1.  **Connect**: Open a Unix domain socket connection to the path (default: `./sochdb_data/sochdb.sock`).
 2.  **Handshake**: (Currently none, connection implies readiness).
 3.  **Sending Requests**:
     *   Write 1 byte OpCode.
@@ -115,7 +115,7 @@ import struct
 
 def simple_get(key_bytes):
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    s.connect("./toondb_data/toondb.sock")
+    s.connect("./sochdb_data/sochdb.sock")
     
     # Send GET (0x02)
     payload = key_bytes

@@ -1,54 +1,54 @@
-# Working with SQL in ToonDB
+# Working with SQL in SochDB
 
 > **🔧 Skill Level:** Intermediate  
 > **⏱️ Time Required:** 25 minutes  
-> **📦 Requirements:** Any ToonDB SDK
+> **📦 Requirements:** Any SochDB SDK
 
-Learn how to use SQL queries in ToonDB for relational data operations.
+Learn how to use SQL queries in SochDB for relational data operations.
 
 ---
 
 ## 💡 Introduction
 
-ToonDB supports full SQL-92 syntax, allowing you to work with relational data using familiar SQL statements. The SQL engine is built on top of ToonDB's high-performance storage layer, giving you both SQL flexibility and ToonDB's speed.
+SochDB supports full SQL-92 syntax, allowing you to work with relational data using familiar SQL statements. The SQL engine is built on top of SochDB's high-performance storage layer, giving you both SQL flexibility and SochDB's speed.
 
 ## Setting Up
 
 ### Installation
 
-SQL support is built into all ToonDB SDKs:
+SQL support is built into all SochDB SDKs:
 
 ```bash
 # Python
-pip install toondb
+pip install sochdb
 
 # Node.js
-npm install @sushanth/toondb
+npm install @sushanth/sochdb
 
 # Rust (add to Cargo.toml)
-toondb-client = "0.3.1"
+sochdb-client = "0.3.1"
 
 # Go
-go get github.com/toondb/toondb-go@v0.3.1
+go get github.com/sochdb/sochdb-go@v0.3.1
 ```
 
 ### Opening a Database
 
 ```python
 # Python
-from toondb import Database
+from sochdb import Database
 db = Database("./mydb")
 ```
 
 ```typescript
 // TypeScript
-import { Database } from '@sushanth/toondb';
+import { Database } from '@sushanth/sochdb';
 const db = new Database('./mydb');
 ```
 
 ```rust
 // Rust
-use toondb_client::Client;
+use sochdb_client::Client;
 let mut client = Client::open("./mydb")?;
 ```
 

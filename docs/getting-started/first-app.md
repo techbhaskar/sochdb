@@ -1,4 +1,4 @@
-# Tutorial: Build Your First ToonDB Application
+# Tutorial: Build Your First SochDB Application
 
 > **Time:** 15 minutes  
 > **Difficulty:** Beginner  
@@ -31,7 +31,7 @@ python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install toondb-client numpy
+pip install sochdb-client numpy
 ```
 
 ### Rust
@@ -44,8 +44,8 @@ cd agent-memory
 # Add dependencies to Cargo.toml
 cat >> Cargo.toml << 'EOF'
 [dependencies]
-toondb = "0.1"
-toondb-kernel = "0.1"
+sochdb = "0.1"
+sochdb-kernel = "0.1"
 EOF
 ```
 
@@ -58,7 +58,7 @@ EOF
 Create `main.py`:
 
 ```python
-from toondb import Database
+from sochdb import Database
 import json
 
 # Open database (creates if not exists)
@@ -80,10 +80,10 @@ python main.py
 Create `src/main.rs`:
 
 ```rust
-use toondb::ToonConnection;
+use sochdb::SochConnection;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let conn = ToonConnection::open("./agent_memory")?;
+    let conn = SochConnection::open("./agent_memory")?;
     println!("✅ Database initialized at ./agent_memory");
     Ok(())
 }
@@ -209,7 +209,7 @@ Add to `main.py`:
 
 ```python
 import numpy as np
-from toondb.bulk import bulk_build_index, bulk_query_index
+from sochdb.bulk import bulk_build_index, bulk_query_index
 import os
 
 def create_embeddings(texts: list[str]) -> np.ndarray:
@@ -351,11 +351,11 @@ Here's the complete `main.py`:
 ```python
 #!/usr/bin/env python3
 """
-Agent Memory System with ToonDB
+Agent Memory System with SochDB
 A simple personal assistant memory store.
 """
 
-from toondb import Database
+from sochdb import Database
 from datetime import datetime
 import json
 
@@ -416,7 +416,7 @@ class AgentMemory:
 
 
 def main():
-    print("🎬 ToonDB Agent Memory Demo\n")
+    print("🎬 SochDB Agent Memory Demo\n")
     
     # Initialize
     memory = AgentMemory()
@@ -455,7 +455,7 @@ python main.py
 
 Expected output:
 ```
-🎬 ToonDB Agent Memory Demo
+🎬 SochDB Agent Memory Demo
 
 ✅ Stored preferences: {'name': 'Demo User', 'theme': 'dark'}
 ✅ Added 3 messages
@@ -499,10 +499,10 @@ Query: Summarize our conversation
 
 ## Troubleshooting
 
-### `ModuleNotFoundError: No module named 'toondb'`
+### `ModuleNotFoundError: No module named 'sochdb'`
 
 ```bash
-pip install --upgrade toondb-client
+pip install --upgrade sochdb-client
 ```
 
 ### `Permission denied` on database path
@@ -518,4 +518,4 @@ Transactions auto-rollback on exceptions. Check your data types match the schema
 
 ---
 
-*Tutorial completed! You've built a working agent memory system with ToonDB.* 🎉
+*Tutorial completed! You've built a working agent memory system with SochDB.* 🎉

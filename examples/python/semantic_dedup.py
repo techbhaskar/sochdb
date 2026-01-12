@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Semantic Deduplication with ToonDB
+Semantic Deduplication with SochDB
 
 Demonstrates:
 - Near-duplicate detection for tickets/logs
@@ -26,7 +26,7 @@ from dataclasses import dataclass
 import numpy as np
 import requests
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -61,7 +61,7 @@ class SemanticDedup:
     """Near-duplicate detection using semantic similarity."""
     
     def __init__(self, similarity_threshold: float = 0.85):
-        from toondb import VectorIndex
+        from sochdb import VectorIndex
         
         self.dimension = 1536
         self.similarity_threshold = similarity_threshold
@@ -193,7 +193,7 @@ def run_dedup_test():
     """Run semantic deduplication test."""
     
     print("="*70)
-    print("  SEMANTIC DEDUPLICATION + TOONDB")
+    print("  SEMANTIC DEDUPLICATION + SOCHDB")
     print("  Near-Duplicate Detection for Tickets")
     print("="*70)
     

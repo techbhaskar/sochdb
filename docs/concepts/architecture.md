@@ -1,8 +1,8 @@
-# ToonDB Complete Architecture & API Reference
+# SochDB Complete Architecture & API Reference
 
 **Version:** 0.3.1  
 **License:** Apache-2.0  
-**Repository:** https://github.com/toondb/toondb
+**Repository:** https://github.com/sochdb/sochdb
 
 ---
 
@@ -30,7 +30,7 @@
 
 ## Design Philosophy
 
-ToonDB is built around four core principles:
+SochDB is built around four core principles:
 
 ### 1. Token Efficiency First
 Every design decision prioritizes minimizing tokens when data is consumed by LLMs:
@@ -38,7 +38,7 @@ Every design decision prioritizes minimizing tokens when data is consumed by LLM
 Traditional: LLM ← JSON ← SQL Result ← Query Optimizer ← B-Tree
              ~150 tokens for 3 rows
 
-ToonDB:      LLM ← TOON ← Columnar Scan ← Path Resolution
+SochDB:      LLM ← TOON ← Columnar Scan ← Path Resolution
              ~50 tokens for 3 rows (66% reduction)
 ```
 
@@ -66,7 +66,7 @@ Single-file deployment (~1.5MB) with optional plugin architecture.
 
 ## Executive Summary
 
-ToonDB is an **AI-native database** designed from the ground up for LLM applications and autonomous agents. Key differentiators:
+SochDB is an **AI-native database** designed from the ground up for LLM applications and autonomous agents. Key differentiators:
 
 | Feature | Description | Benefit |
 |---------|-------------|---------|
@@ -82,7 +82,7 @@ ToonDB is an **AI-native database** designed from the ground up for LLM applicat
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         ToonDB Architecture                         │
+│                         SochDB Architecture                         │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐              │
@@ -92,7 +92,7 @@ ToonDB is an **AI-native database** designed from the ground up for LLM applicat
 │   ┌──────┴─────────────────┴─────────────────┴──────┐              │
 │   │              Query Processing Engine             │              │
 │   │  ┌─────────┐  ┌─────────┐  ┌─────────────────┐  │              │
-│   │  │ ToonQL  │  │ Context │  │ Token Budgeting │  │              │
+│   │  │ SochQL  │  │ Context │  │ Token Budgeting │  │              │
 │   │  │ Parser  │  │ Builder │  │    Engine       │  │              │
 │   │  └────┬────┘  └────┬────┘  └────────┬────────┘  │              │
 │   └───────┼────────────┼────────────────┼───────────┘              │
@@ -130,41 +130,41 @@ ToonDB is an **AI-native database** designed from the ground up for LLM applicat
 ### Crate Dependency Graph
 
 ```
-toondb-studio (GUI)
+sochdb-studio (GUI)
         │
         ▼
 ┌──────────────────────────────────────────────────────────────┐
 │                     Application Layer                         │
 │  ┌────────────┐  ┌────────────┐  ┌────────────┐              │
-│  │ toondb-mcp │  │toondb-grpc │  │toondb-wasm │              │
+│  │ sochdb-mcp │  │sochdb-grpc │  │sochdb-wasm │              │
 │  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘              │
 └────────┼───────────────┼───────────────┼─────────────────────┘
          ▼               ▼               ▼
 ┌──────────────────────────────────────────────────────────────┐
 │                      Client Layer                             │
 │  ┌─────────────────┐  ┌─────────────────┐                    │
-│  │  toondb-client  │  │  toondb-python  │                    │
+│  │  sochdb-client  │  │  sochdb-python  │                    │
 │  └────────┬────────┘  └────────┬────────┘                    │
 └───────────┼────────────────────┼─────────────────────────────┘
             ▼                    ▼
 ┌──────────────────────────────────────────────────────────────┐
 │                      Query Layer                              │
 │  ┌────────────┐  ┌────────────┐  ┌────────────┐              │
-│  │toondb-query│  │toondb-tools│  │  toon-fmt  │              │
+│  │sochdb-query│  │sochdb-tools│  │  toon-fmt  │              │
 │  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘              │
 └────────┼───────────────┼───────────────┼─────────────────────┘
          ▼               ▼               ▼
 ┌──────────────────────────────────────────────────────────────┐
 │                    Execution Layer                            │
 │  ┌────────────┐  ┌────────────┐  ┌────────────┐              │
-│  │toondb-index│  │toondb-vector│ │toondb-kernel│             │
+│  │sochdb-index│  │sochdb-vector│ │sochdb-kernel│             │
 │  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘              │
 └────────┼───────────────┼───────────────┼─────────────────────┘
          ▼               ▼               ▼
 ┌──────────────────────────────────────────────────────────────┐
 │                     Storage Layer                             │
 │               ┌─────────────────────┐                        │
-│               │   toondb-storage    │                        │
+│               │   sochdb-storage    │                        │
 │               │  (WAL + LSCS + GC)  │                        │
 │               └──────────┬──────────┘                        │
 └──────────────────────────┼───────────────────────────────────┘
@@ -172,7 +172,7 @@ toondb-studio (GUI)
 ┌──────────────────────────────────────────────────────────────┐
 │                      Core Layer                               │
 │               ┌─────────────────────┐                        │
-│               │    toondb-core      │                        │
+│               │    sochdb-core      │                        │
 │               │ (Types, Codec, Trie)│                        │
 │               └─────────────────────┘                        │
 └──────────────────────────────────────────────────────────────┘
@@ -182,16 +182,16 @@ toondb-studio (GUI)
 
 | Crate | Purpose | Key Types |
 |-------|---------|-----------|
-| `toondb-core` | Foundational types, codecs, trie | `ToonValue`, `ToonSchema`, `ToonCodec` |
-| `toondb-storage` | WAL, LSCS, GC, durability | `Database`, `WalManager`, `GarbageCollector` |
-| `toondb-kernel` | Query execution, table operations | `Kernel`, `TableHandle`, `ScanIterator` |
-| `toondb-index` | B-tree, learned indexes | `BTreeIndex`, `LearnedSparseIndex` |
-| `toondb-vector` | HNSW, Vamana, PQ | `HnswIndex`, `VamanaIndex`, `ProductQuantizer` |
-| `toondb-query` | ToonQL parser, optimizer | `Parser`, `Planner`, `Optimizer` |
-| `toondb-client` | High-level SDK, context queries | `DurableConnection`, `ContextQueryBuilder` |
-| `toondb-mcp` | MCP protocol server | `McpServer`, `ToolExecutor` |
-| `toondb-python` | Python bindings (FFI) | `PyToonDB`, `PyVectorIndex` |
-| `toondb-wasm` | Browser WASM build | `WasmVectorIndex` |
+| `sochdb-core` | Foundational types, codecs, trie | `SochValue`, `SochSchema`, `SochCodec` |
+| `sochdb-storage` | WAL, LSCS, GC, durability | `Database`, `WalManager`, `GarbageCollector` |
+| `sochdb-kernel` | Query execution, table operations | `Kernel`, `TableHandle`, `ScanIterator` |
+| `sochdb-index` | B-tree, learned indexes | `BTreeIndex`, `LearnedSparseIndex` |
+| `sochdb-vector` | HNSW, Vamana, PQ | `HnswIndex`, `VamanaIndex`, `ProductQuantizer` |
+| `sochdb-query` | SochQL parser, optimizer | `Parser`, `Planner`, `Optimizer` |
+| `sochdb-client` | High-level SDK, context queries | `DurableConnection`, `ContextQueryBuilder` |
+| `sochdb-mcp` | MCP protocol server | `McpServer`, `ToolExecutor` |
+| `sochdb-python` | Python bindings (FFI) | `PySochDB`, `PyVectorIndex` |
+| `sochdb-wasm` | Browser WASM build | `WasmVectorIndex` |
 
 ---
 
@@ -392,15 +392,15 @@ fn recover(&self) -> Result<RecoveryStats> {
 
 ## Client SDK API
 
-### ToonClient (In-Memory)
+### SochClient (In-Memory)
 
 For testing and development without durability requirements:
 
 ```rust
-use toondb::prelude::*;
+use sochdb::prelude::*;
 
 // Open database
-let client = ToonClient::open("./mydb")?;
+let client = SochClient::open("./mydb")?;
 
 // Configure token budget for LLM responses
 let client = client.with_token_budget(4096);
@@ -408,7 +408,7 @@ let client = client.with_token_budget(4096);
 // Path-based queries (O(|path|) resolution)
 let result = client.query("/users/123").execute()?;
 
-// Execute ToonQL
+// Execute SochQL
 let rows = client.execute("SELECT * FROM users WHERE active = true")?;
 
 // Begin transaction
@@ -420,15 +420,15 @@ vectors.add(&["doc1", "doc2"], &[vec1, vec2])?;
 let results = vectors.search(&query_embedding, 10)?;
 ```
 
-### DurableToonClient (Production)
+### DurableSochClient (Production)
 
 Full WAL/MVCC support for production workloads:
 
 ```rust
-use toondb::prelude::*;
+use sochdb::prelude::*;
 
 // Open with durability
-let client = DurableToonClient::open("./mydb")?;
+let client = DurableSochClient::open("./mydb")?;
 
 // Path-based CRUD
 client.put("/users/123", b"{\"name\": \"Alice\"}")?;
@@ -453,12 +453,12 @@ client.fsync()?;
 Leverages TCH's O(|path|) resolution:
 
 ```rust
-use toondb::path_query::{PathQuery, CompareOp};
+use sochdb::path_query::{PathQuery, CompareOp};
 
 // Fluent query builder
 let results = client.query("/users")
-    .filter("score", CompareOp::Gt, ToonValue::Int(80))
-    .filter("active", CompareOp::Eq, ToonValue::Bool(true))
+    .filter("score", CompareOp::Gt, SochValue::Int(80))
+    .filter("active", CompareOp::Eq, SochValue::Bool(true))
     .select(&["name", "email", "score"])
     .order_by("score", SortDirection::Desc)
     .limit(10)
@@ -486,7 +486,7 @@ pub enum CompareOp {
 
 ```rust
 pub enum OutputFormat {
-    Toon,      // Default: 40-60% fewer tokens than JSON
+    Soch,      // Default: 40-60% fewer tokens than JSON
     Json,      // Standard JSON for compatibility
     Columnar,  // Raw columnar for analytics
 }
@@ -543,7 +543,7 @@ ref          ::= "ref(" identifier "," integer ")"
 
 ```rust
 #[repr(u8)]
-pub enum ToonTypeTag {
+pub enum SochTypeTag {
     Null      = 0x00,
     False     = 0x01,
     True      = 0x02,
@@ -599,7 +599,7 @@ fn decode_varint(buf: &[u8]) -> (u64, usize) {
 Client                           Server
   │                                │
   │──── initialize ──────────────►│
-  │                                │ Create ToonDB connection
+  │                                │ Create SochDB connection
   │◄─── capabilities ─────────────│
   │                                │
   │──── initialized ─────────────►│
@@ -609,7 +609,7 @@ Client                           Server
   │◄─── tool definitions ─────────│
   │                                │
   │──── tools/call ──────────────►│
-  │     { "name": "toondb_query", │
+  │     { "name": "sochdb_query", │
   │       "arguments": {...} }    │
   │                                │ Execute query
   │◄─── result (TOON format) ─────│
@@ -635,13 +635,13 @@ impl McpServer {
 
 | Tool | Description | Required Args |
 |------|-------------|---------------|
-| `toondb_context_query` | AI-optimized context with token budgeting | `sections` |
-| `toondb_query` | Execute ToonQL query | `query` |
-| `toondb_get` | Get value at path | `path` |
-| `toondb_put` | Set value at path | `path`, `value` |
-| `toondb_delete` | Delete at path | `path` |
-| `toondb_list_tables` | List tables with metadata | - |
-| `toondb_describe` | Get table schema | `table` |
+| `sochdb_context_query` | AI-optimized context with token budgeting | `sections` |
+| `sochdb_query` | Execute SochQL query | `query` |
+| `sochdb_get` | Get value at path | `path` |
+| `sochdb_put` | Set value at path | `path`, `value` |
+| `sochdb_delete` | Delete at path | `path` |
+| `sochdb_list_tables` | List tables with metadata | - |
+| `sochdb_describe` | Get table schema | `table` |
 
 #### Memory Tools (Episode/Entity Schema)
 
@@ -662,12 +662,12 @@ impl McpServer {
 
 ### Tool Schemas
 
-#### toondb_context_query
+#### sochdb_context_query
 
 ```json
 {
-  "name": "toondb_context_query",
-  "description": "Fetch AI-optimized context from ToonDB with token budgeting",
+  "name": "sochdb_context_query",
+  "description": "Fetch AI-optimized context from SochDB with token budgeting",
   "inputSchema": {
     "type": "object",
     "properties": {
@@ -696,16 +696,16 @@ impl McpServer {
 }
 ```
 
-#### toondb_query
+#### sochdb_query
 
 ```json
 {
-  "name": "toondb_query",
-  "description": "Execute a ToonQL query. Returns results in TOON format.",
+  "name": "sochdb_query",
+  "description": "Execute a SochQL query. Returns results in TOON format.",
   "inputSchema": {
     "type": "object",
     "properties": {
-      "query": { "type": "string", "description": "ToonQL query" },
+      "query": { "type": "string", "description": "SochQL query" },
       "format": { "type": "string", "enum": ["toon", "json"], "default": "toon" },
       "limit": { "type": "integer", "default": 100 }
     },
@@ -787,7 +787,7 @@ pub struct VectorCollection {
 
 impl VectorCollection {
     /// Open or create a vector collection
-    pub fn open(conn: &ToonConnection, name: &str) -> Result<Self>;
+    pub fn open(conn: &SochConnection, name: &str) -> Result<Self>;
     
     /// Add vectors in batch
     pub fn add(&mut self, ids: &[&str], vectors: &[Vec<f32>]) -> Result<()>;
@@ -924,7 +924,7 @@ fn search_internal(&self, query: &[f32], k: usize) -> Vec<(u64, f32)> {
 ### WASM Vector Index (Browser)
 
 ```javascript
-import init, { WasmVectorIndex } from 'toondb-wasm';
+import init, { WasmVectorIndex } from 'sochdb-wasm';
 
 async function main() {
   await init();
@@ -1086,7 +1086,7 @@ let context = ContextQueryBuilder::new()
         top_k: 5,
     })
     .with_budget(4096)
-    .with_format(ContextFormat::Toon)
+    .with_format(ContextFormat::Soch)
     .with_truncation(TruncationStrategy::TailDrop)
     .execute()?;
 ```
@@ -1113,7 +1113,7 @@ name    | age | active
 
 ### Complexity Analysis
 
-| Operation | ToonDB | B-Tree (SQLite) | Notes |
+| Operation | SochDB | B-Tree (SQLite) | Notes |
 |-----------|--------|-----------------|-------|
 | Point Read | O(\|path\|) | O(log N) | TCH path-based |
 | Point Write | O(\|path\|) | O(log N) | + WAL |
@@ -1394,15 +1394,15 @@ struct Snapshot {
 ┌──────────────────────────────────────────────────────────────────┐
 │                     Python Application                            │
 ├──────────────────────────────────────────────────────────────────┤
-│                        toondb (PyPI)                              │
+│                        sochdb (PyPI)                              │
 │  ┌────────────┐  ┌────────────┐  ┌─────────────────────────────┐ │
 │  │  Embedded  │  │    IPC     │  │        Bulk API             │ │
-│  │    FFI     │  │   Client   │  │  (subprocess → toondb-bulk) │ │
+│  │    FFI     │  │   Client   │  │  (subprocess → sochdb-bulk) │ │
 │  └─────┬──────┘  └─────┬──────┘  └──────────────┬──────────────┘ │
 └────────┼───────────────┼─────────────────────────┼────────────────┘
          │               │                         │
     ┌────▼────┐    ┌─────▼─────┐           ┌───────▼───────┐
-    │  Rust   │    │    IPC    │           │  toondb-bulk  │
+    │  Rust   │    │    IPC    │           │  sochdb-bulk  │
     │  FFI    │    │  Server   │           │    binary     │
     │  (.so)  │    │           │           │               │
     └─────────┘    └───────────┘           └───────────────┘
@@ -1413,15 +1413,15 @@ struct Snapshot {
 Wheels contain pre-built Rust binaries - no compilation required:
 
 ```
-toondb-0.2.3-py3-none-manylinux_2_17_x86_64.whl
-├── toondb/
+sochdb-0.2.3-py3-none-manylinux_2_17_x86_64.whl
+├── sochdb/
 │   ├── __init__.py
 │   ├── database.py      # Embedded FFI
 │   ├── ipc.py           # IPC client
 │   ├── bulk.py          # Bulk operations
 │   └── _bin/
 │       └── linux-x86_64/
-│           └── toondb-bulk  # Pre-built binary
+│           └── sochdb-bulk  # Pre-built binary
 ```
 
 **Platform matrix:**
@@ -1442,7 +1442,7 @@ Python FFI path (130 vec/s):
 
 Bulk API path (1,600 vec/s):
 ┌─────────┐   mmap    ┌──────────────┐   fork    ┌──────────────┐
-│ numpy   │ ────────→ │  temp file   │ ────────→ │ toondb-bulk  │
+│ numpy   │ ────────→ │  temp file   │ ────────→ │ sochdb-bulk  │
 └─────────┘  1 write  └──────────────┘  1 proc   └───────────────┘
 ```
 
@@ -1452,7 +1452,7 @@ Bulk API path (1,600 vec/s):
 
 ## Summary
 
-ToonDB's architecture delivers:
+SochDB's architecture delivers:
 
 1. **AI-Native Design**: 
    - TOON format (40-60% token savings)
@@ -1479,4 +1479,4 @@ ToonDB's architecture delivers:
    - Lock-free reads via hazard pointers
    - 12× Python throughput via Bulk API
 
-This enables ToonDB to replace the traditional AI stack (PostgreSQL + Pinecone + Redis + custom RAG) with a single, optimized system.
+This enables SochDB to replace the traditional AI stack (PostgreSQL + Pinecone + Redis + custom RAG) with a single, optimized system.

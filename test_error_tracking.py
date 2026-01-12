@@ -3,10 +3,10 @@
 import sys
 import os
 
-# Ensure we can import toondb
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'toondb-python-sdk', 'src'))
+# Ensure we can import sochdb
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'sochdb-python-sdk', 'src'))
 
-from toondb.analytics import capture_error, is_analytics_disabled
+from sochdb.analytics import capture_error, is_analytics_disabled
 
 print("=" * 60)
 print("Testing Error Tracking (Static Only)")

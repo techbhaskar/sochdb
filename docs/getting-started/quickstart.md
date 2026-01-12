@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Quick Start
 
-Get ToonDB running in 5 minutes.
+Get SochDB running in 5 minutes.
 
 ---
 
@@ -23,13 +23,13 @@ Get ToonDB running in 5 minutes.
 ### Python
 
 ```bash
-pip install toondb-client
+pip install sochdb-client
 ```
 
 ### Node.js / TypeScript
 
 ```bash
-npm install @sushanth/toondb
+npm install @sushanth/sochdb
 ```
 
 ### Rust
@@ -38,20 +38,20 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-toondb = "0.2"
+sochdb = "0.2"
 ```
 
 ### Go
 
 ```bash
-go get github.com/toondb/toondb-go@v0.3.1
+go get github.com/sochdb/sochdb-go@v0.3.1
 ```
 
 ### Build from Source
 
 ```bash
-git clone https://github.com/toondb/toondb
-cd toondb
+git clone https://github.com/sochdb/sochdb
+cd sochdb
 cargo build --release
 ```
 
@@ -62,7 +62,7 @@ cargo build --release
 ### Python
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 # Open database (creates automatically)
 db = Database.open("./my_first_db")
@@ -81,10 +81,10 @@ db.close()
 ### Node.js / TypeScript
 
 ```typescript
-import { ToonDatabase } from '@sushanth/toondb';
+import { SochDatabase } from '@sushanth/sochdb';
 
 // Open database
-const db = new ToonDatabase('./my_first_db');
+const db = new SochDatabase('./my_first_db');
 
 // Store data
 await db.put('users/alice/name', 'Alice Smith');
@@ -104,12 +104,12 @@ package main
 
 import (
     "fmt"
-    toondb "github.com/toondb/toondb-go"
+    sochdb "github.com/sochdb/sochdb-go"
 )
 
 func main() {
     // Open database
-    db, err := toondb.Open("./my_first_db")
+    db, err := sochdb.Open("./my_first_db")
     if err != nil {
         panic(err)
     }
@@ -128,7 +128,7 @@ func main() {
 ### Rust
 
 ```rust
-use toondb::Database;
+use sochdb::Database;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Open database
@@ -154,49 +154,49 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Python
 
 ```bash
-python -c "from toondb import Database; print('ToonDB Python SDK installed!')"
+python -c "from sochdb import Database; print('SochDB Python SDK installed!')"
 ```
 
 ### Node.js
 
 ```bash
-node -e "const {ToonDatabase} = require('@sushanth/toondb'); console.log('ToonDB Node.js SDK installed!')"
+node -e "const {SochDatabase} = require('@sushanth/sochdb'); console.log('SochDB Node.js SDK installed!')"
 ```
 
 ### Go
 
 ```bash
-go run -e 'package main; import _ "github.com/toondb/toondb-go"; func main() { println("ToonDB Go SDK installed!") }'
+go run -e 'package main; import _ "github.com/sochdb/sochdb-go"; func main() { println("SochDB Go SDK installed!") }'
 ```
 
 ### Rust
 
 ```bash
-cargo build --release && echo "ToonDB Rust SDK installed!"
+cargo build --release && echo "SochDB Rust SDK installed!"
 ```
 
 ---
 
 ## Configuration
 
-ToonDB works out of the box with sensible defaults. For customization:
+SochDB works out of the box with sensible defaults. For customization:
 
 ### Environment Variables
 
 ```bash
 # Enable debug logging
-export RUST_LOG=toondb=debug
+export RUST_LOG=sochdb=debug
 
 # Set default database path
-export TOONDB_PATH=./data
+export SOCHDB_PATH=./data
 
 # Library path for Python FFI
-export TOONDB_LIB_PATH=/path/to/toondb/target/release
+export SOCHDB_LIB_PATH=/path/to/sochdb/target/release
 ```
 
 ### Configuration File
 
-Create `toondb.toml` in your database directory:
+Create `sochdb.toml` in your database directory:
 
 ```toml
 [storage]
@@ -208,7 +208,7 @@ hnsw_m = 16           # HNSW graph connectivity
 hnsw_ef = 200         # Construction search width
 
 [server]
-socket_path = "/tmp/toondb.sock"
+socket_path = "/tmp/sochdb.sock"
 max_connections = 100
 ```
 
@@ -230,10 +230,10 @@ max_connections = 100
 
 ### Common Issues
 
-#### Python: `ModuleNotFoundError: No module named 'toondb'`
+#### Python: `ModuleNotFoundError: No module named 'sochdb'`
 
 ```bash
-pip install --upgrade toondb-client
+pip install --upgrade sochdb-client
 ```
 
 #### Rust: `error: linking with 'cc' failed`
@@ -254,12 +254,12 @@ sudo dnf install gcc
 #### Permission denied on Unix socket
 
 ```bash
-chmod 755 /tmp/toondb.sock
+chmod 755 /tmp/sochdb.sock
 ```
 
 ### Get Help
 
-- [GitHub Issues](https://github.com/toondb/toondb/issues)
+- [GitHub Issues](https://github.com/sochdb/sochdb/issues)
 - [Documentation Home](/)
 - [API Reference](/api-reference/python-api)
 

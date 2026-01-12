@@ -1,9 +1,9 @@
-# ToonDB Performance Issue Analysis
+# SochDB Performance Issue Analysis
 
 ## Problem Statement
 
-ToonDB insert performance is significantly slower than ChromaDB:
-- **ToonDB**: 862 vec/s  
+SochDB insert performance is significantly slower than ChromaDB:
+- **SochDB**: 862 vec/s  
 - **ChromaDB**: 14,258 vec/s (16.5x faster)
 
 ## Root Cause Analysis
@@ -54,9 +54,9 @@ With our current settings:
 | 150             | 94 vec/s   | Good        | 1.2x faster      |
 | 200             | 78 vec/s   | Excellent   | baseline          |
 
-## ChromaDB vs ToonDB Configuration Differences
+## ChromaDB vs SochDB Configuration Differences
 
-### ToonDB Current Settings
+### SochDB Current Settings
 ```python
 VectorIndex(
     dimension=768,
@@ -117,7 +117,7 @@ VectorIndex(ef_construction=100)
 
 ## Benchmark Configuration Issue
 
-The benchmark results suggest the ToonDB test was likely run with:
+The benchmark results suggest the SochDB test was likely run with:
 - `ef_construction=200` (high quality settings)
 - Single-threaded insertion
 - Full RNG heuristic
@@ -158,6 +158,6 @@ With additional optimizations:
 
 ## Conclusion
 
-The performance gap is **algorithmic, not architectural**. ToonDB is using high-quality HNSW settings that prioritize recall over insert speed. ChromaDB likely uses more aggressive defaults optimized for insertion performance.
+The performance gap is **algorithmic, not architectural**. SochDB is using high-quality HNSW settings that prioritize recall over insert speed. ChromaDB likely uses more aggressive defaults optimized for insertion performance.
 
 The fix is straightforward: adjust the quality vs speed trade-off to match competitive benchmarks, then optimize the hot path (neighbor selection) for production use.

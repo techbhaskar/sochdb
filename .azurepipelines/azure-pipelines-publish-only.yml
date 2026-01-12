@@ -14,7 +14,7 @@ steps:
     inputs:
       buildType: 'specific'
       project: '$(System.TeamProjectId)'
-      definition: 'toondb-python-release'
+      definition: 'sochdb-python-release'
       buildVersionToDownload: 'latest'
       artifactName: 'dist-linux-x64'
       targetPath: '$(Pipeline.Workspace)/wheels'
@@ -23,7 +23,7 @@ steps:
     inputs:
       buildType: 'specific'
       project: '$(System.TeamProjectId)'
-      definition: 'toondb-python-release'
+      definition: 'sochdb-python-release'
       buildVersionToDownload: 'latest'
       artifactName: 'wheel-macos-arm64'
       targetPath: '$(Pipeline.Workspace)/wheels'
@@ -32,7 +32,7 @@ steps:
     inputs:
       buildType: 'specific'
       project: '$(System.TeamProjectId)'
-      definition: 'toondb-python-release'
+      definition: 'sochdb-python-release'
       buildVersionToDownload: 'latest'
       artifactName: 'wheel-windows-x64'
       targetPath: '$(Pipeline.Workspace)/wheels'

@@ -5,7 +5,7 @@
 > **Difficulty:** Beginner to Intermediate  
 > **Prerequisites:** Python 3.9+
 
-Complete guide to ToonDB's Python SDK covering SQL, key-value operations, advanced features (TOON format, batched scanning, plugins), bulk operations, and multi-process modes.
+Complete guide to SochDB's Python SDK covering SQL, key-value operations, advanced features (TOON format, batched scanning, plugins), bulk operations, and multi-process modes.
 
 ---
 
@@ -22,9 +22,9 @@ Complete guide to ToonDB's Python SDK covering SQL, key-value operations, advanc
 9. [Vector Search](#vector-search)
 10. [IPC Mode](#ipc-mode)
 11. [CLI Tools](#cli-tools)
-    - [toondb-server](#toondb-server-options)
-    - [toondb-bulk](#toondb-bulk)
-    - [toondb-grpc-server](#toondb-grpc-server)
+    - [sochdb-server](#sochdb-server-options)
+    - [sochdb-bulk](#sochdb-bulk)
+    - [sochdb-grpc-server](#sochdb-grpc-server)
 12. [Advanced Features](#advanced-features)
     - [TOON Format](#toon-format)
     - [Batched Scanning](#batched-scanning)
@@ -40,7 +40,7 @@ Complete guide to ToonDB's Python SDK covering SQL, key-value operations, advanc
 ## Installation
 
 ```bash
-pip install toondb-client
+pip install sochdb-client
 ```
 
 **What's New in 0.2.7:**
@@ -55,7 +55,7 @@ pip install toondb-client
 - ✅ Zero-compilation with pre-built binaries
 - ✅ Improved FFI performance
 
-> **Import Note:** Install with `pip install toondb-client`, import as `from toondb import Database`
+> **Import Note:** Install with `pip install sochdb-client`, import as `from sochdb import Database`
 
 **Pre-built for:**
 - Linux (x86_64, aarch64)
@@ -69,7 +69,7 @@ pip install toondb-client
 ### Embedded Mode
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 # Open database
 with Database.open("./my_database") as db:
@@ -92,7 +92,7 @@ with Database.open("./my_database") as db:
 ### CREATE TABLE
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 with Database.open("./sql_db") as db:
     # Create table
@@ -395,7 +395,7 @@ products/mouse: result[1]{name,price}:Mouse,25
 ### Bulk HNSW Index Building
 
 ```python
-from toondb.bulk import bulk_build_index, bulk_query_index
+from sochdb.bulk import bulk_build_index, bulk_query_index
 import numpy as np
 
 # Generate embeddings (10K × 768D)
@@ -454,7 +454,7 @@ Top 10 nearest neighbors:
 
 ## IPC Mode
 
-For multi-process applications, ToonDB provides a high-performance IPC server with Unix domain socket communication.
+For multi-process applications, SochDB provides a high-performance IPC server with Unix domain socket communication.
 
 > **Deep Dive:** See [IPC Server Capabilities](../servers/IPC_SERVER.md) for wire protocol details, internals, and architecture.
 
@@ -462,18 +462,18 @@ For multi-process applications, ToonDB provides a high-performance IPC server wi
 
 ```bash
 # Start the IPC server (globally available after pip install)
-toondb-server --db ./my_database
+sochdb-server --db ./my_database
 
 # Check status
-toondb-server status --db ./my_database
+sochdb-server status --db ./my_database
 # Output: [Server] Running (PID: 12345)
 ```
 
 ```python
 # Connect from Python (or any other process)
-from toondb import IpcClient
+from sochdb import IpcClient
 
-client = IpcClient.connect("./my_database/toondb.sock")
+client = IpcClient.connect("./my_database/sochdb.sock")
 
 client.put(b"key", b"value")
 value = client.get(b"key")
@@ -481,12 +481,12 @@ print(value.decode())
 # Output: value
 ```
 
-### toondb-server Options
+### sochdb-server Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--db PATH` | `./toondb_data` | Database directory |
-| `--socket PATH` | `<db>/toondb.sock` | Unix socket path |
+| `--db PATH` | `./sochdb_data` | Database directory |
+| `--socket PATH` | `<db>/sochdb.sock` | Unix socket path |
 | `--max-clients N` | `100` | Maximum concurrent connections |
 | `--timeout-ms MS` | `30000` | Connection timeout (30s) |
 | `--log-level LEVEL` | `info` | trace/debug/info/warn/error |
@@ -495,25 +495,25 @@ print(value.decode())
 
 ```bash
 # Start server
-toondb-server --db ./my_database
+sochdb-server --db ./my_database
 
 # Check if running
-toondb-server status --db ./my_database
+sochdb-server status --db ./my_database
 # Output: [Server] Running (PID: 12345)
-#         Socket: ./my_database/toondb.sock
+#         Socket: ./my_database/sochdb.sock
 #         Database: /absolute/path/to/my_database
 
 # Stop server gracefully
-toondb-server stop --db ./my_database
+sochdb-server stop --db ./my_database
 ```
 
 ### Production Configuration
 
 ```bash
 # High-traffic production setup
-toondb-server \
-    --db /var/lib/toondb/production \
-    --socket /var/run/toondb.sock \
+sochdb-server \
+    --db /var/lib/sochdb/production \
+    --socket /var/run/sochdb.sock \
     --max-clients 500 \
     --timeout-ms 60000 \
     --log-level info
@@ -528,9 +528,9 @@ The IPC server uses a binary protocol for high-performance communication. See th
 The IPC server tracks real-time metrics accessible via `client.stats()`:
 
 ```python
-from toondb import IpcClient
+from sochdb import IpcClient
 
-client = IpcClient.connect("./my_database/toondb.sock")
+client = IpcClient.connect("./my_database/sochdb.sock")
 stats = client.stats()
 
 print(f"Connections: {stats['connections_active']}/{stats['connections_total']}")
@@ -544,9 +544,9 @@ print(f"Active transactions: {stats['active_transactions']}")
 
 ## CLI Tools
 
-Three CLI tools are available globally after `pip install toondb-client`:
+Three CLI tools are available globally after `pip install sochdb-client`:
 
-### toondb-bulk
+### sochdb-bulk
 
 High-performance bulk vector operations (~1,600 vec/s).
 
@@ -554,7 +554,7 @@ High-performance bulk vector operations (~1,600 vec/s).
 
 ```bash
 # Build HNSW index from embeddings
-toondb-bulk build-index \
+sochdb-bulk build-index \
     --input embeddings.npy \
     --output index.hnsw \
     --dimension 768 \
@@ -563,28 +563,28 @@ toondb-bulk build-index \
     --metric cosine
 
 # Query k-nearest neighbors
-toondb-bulk query \
+sochdb-bulk query \
     --index index.hnsw \
     --query query_vector.raw \
     --k 10 \
     --ef 64
 
 # Get index metadata
-toondb-bulk info --index index.hnsw
+sochdb-bulk info --index index.hnsw
 # Output:
 # Dimension: 768
 # Vectors: 100000
 # Max connections: 16
 
 # Convert between formats
-toondb-bulk convert \
+sochdb-bulk convert \
     --input vectors.npy \
     --output vectors.raw \
     --to-format raw_f32 \
     --dimension 768
 ```
 
-### toondb-grpc-server
+### sochdb-grpc-server
 
 gRPC server for remote vector search operations.
 
@@ -592,10 +592,10 @@ gRPC server for remote vector search operations.
 
 ```bash
 # Start gRPC server
-toondb-grpc-server --host 0.0.0.0 --port 50051
+sochdb-grpc-server --host 0.0.0.0 --port 50051
 
 # Check status
-toondb-grpc-server status --port 50051
+sochdb-grpc-server status --port 50051
 ```
 
 **gRPC Service Methods:** See [gRPC Deep Dive](../servers/GRPC_SERVER.md) for full method signatures.
@@ -604,10 +604,10 @@ toondb-grpc-server status --port 50051
 
 ```python
 import grpc
-from toondb_pb2 import (
+from sochdb_pb2 import (
     CreateIndexRequest, SearchRequest, HnswConfig
 )
-from toondb_pb2_grpc import VectorIndexServiceStub
+from sochdb_pb2_grpc import VectorIndexServiceStub
 
 # Connect to gRPC server
 channel = grpc.insecure_channel('localhost:50051')
@@ -643,9 +643,9 @@ for result in response.results:
 Override bundled binaries with custom paths:
 
 ```bash
-export TOONDB_SERVER_PATH=/path/to/toondb-server
-export TOONDB_BULK_PATH=/path/to/toondb-bulk
-export TOONDB_GRPC_SERVER_PATH=/path/to/toondb-grpc-server
+export SOCHDB_SERVER_PATH=/path/to/sochdb-server
+export SOCHDB_BULK_PATH=/path/to/sochdb-bulk
+export SOCHDB_GRPC_SERVER_PATH=/path/to/sochdb-grpc-server
 ```
 
 ---
@@ -657,7 +657,7 @@ export TOONDB_GRPC_SERVER_PATH=/path/to/toondb-grpc-server
 **Token-Optimized Output Notation** - Achieve **40-66% token reduction** for LLM context.
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 # Sample records
 records = [
@@ -683,7 +683,7 @@ print(records)
 **Use Case: RAG with LLMs**
 
 ```python
-from toondb import Database
+from sochdb import Database
 import openai
 
 with Database.open("./knowledge_base") as db:
@@ -716,7 +716,7 @@ with Database.open("./knowledge_base") as db:
 **1000× fewer FFI calls** for large dataset scans.
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 with Database.open("./my_db") as db:
     # Insert 10K test records
@@ -753,7 +753,7 @@ with Database.open("./my_db") as db:
 ### Statistics & Monitoring
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 with Database.open("./my_db") as db:
     # Perform operations
@@ -789,7 +789,7 @@ with Database.open("./my_db") as db:
 Force durability checkpoint to flush data to disk.
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 with Database.open("./my_db") as db:
     # Bulk import
@@ -817,7 +817,7 @@ with Database.open("./my_db") as db:
 Run Python code as database triggers.
 
 ```python
-from toondb.plugins import PythonPlugin, PluginRegistry, TriggerEvent, TriggerAbort
+from sochdb.plugins import PythonPlugin, PluginRegistry, TriggerEvent, TriggerAbort
 
 # Define validation plugin
 plugin = PythonPlugin(
@@ -863,7 +863,7 @@ print(result["created_at"])  # 1704182400.0
 ### Transaction Advanced
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 with Database.open("./my_db") as db:
     # Get transaction ID
@@ -982,7 +982,7 @@ db.close()
 ### Example 1: Multi-Tenant SaaS with SQL + K-V
 
 ```python
-from toondb import Database
+from sochdb import Database
 import json
 
 def main():
@@ -1038,7 +1038,7 @@ Globex Inc (1 users):
 ### Example 2: E-commerce with SQL
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 with Database.open("./ecommerce") as db:
     # Create schema
@@ -1173,15 +1173,15 @@ pytest tests/ -v
 pytest tests/test_sql.py -v
 
 # With coverage
-pytest --cov=toondb tests/
+pytest --cov=sochdb tests/
 ```
 
 ---
 
 ## Resources
 
-- [Python SDK GitHub](https://github.com/toondb/toondb/tree/main/toondb-python-sdk)
-- [PyPI Package](https://pypi.org/project/toondb-client/)
+- [Python SDK GitHub](https://github.com/sochdb/sochdb/tree/main/sochdb-python-sdk)
+- [PyPI Package](https://pypi.org/project/sochdb-client/)
 - [API Reference](../api-reference/python-api.md)
 - [Go SDK](./go-sdk.md)
 - [JavaScript SDK](./nodejs-sdk.md)

@@ -1,0 +1,48 @@
+[package]
+name = "sochdb-grpc"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+keywords.workspace = true
+categories.workspace = true
+rust-version.workspace = true
+description = "SochDB gRPC services for cross-language clients (Thick Server / Thin Client architecture)"
+readme = "README.md"
+
+[dependencies]
+sochdb-index = { version = "0.3.3", path = "../sochdb-index" }
+sochdb-core = { version = "0.3.3", path = "../sochdb-core", features = ["analytics"] }
+
+# gRPC / Protocol Buffers
+tonic = "0.13"
+prost = "0.13"
+
+# Async runtime - gRPC server requires tokio
+tokio = { version = "1.35", features = ["rt-multi-thread", "signal", "macros", "sync", "time"] }
+tokio-stream = "0.1"
+
+# Utilities
+tracing = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dashmap = { workspace = true }
+parking_lot = { workspace = true }
+thiserror = { workspace = true }
+clap = { version = "4.5", features = ["derive"] }
+
+# Additional dependencies for services
+serde = { workspace = true }
+serde_json = { workspace = true }
+regex = "1.10"
+uuid = { version = "1.0", features = ["v4"] }
+base64 = "0.22"
+
+[build-dependencies]
+tonic-build = "0.13"
+
+[[bin]]
+name = "sochdb-grpc-server"
+path = "src/main.rs"

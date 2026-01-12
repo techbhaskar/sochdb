@@ -14,7 +14,7 @@ parameters:
     default: ''
 
 variables:
-  - group: toondb-release-secrets
+  - group: sochdb-release-secrets
   - name: GO_VERSION
     value: '1.22'
 
@@ -64,7 +64,7 @@ stages:
               go build -v ./...
               go test -v -race ./...
             displayName: 'Build and Test'
-            workingDirectory: toondb-go
+            workingDirectory: sochdb-go
 
   - stage: Release
     displayName: 'Release'
@@ -87,17 +87,17 @@ stages:
               git config user.email "azuredevops@microsoft.com"
               
               # Create and push tag for the Go module
-              # Go modules use path-based tags: toondb-go/v0.2.3
-              TAG="toondb-go/$VERSION"
+              # Go modules use path-based tags: sochdb-go/v0.2.3
+              TAG="sochdb-go/$VERSION"
               
               echo "Creating tag: $TAG"
-              git tag -a "$TAG" -m "Release toondb-go $VERSION"
+              git tag -a "$TAG" -m "Release sochdb-go $VERSION"
               git push origin "$TAG"
               
-              echo "##[section]Released toondb-go $VERSION"
-              echo "Install with: go get github.com/toondb/toondb-go@$VERSION"
+              echo "##[section]Released sochdb-go $VERSION"
+              echo "Install with: go get github.com/sochdb/sochdb-go@$VERSION"
             displayName: 'Create release tag'
-            workingDirectory: toondb-go
+            workingDirectory: sochdb-go
 
   - stage: Verify
     displayName: 'Verify'
@@ -122,13 +122,13 @@ stages:
               sleep 60
               
               # Create a test module to verify the release
-              mkdir -p /tmp/test-toondb-go
-              cd /tmp/test-toondb-go
+              mkdir -p /tmp/test-sochdb-go
+              cd /tmp/test-sochdb-go
               go mod init test
               
               # Try to get the new version
-              if go get github.com/toondb/toondb-go@$VERSION; then
-                echo "##[section]Module verified: github.com/toondb/toondb-go@$VERSION"
+              if go get github.com/sochdb/sochdb-go@$VERSION; then
+                echo "##[section]Module verified: github.com/sochdb/sochdb-go@$VERSION"
               else
                 echo "##vso[task.logissue type=warning]Module not yet available on proxy (may take a few minutes)"
               fi

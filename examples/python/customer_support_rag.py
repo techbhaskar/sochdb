@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Customer Support RAG Example with ToonDB
+Customer Support RAG Example with SochDB
 
 Demonstrates:
 - Multi-tenant vector search with ACL
@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import requests
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -64,7 +64,7 @@ class CustomerSupportRAG:
     """Multi-tenant customer support RAG with ACL and time decay."""
     
     def __init__(self):
-        from toondb import VectorIndex
+        from sochdb import VectorIndex
         
         self.dimension = 1536
         self.index = VectorIndex(dimension=self.dimension, max_connections=32, ef_construction=200)
@@ -178,7 +178,7 @@ def run_customer_support_test():
     """Run customer support RAG test with assertions."""
     
     print("="*70)
-    print("  CUSTOMER SUPPORT RAG + TOONDB")
+    print("  CUSTOMER SUPPORT RAG + SOCHDB")
     print("  Multi-tenant + ACL + Time Decay")
     print("="*70)
     

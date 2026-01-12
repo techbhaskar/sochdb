@@ -1,4 +1,4 @@
-# ToonDB Bulk Operations
+# SochDB Bulk Operations
 
 High-performance bulk vector index operations that bypass Python FFI overhead.
 
@@ -20,7 +20,7 @@ The overhead comes from:
 
 The Bulk API eliminates this by:
 1. Writing vectors to a memory-mapped file (raw f32 or npy)
-2. Spawning the `toondb-bulk` CLI as a subprocess
+2. Spawning the `sochdb-bulk` CLI as a subprocess
 3. Zero FFI marshalling during the actual index build
 
 ## Quick Start
@@ -28,7 +28,7 @@ The Bulk API eliminates this by:
 ### Python API
 
 ```python
-from toondb.bulk import bulk_build_index
+from sochdb.bulk import bulk_build_index
 import numpy as np
 
 # Your embeddings (10K × 768D)
@@ -49,18 +49,18 @@ print(f"Built {stats.vectors} vectors at {stats.rate:.0f} vec/s")
 
 ```bash
 # Build from raw f32 file
-toondb-bulk build-index \
+sochdb-bulk build-index \
     --input embeddings.bin \
     --output index.hnsw \
     --dimension 768
 
 # Build from NumPy .npy file
-toondb-bulk build-index \
+sochdb-bulk build-index \
     --input embeddings.npy \
     --output index.hnsw
 
 # With custom HNSW parameters
-toondb-bulk build-index \
+sochdb-bulk build-index \
     --input data.f32 \
     --output index.hnsw \
     --dimension 768 \
@@ -69,13 +69,13 @@ toondb-bulk build-index \
     --threads 8
 
 # Query an index
-toondb-bulk query \
+sochdb-bulk query \
     --index index.hnsw \
     --query query.f32 \
     --k 10
 
 # Get index info
-toondb-bulk info --index index.hnsw
+sochdb-bulk info --index index.hnsw
 ```
 
 ## Input Formats
@@ -91,7 +91,7 @@ The simplest and fastest format - just raw bytes.
 
 **Creating raw f32 from Python:**
 ```python
-from toondb.bulk import convert_embeddings_to_raw
+from sochdb.bulk import convert_embeddings_to_raw
 import numpy as np
 
 embeddings = np.load("embeddings.npy")
@@ -170,7 +170,7 @@ def convert_embeddings_to_raw(
 ) -> Path:
 ```
 
-Convert embeddings to ToonDB's raw f32 format for optimal bulk loading.
+Convert embeddings to SochDB's raw f32 format for optimal bulk loading.
 
 ### `read_raw_embeddings()`
 
@@ -188,7 +188,7 @@ Read embeddings from raw f32 format using memory mapping.
 ### `build-index`
 
 ```
-toondb-bulk build-index [OPTIONS] --input <FILE> --output <FILE>
+sochdb-bulk build-index [OPTIONS] --input <FILE> --output <FILE>
 
 Options:
   -i, --input <FILE>         Input vector file (raw f32 or .npy)
@@ -207,7 +207,7 @@ Options:
 ### `query`
 
 ```
-toondb-bulk query [OPTIONS] --index <FILE> --query <FILE>
+sochdb-bulk query [OPTIONS] --index <FILE> --query <FILE>
 
 Options:
   -i, --index <FILE>   Index file
@@ -219,13 +219,13 @@ Options:
 ### `info`
 
 ```
-toondb-bulk info --index <FILE>
+sochdb-bulk info --index <FILE>
 ```
 
 ### `convert`
 
 ```
-toondb-bulk convert [OPTIONS] --input <FILE> --output <FILE> --to-format <FMT>
+sochdb-bulk convert [OPTIONS] --input <FILE> --output <FILE> --to-format <FMT>
 
 Options:
   -i, --input <FILE>       Input file
@@ -239,16 +239,16 @@ Options:
 
 ```bash
 # Build release binary
-cargo build --release -p toondb-tools
+cargo build --release -p sochdb-tools
 
 # Binary location
-./target/release/toondb-bulk --help
+./target/release/sochdb-bulk --help
 
 # Run benchmarks
-cargo bench -p toondb-tools
+cargo bench -p sochdb-tools
 
 # Install to PATH
-cargo install --path toondb-tools
+cargo install --path sochdb-tools
 ```
 
 ## Bundling with Python Package
@@ -256,7 +256,7 @@ cargo install --path toondb-tools
 The Python package can bundle the native binary:
 
 ```bash
-cd toondb-python-sdk
+cd sochdb-python-sdk
 
 # Build and install binary for current platform
 python build_native.py
@@ -265,7 +265,7 @@ python build_native.py
 pip wheel .
 ```
 
-The binary is installed to `src/toondb/_bin/<platform>/toondb-bulk`.
+The binary is installed to `src/sochdb/_bin/<platform>/sochdb-bulk`.
 
 ## Performance Tips
 
@@ -284,7 +284,7 @@ Run the performance benchmark:
 python benchmarks/bulk_benchmark.py --size medium
 
 # Rust microbenchmarks
-cargo bench -p toondb-tools --bench bulk_ingest
+cargo bench -p sochdb-tools --bench bulk_ingest
 ```
 
 Expected results (Apple M1 Pro, 768D vectors):
@@ -297,33 +297,33 @@ Expected results (Apple M1 Pro, 768D vectors):
 
 ## Troubleshooting
 
-### "Could not find toondb-bulk binary"
+### "Could not find sochdb-bulk binary"
 
-The Python Bulk API requires the `toondb-bulk` binary. The SDK automatically
+The Python Bulk API requires the `sochdb-bulk` binary. The SDK automatically
 searches in this order:
 
 1. **Bundled in wheel** (recommended):
    ```bash
-   pip install toondb-client
-   # Binary is at: site-packages/toondb/_bin/<platform>/toondb-bulk
+   pip install sochdb-client
+   # Binary is at: site-packages/sochdb/_bin/<platform>/sochdb-bulk
    ```
 
 2. **System PATH**:
    ```bash
-   cargo install --path toondb-tools
+   cargo install --path sochdb-tools
    # Or: export PATH="$PATH:/path/to/target/release"
    ```
 
 3. **Cargo target directory** (development):
    ```bash
-   cargo build --release -p toondb-tools
+   cargo build --release -p sochdb-tools
    # Auto-detected if running from workspace
    ```
 
 To debug resolution:
 ```python
-from toondb.bulk import get_toondb_bulk_path
-print(get_toondb_bulk_path())  # Shows resolved path
+from sochdb.bulk import get_sochdb_bulk_path
+print(get_sochdb_bulk_path())  # Shows resolved path
 ```
 
 ### Platform Support
@@ -370,14 +370,14 @@ Python Application
        │
        ▼
 ┌─────────────────────┐
-│  toondb.bulk.py     │  Python Bulk API
+│  sochdb.bulk.py     │  Python Bulk API
 │  - Write vectors    │
 │  - Spawn subprocess │
 └─────────┬───────────┘
           │ subprocess.run()
           ▼
 ┌─────────────────────┐
-│  toondb-bulk CLI    │  Rust Binary (bundled in wheel)
+│  sochdb-bulk CLI    │  Rust Binary (bundled in wheel)
 │  - mmap vector file │
 │  - HNSW insertion   │
 │  - Save index       │

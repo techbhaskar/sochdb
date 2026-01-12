@@ -1,14 +1,14 @@
 /**
- * ToonDB SQL Query Examples
+ * SochDB SQL Query Examples
  * 
- * Demonstrates SQL support in ToonDB:
+ * Demonstrates SQL support in SochDB:
  * - CREATE TABLE, INSERT, UPDATE, DELETE
  * - SELECT with WHERE, ORDER BY, LIMIT
  * - Transactions with SQL
  * - Schema management
  */
 
-import { Database } from '@sushanth/toondb';
+import { Database } from '@sushanth/sochdb';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -65,7 +65,7 @@ async function insertData(db: Database): Promise<void> {
     // Insert posts
     const posts = [
         [1, 1, 'First Post', 'Hello World!', 10, '2024-01-05'],
-        [2, 1, 'Second Post', 'ToonDB is awesome', 25, '2024-01-06'],
+        [2, 1, 'Second Post', 'SochDB is awesome', 25, '2024-01-06'],
         [3, 2, 'Bob\'s Thoughts', 'SQL queries are easy', 15, '2024-01-07'],
         [4, 3, 'Charlie\'s Guide', 'Database tips', 30, '2024-01-08'],
         [5, 3, 'Advanced Topics', 'Performance tuning', 50, '2024-01-09'],
@@ -213,7 +213,7 @@ async function complexQueries(db: Database): Promise<void> {
 
 async function main() {
     console.log('='.repeat(60));
-    console.log('ToonDB SQL Query Examples');
+    console.log('SochDB SQL Query Examples');
     console.log('='.repeat(60));
 
     // Open database

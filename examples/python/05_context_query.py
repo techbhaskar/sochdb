@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-ToonDB Context Query Example
+SochDB Context Query Example
 ============================
 
-This example demonstrates ToonDB's context query system, which allows
+This example demonstrates SochDB's context query system, which allows
 building prioritized context sections with automatic token budgeting.
 
-The Context Query is ToonDB's "killer feature" for AI agents:
+The Context Query is SochDB's "killer feature" for AI agents:
 - Assemble multi-source context in one call
 - Automatic token budget enforcement
 - Priority-based truncation
@@ -18,7 +18,7 @@ Expected Output:
     ✓ Context assembled for LLM
 
 Usage:
-    PYTHONPATH=toondb-python-sdk/src TOONDB_LIB_PATH=target/release python3 examples/python/05_context_query.py
+    PYTHONPATH=sochdb-python-sdk/src SOCHDB_LIB_PATH=target/release python3 examples/python/05_context_query.py
 """
 
 import os
@@ -27,7 +27,7 @@ import json
 from typing import List, Dict, Any
 from dataclasses import dataclass, field
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 import numpy as np
 
@@ -56,11 +56,11 @@ class ContextQueryResult:
     budget: int
 
 
-class MockToonDB:
+class MockSochDB:
     """
-    Mock ToonDB for demonstrating context queries.
+    Mock SochDB for demonstrating context queries.
     
-    In production, this would connect to the actual ToonDB MCP server.
+    In production, this would connect to the actual SochDB MCP server.
     """
     
     def __init__(self):
@@ -73,14 +73,14 @@ class MockToonDB:
         
         self.tables = {
             "messages": [
-                {"id": 1, "role": "user", "content": "How do I use ToonDB?"},
-                {"id": 2, "role": "assistant", "content": "ToonDB is easy! Just import and connect."},
+                {"id": 1, "role": "user", "content": "How do I use SochDB?"},
+                {"id": 2, "role": "assistant", "content": "SochDB is easy! Just import and connect."},
                 {"id": 3, "role": "user", "content": "Can I use it for RAG?"},
-                {"id": 4, "role": "assistant", "content": "Yes! ToonDB has built-in vector search."},
+                {"id": 4, "role": "assistant", "content": "Yes! SochDB has built-in vector search."},
                 {"id": 5, "role": "user", "content": "What about token budgets?"},
             ],
             "knowledge": [
-                {"id": 1, "topic": "Architecture", "content": "ToonDB uses Trie-Columnar Hybrid storage."},
+                {"id": 1, "topic": "Architecture", "content": "SochDB uses Trie-Columnar Hybrid storage."},
                 {"id": 2, "topic": "Performance", "content": "Sub-millisecond search, 10K+ vec/s insert."},
                 {"id": 3, "topic": "Integration", "content": "Supports MCP, LangGraph, CrewAI."},
             ]
@@ -106,7 +106,7 @@ class MockToonDB:
 
 
 def context_query(
-    db: MockToonDB,
+    db: MockSochDB,
     sections: List[Dict],
     token_budget: int = 4096,
     truncation: str = "tail_drop"
@@ -114,10 +114,10 @@ def context_query(
     """
     Execute a context query with token budgeting.
     
-    This is the core ToonDB feature for AI agents.
+    This is the core SochDB feature for AI agents.
     
     Args:
-        db: ToonDB connection
+        db: SochDB connection
         sections: List of section definitions
         token_budget: Maximum tokens to return
         truncation: Strategy - tail_drop, head_drop, proportional
@@ -207,11 +207,11 @@ def context_query(
 
 def main():
     print("=" * 70)
-    print("  ToonDB Context Query Example")
+    print("  SochDB Context Query Example")
     print("=" * 70)
     
     # Initialize mock database
-    db = MockToonDB()
+    db = MockSochDB()
     print("\n[1] Database initialized with mock data")
     
     # Define context query sections

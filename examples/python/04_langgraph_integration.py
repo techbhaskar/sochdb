@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-ToonDB + LangGraph Integration Example
+SochDB + LangGraph Integration Example
 ======================================
 
-This example demonstrates how to integrate ToonDB with LangGraph for building
+This example demonstrates how to integrate SochDB with LangGraph for building
 AI agents with persistent memory and semantic retrieval.
 
 Features:
-- ToonDB as unified memory store (KV + Vector)
+- SochDB as unified memory store (KV + Vector)
 - Context queries with token budgeting
 - LangGraph state management
 
 Expected Output:
-    ✓ ToonDB connected
+    ✓ SochDB connected
     ✓ Knowledge indexed (5 documents)
     ✓ Agent graph built
     ✓ Query executed with context retrieval
@@ -20,8 +20,8 @@ Expected Output:
 
 Usage:
     # Set environment variables
-    export PYTHONPATH=toondb-python-sdk/src
-    export TOONDB_LIB_PATH=target/release
+    export PYTHONPATH=sochdb-python-sdk/src
+    export SOCHDB_LIB_PATH=target/release
     
     # Run example
     python3 examples/python/04_langgraph_integration.py
@@ -34,7 +34,7 @@ import time
 from typing import TypedDict, List, Dict, Any
 from dataclasses import dataclass
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 import numpy as np
 
@@ -56,9 +56,9 @@ class AgentState(TypedDict):
     retrieved_docs: List[Dict]
 
 
-class ToonDBMemory:
+class SochDBMemory:
     """
-    ToonDB-backed memory for LangGraph agents.
+    SochDB-backed memory for LangGraph agents.
     
     Provides:
     - Vector storage for semantic search
@@ -67,7 +67,7 @@ class ToonDBMemory:
     """
     
     def __init__(self, dimension: int = 768):
-        from toondb import VectorIndex, Database
+        from sochdb import VectorIndex, Database
         
         self.dimension = dimension
         self.index = VectorIndex(
@@ -177,14 +177,14 @@ def mock_embedding(text: str, dimension: int = 768) -> np.ndarray:
 
 def main():
     print("=" * 70)
-    print("  ToonDB + LangGraph Integration Example")
+    print("  SochDB + LangGraph Integration Example")
     print("=" * 70)
     
-    # 1. Initialize ToonDB memory
-    print("\n[1] Initializing ToonDB memory...")
+    # 1. Initialize SochDB memory
+    print("\n[1] Initializing SochDB memory...")
     try:
-        memory = ToonDBMemory(dimension=768)
-        print("    ✓ ToonDB connected")
+        memory = SochDBMemory(dimension=768)
+        print("    ✓ SochDB connected")
     except Exception as e:
         print(f"    ✗ Failed: {e}")
         return 1
@@ -193,12 +193,12 @@ def main():
     print("\n[2] Indexing knowledge base...")
     knowledge = [
         {
-            "topic": "ToonDB Architecture",
-            "content": "ToonDB uses a Trie-Columnar Hybrid storage engine for O(path) lookups."
+            "topic": "SochDB Architecture",
+            "content": "SochDB uses a Trie-Columnar Hybrid storage engine for O(path) lookups."
         },
         {
             "topic": "Vector Search",
-            "content": "ToonDB implements HNSW with SIMD acceleration for fast vector similarity search."
+            "content": "SochDB implements HNSW with SIMD acceleration for fast vector similarity search."
         },
         {
             "topic": "Context Queries",
@@ -206,11 +206,11 @@ def main():
         },
         {
             "topic": "MCP Integration",
-            "content": "ToonDB supports Model Context Protocol for seamless LLM tool integration."
+            "content": "SochDB supports Model Context Protocol for seamless LLM tool integration."
         },
         {
             "topic": "Performance",
-            "content": "ToonDB achieves sub-millisecond search latency and 10K+ vectors/sec insert rate."
+            "content": "SochDB achieves sub-millisecond search latency and 10K+ vectors/sec insert rate."
         }
     ]
     
@@ -228,7 +228,7 @@ def main():
     print("\n[3] Building agent graph...")
     
     def retrieve_context(state: AgentState) -> AgentState:
-        """Retrieve relevant context from ToonDB."""
+        """Retrieve relevant context from SochDB."""
         user_query = state["messages"][-1]["content"]
         query_embedding = mock_embedding(user_query)
         
@@ -267,7 +267,7 @@ def main():
     print("-" * 70)
     
     test_queries = [
-        "What storage engine does ToonDB use?",
+        "What storage engine does SochDB use?",
         "How fast is the vector search?",
         "What is the MCP integration?"
     ]

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-ToonDB Vector Search Example
+SochDB Vector Search Example
 ============================
 
-This example demonstrates ToonDB's vector search capabilities:
+This example demonstrates SochDB's vector search capabilities:
 1. Creating a vector index
 2. Inserting vectors (single and batch)
 3. Searching for nearest neighbors
@@ -17,28 +17,28 @@ Expected Output:
     ✓ Search latency: <10ms
 
 Usage:
-    PYTHONPATH=toondb-python-sdk/src TOONDB_LIB_PATH=target/release python3 examples/python/02_vector_search.py
+    PYTHONPATH=sochdb-python-sdk/src SOCHDB_LIB_PATH=target/release python3 examples/python/02_vector_search.py
 """
 
 import os
 import sys
 import time
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 import numpy as np
 
 
 def main():
     print("=" * 60)
-    print("  ToonDB Vector Search Example")
+    print("  SochDB Vector Search Example")
     print("=" * 60)
     
     try:
-        from toondb import VectorIndex
+        from sochdb import VectorIndex
     except ImportError as e:
         print(f"❌ Import failed: {e}")
-        print("   Set TOONDB_LIB_PATH to target/release directory")
+        print("   Set SOCHDB_LIB_PATH to target/release directory")
         return 1
     
     # Configuration
@@ -97,15 +97,15 @@ def main():
     for i in range(num_queries):
         query = vectors[i]
         
-        # ToonDB results
+        # SochDB results
         results = index.search(query, k=k)
-        toondb_ids = set([r[0] for r in results])
+        sochdb_ids = set([r[0] for r in results])
         
         # Ground truth (brute-force cosine similarity)
         similarities = np.dot(vectors, query)
         ground_truth = set(np.argsort(similarities)[-k:])
         
-        recall = len(toondb_ids & ground_truth) / k
+        recall = len(sochdb_ids & ground_truth) / k
         recalls.append(recall)
     
     avg_recall = np.mean(recalls) * 100

@@ -1,6 +1,6 @@
 # Documentation Style Guide
 
-Guidelines for writing ToonDB documentation.
+Guidelines for writing SochDB documentation.
 
 ---
 
@@ -61,7 +61,7 @@ Place each document in the appropriate quadrant:
 ### Voice
 
 - Use **second person** ("you can...") for instructions
-- Use **active voice** ("ToonDB stores..." not "data is stored...")
+- Use **active voice** ("SochDB stores..." not "data is stored...")
 - Be **direct** ("Run this command" not "You might want to run...")
 
 ### Headings
@@ -79,7 +79,7 @@ Always include:
 
 ```python
 # ✅ Good: Complete, runnable example
-from toondb import Database
+from sochdb import Database
 
 db = Database.open("./my_db")
 db.put(b"key", b"value")
@@ -119,7 +119,7 @@ Click [here](./reference/configuration.md) for more info
 ### Code
 
 - **Inline code** for: file names, function names, commands, paths
-  - `toondb.toml`, `ToonValue`, `cargo test`, `/var/lib/toondb`
+  - `sochdb.toml`, `SochValue`, `cargo test`, `/var/lib/sochdb`
   
 - **Code blocks** for: multi-line code, command output, file contents
 

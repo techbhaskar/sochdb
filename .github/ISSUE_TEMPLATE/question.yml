@@ -1,24 +1,24 @@
 name: Question/Support Request
-description: Ask a question or request support for using ToonDB
+description: Ask a question or request support for using SochDB
 title: "[Question]: "
 labels: ["question", "needs-response"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for your interest in ToonDB! Please provide details about your question below.
+        Thanks for your interest in SochDB! Please provide details about your question below.
         
-        **Note**: For general discussions, consider using [GitHub Discussions](https://github.com/toondb/toondb/discussions) instead.
+        **Note**: For general discussions, consider using [GitHub Discussions](https://github.com/sochdb/sochdb/discussions) instead.
 
   - type: textarea
     id: question
     attributes:
       label: Your Question
-      description: What would you like to know about ToonDB?
+      description: What would you like to know about SochDB?
       placeholder: |
         How do I...?
         What's the best way to...?
-        Can ToonDB support...?
+        Can SochDB support...?
     validations:
       required: true
 
@@ -79,8 +79,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: ToonDB Version
-      description: Which version of ToonDB are you using?
+      label: SochDB Version
+      description: Which version of SochDB are you using?
       placeholder: "e.g., 0.1.0, latest"
 
   - type: dropdown

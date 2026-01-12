@@ -1,4 +1,4 @@
-# ToonDB Test Cheatsheet
+# SochDB Test Cheatsheet
 
 ## Quick Reference: Claims vs Tests
 

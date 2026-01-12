@@ -1,6 +1,6 @@
 # Testing Guide
 
-Comprehensive testing guidelines for ToonDB contributors.
+Comprehensive testing guidelines for SochDB contributors.
 
 ---
 
@@ -24,12 +24,12 @@ Comprehensive testing guidelines for ToonDB contributors.
 cargo test --all
 
 # Run tests for a specific crate
-cargo test -p toondb-kernel
-cargo test -p toondb-index
-cargo test -p toondb-core
+cargo test -p sochdb-kernel
+cargo test -p sochdb-index
+cargo test -p sochdb-core
 
 # Run a specific test
-cargo test -p toondb-kernel test_transaction_commit
+cargo test -p sochdb-kernel test_transaction_commit
 
 # Run with output (see println! statements)
 cargo test --all -- --nocapture
@@ -56,10 +56,10 @@ cargo install cargo-watch
 cargo watch -x 'test --all'
 
 # Watch specific crate
-cargo watch -x 'test -p toondb-kernel'
+cargo watch -x 'test -p sochdb-kernel'
 
 # Watch and run specific test
-cargo watch -x 'test -p toondb-index test_hnsw'
+cargo watch -x 'test -p sochdb-index test_hnsw'
 ```
 
 ---
@@ -69,7 +69,7 @@ cargo watch -x 'test -p toondb-index test_hnsw'
 ### Directory Structure
 
 ```
-toondb-*/
+sochdb-*/
 ├── src/
 │   ├── lib.rs
 │   └── module.rs          # Unit tests at bottom of file
@@ -211,10 +211,10 @@ use proptest::prelude::*;
 proptest! {
     #[test]
     fn encode_decode_roundtrip(value: i64) {
-        let encoded = ToonValue::Int(value).encode();
-        let decoded = ToonValue::decode(&encoded).unwrap();
+        let encoded = SochValue::Int(value).encode();
+        let decoded = SochValue::decode(&encoded).unwrap();
         
-        prop_assert_eq!(ToonValue::Int(value), decoded);
+        prop_assert_eq!(SochValue::Int(value), decoded);
     }
 
     #[test]
@@ -248,7 +248,7 @@ Place in `tests/` directory:
 ```rust
 // tests/transaction_integration.rs
 
-use toondb_kernel::Database;
+use sochdb_kernel::Database;
 use tempfile::TempDir;
 
 #[test]
@@ -286,9 +286,9 @@ Include examples in documentation that are automatically tested:
 /// # Examples
 ///
 /// ```
-/// use toondb_core::ToonValue;
+/// use sochdb_core::SochValue;
 ///
-/// let value = ToonValue::Int(42);
+/// let value = SochValue::Int(42);
 /// let encoded = value.to_toon();
 /// assert_eq!(encoded, "42");
 /// ```
@@ -296,11 +296,11 @@ Include examples in documentation that are automatically tested:
 /// Arrays are encoded with brackets:
 ///
 /// ```
-/// use toondb_core::ToonValue;
+/// use sochdb_core::SochValue;
 ///
-/// let arr = ToonValue::Array(vec![
-///     ToonValue::Int(1),
-///     ToonValue::Int(2),
+/// let arr = SochValue::Array(vec![
+///     SochValue::Int(1),
+///     SochValue::Int(2),
 /// ]);
 /// assert_eq!(arr.to_toon(), "[1,2]");
 /// ```
@@ -317,11 +317,11 @@ pub fn to_toon(&self) -> String {
 
 | Crate | Minimum Coverage | Notes |
 |-------|------------------|-------|
-| `toondb-core` | **80%** | Core types, must be well-tested |
-| `toondb-kernel` | **75%** | Engine internals |
-| `toondb-index` | **70%** | Index implementations |
-| `toondb-query` | **70%** | Query processing |
-| `toondb-client` | **65%** | SDK surface |
+| `sochdb-core` | **80%** | Core types, must be well-tested |
+| `sochdb-kernel` | **75%** | Engine internals |
+| `sochdb-index` | **70%** | Index implementations |
+| `sochdb-query` | **70%** | Query processing |
+| `sochdb-client` | **65%** | SDK surface |
 | Others | **60%** | Utilities, plugins |
 
 ### Checking Coverage
@@ -334,7 +334,7 @@ cargo install cargo-tarpaulin
 cargo tarpaulin --all --out Html --output-dir coverage/
 
 # Run coverage for specific crate
-cargo tarpaulin -p toondb-kernel --out Html
+cargo tarpaulin -p sochdb-kernel --out Html
 
 # Run with ignored tests
 cargo tarpaulin --all --run-types Tests,Doctests --out Html
@@ -358,7 +358,7 @@ PRs that drop coverage below the thresholds will receive a warning comment. Sign
 cargo bench
 
 # Run specific benchmark
-cargo bench -p toondb-index hnsw_search
+cargo bench -p sochdb-index hnsw_search
 
 # Run with baseline comparison
 cargo bench -- --baseline main
@@ -373,7 +373,7 @@ cargo bench -- --save-baseline main
 // benches/hnsw_benchmark.rs
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
-use toondb_index::HNSWIndex;
+use sochdb_index::HNSWIndex;
 
 fn benchmark_hnsw_search(c: &mut Criterion) {
     let mut group = c.benchmark_group("hnsw_search");

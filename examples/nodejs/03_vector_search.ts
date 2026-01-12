@@ -8,7 +8,7 @@
  * - Distance utilities
  */
 
-import { VectorIndex, VectorIndexConfig, DistanceMetric } from '@sushanth/toondb';
+import { VectorIndex, VectorIndexConfig, DistanceMetric } from '@sushanth/sochdb';
 
 async function main() {
   // Configuration for the vector index

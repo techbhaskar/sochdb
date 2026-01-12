@@ -11,7 +11,7 @@ We release patches for security vulnerabilities. Currently supported versions:
 
 ## Reporting a Vulnerability
 
-The ToonDB team takes security bugs seriously. We appreciate your efforts to
+The SochDB team takes security bugs seriously. We appreciate your efforts to
 responsibly disclose your findings, and will make every effort to acknowledge
 your contributions.
 
@@ -19,7 +19,7 @@ your contributions.
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-Instead, please report them via email to **sushanth@toondb.dev**.
+Instead, please report them via email to **sushanth@sochdb.dev**.
 
 You should receive a response within **48 hours**. If for some reason you do not,
 please follow up via email to ensure we received your original message.
@@ -83,13 +83,13 @@ When a security fix is released:
 
 ## Bug Bounty Program
 
-At this time, ToonDB does not have a formal bug bounty program. However, we
-deeply appreciate security researchers who help make ToonDB more secure and
+At this time, SochDB does not have a formal bug bounty program. However, we
+deeply appreciate security researchers who help make SochDB more secure and
 will publicly acknowledge contributors who wish to be recognized.
 
 ## Security Best Practices
 
-When using ToonDB:
+When using SochDB:
 
 * Always use the latest stable version
 * Keep dependencies up to date
@@ -103,7 +103,7 @@ When using ToonDB:
 
 For security-related questions or concerns:
 
-* **Email**: sushanth@toondb.dev
+* **Email**: sushanth@sochdb.dev
 * **PGP Key**: Available upon request
 
-Thank you for helping keep ToonDB and our users safe!
+Thank you for helping keep SochDB and our users safe!

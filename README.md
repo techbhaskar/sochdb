@@ -1,4 +1,6 @@
-# 🎬 ToonDB
+# 🎬 SochDB
+
+> **📢 Note:** This project has been renamed from **ToonDB** to **SochDB**. All references, packages, and APIs have been updated accordingly.
 
 ### The LLM‑Native Database
 
@@ -7,14 +9,13 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-2024%20edition-orange.svg)](https://www.rust-lang.org/)
 
-* **40–66% fewer tokens** for tabular context via **TOON** (Tabular Object‑Oriented Notation)
 * **SQL support** with full SQL-92 syntax for relational queries
 * **Context Query Builder**: assemble *system + user + history + retrieval* under a token budget
 * **Native HNSW vector search** (F32/F16/BF16) with optional quantization
 * **ACID transactions** (MVCC + WAL + Serializable Snapshot Isolation)
 * **Two access modes**: **Embedded (FFI)** and **IPC (Unix sockets)** via Python SDK
 
-**Quick links:** [📚 Documentation](https://docs.toondb.dev) • [Quick Start](#-quick-start) • [Architecture](#-architecture) • [TOON Format](#-toon-format) • [Benchmarks](#-benchmarks) • [RFD](docs/rfds/RFD-001-ai-native-database.md)
+**Quick links:** [📚 Documentation](https://docs.sochdb.dev) • [Quick Start](#-quick-start) • [Architecture](#-architecture) • [TOON Format](#-toon-format) • [Benchmarks](#-benchmarks) • [RFD](docs/rfds/RFD-001-ai-native-database.md)
 
 ---
 
@@ -22,7 +23,7 @@
 
 ### Sync-First Architecture: Tokio is Truly Optional
 
-ToonDB v0.3.5 adopts a **sync-first core** design, following SQLite's proven architecture pattern. The async runtime (tokio) is now **truly optional** and only required at the edges (gRPC server, async client APIs).
+SochDB v0.3.5 adopts a **sync-first core** design, following SQLite's proven architecture pattern. The async runtime (tokio) is now **truly optional** and only required at the edges (gRPC server, async client APIs).
 
 **Benefits:**
 - **~500KB smaller binaries** for embedded use cases
@@ -32,11 +33,11 @@ ToonDB v0.3.5 adopts a **sync-first core** design, following SQLite's proven arc
 
 ```bash
 # Default build (no tokio)
-cargo build --release -p toondb-storage
+cargo build --release -p sochdb-storage
 # Binary size: 732 KB
 
 # With async features
-cargo build --release -p toondb-storage --features async
+cargo build --release -p sochdb-storage --features async
 # Binary size: 1.2 MB
 ```
 
@@ -64,7 +65,7 @@ cargo build --release -p toondb-storage --features async
 **Vector Index Convenience Methods**: Manage vector operations directly from the `Database` class without separate `VectorIndex` objects:
 
 ```python
-from toondb import Database
+from sochdb import Database
 import numpy as np
 
 db = Database.open("./my_db")
@@ -89,7 +90,7 @@ db.close()
 Full TypeScript/JavaScript support for graph operations:
 
 ```typescript
-import { Database } from '@sushanth/toondb';
+import { Database } from '@sushanth/sochdb';
 
 const db = await Database.open('./my_db');
 
@@ -105,7 +106,7 @@ await db.close();
 
 ---
 
-## Why ToonDB exists
+## Why SochDB exists
 
 Most "agent stacks" still glue together:
 
@@ -116,7 +117,7 @@ Most "agent stacks" still glue together:
 
 …and then spend weeks maintaining brittle context assembly and token budgeting.
 
-**ToonDB collapses that stack into one LLM‑native substrate**: you store structured data + embeddings + history *and* ask the DB to produce a token‑efficient context payload.
+**SochDB collapses that stack into one LLM‑native substrate**: you store structured data + embeddings + history *and* ask the DB to produce a token‑efficient context payload.
 
 ---
 
@@ -149,7 +150,7 @@ Most "agent stacks" still glue together:
 
 ### ✅ Developer experience
 
-* **Rust client** (`toondb-client`)
+* **Rust client** (`sochdb-client`)
 * **Python SDK** with:
 
   * **Embedded mode (FFI)** for lowest latency
@@ -164,9 +165,9 @@ Most "agent stacks" still glue together:
 
 ---
 
-## ToonDB in one picture
+## SochDB in one picture
 
-| Problem           | Typical approach               | ToonDB approach                     |
+| Problem           | Typical approach               | SochDB approach                     |
 | ----------------- | ------------------------------ | ----------------------------------- |
 | Token waste       | JSON/SQL payload bloat         | **TOON**: dense, table-like output  |
 | RAG plumbing      | External vector DB + glue      | **Built-in HNSW** + quantization    |
@@ -183,7 +184,7 @@ Choose your preferred SDK:
 
 ```bash
 # Rust - add to Cargo.toml
-toondb = "0.2"
+sochdb = "0.2"
 ```
 
 ### SDK Repositories
@@ -192,27 +193,27 @@ Language SDKs are maintained in separate repositories with their own release cyc
 
 | Language | Repository | Installation |
 |----------|------------|-------------|
-| **Python** | [toondb-python-sdk](https://github.com/toondb/toondb-python-sdk) | `pip install toondb-client` |
-| **Node.js/TypeScript** | [toondb-nodejs-sdk](https://github.com/toondb/toondb-nodejs-sdk) | `npm install @sushanth/toondb` |
-| **Go** | [toondb-go](https://github.com/toondb/toondb-go) | `go get github.com/toondb/toondb-go@latest` |
-| **Rust** | This repository | `cargo add toondb` |
+| **Python** | [sochdb-python-sdk](https://github.com/sochdb/sochdb-python-sdk) | `pip install sochdb-client` |
+| **Node.js/TypeScript** | [sochdb-nodejs-sdk](https://github.com/sochdb/sochdb-nodejs-sdk) | `npm install @sushanth/sochdb` |
+| **Go** | [sochdb-go](https://github.com/sochdb/sochdb-go) | `go get github.com/sochdb/sochdb-go@latest` |
+| **Rust** | This repository | `cargo add sochdb` |
 
 ### Examples
 
-- **Python Examples**: [toondb-python-examples](https://github.com/toondb/toondb-python-examples)
-- **Node.js Examples**: [toondb-nodejs-examples](https://github.com/toondb/toondb-nodejs-examples)
-- **Go Examples**: [toondb-golang-examples](https://github.com/toondb/toondb-golang-examples)
+- **Python Examples**: [sochdb-python-examples](https://github.com/sochdb/sochdb-python-examples)
+- **Node.js Examples**: [sochdb-nodejs-examples](https://github.com/sochdb/sochdb-nodejs-examples)
+- **Go Examples**: [sochdb-golang-examples](https://github.com/sochdb/sochdb-golang-examples)
 
 ### Benchmarks
 
-For performance comparisons and benchmarks, see [toondb-benchmarks](https://github.com/toondb/toondb-benchmarks).
+For performance comparisons and benchmarks, see [sochdb-benchmarks](https://github.com/sochdb/sochdb-benchmarks).
 
 ### Hello World
 
 #### Python
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 db = Database.open("./my_db")
 db.put(b"users/alice", b"Alice Smith")
@@ -223,9 +224,9 @@ db.close()
 #### Node.js / TypeScript
 
 ```typescript
-import { ToonDatabase } from '@sushanth/toondb';
+import { SochDatabase } from '@sushanth/sochdb';
 
-const db = new ToonDatabase('./my_db');
+const db = new SochDatabase('./my_db');
 await db.put('users/alice', 'Alice Smith');
 console.log(await db.get('users/alice'));  // "Alice Smith"
 await db.close();
@@ -238,11 +239,11 @@ package main
 
 import (
     "fmt"
-    toondb "github.com/toondb/toondb-go"
+    sochdb "github.com/sochdb/sochdb-go"
 )
 
 func main() {
-    db, _ := toondb.Open("./my_db")
+    db, _ := sochdb.Open("./my_db")
     defer db.Close()
     
     db.Put([]byte("users/alice"), []byte("Alice Smith"))
@@ -254,7 +255,7 @@ func main() {
 #### Rust
 
 ```rust
-use toondb::Database;
+use sochdb::Database;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db = Database::open("./my_db")?;
@@ -269,12 +270,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### 🕸️ Graph Overlay for Agent Memory (v0.3.3)
 
-Build lightweight graph structures on top of ToonDB's KV storage for agent memory:
+Build lightweight graph structures on top of SochDB's KV storage for agent memory:
 
 #### Python
 
 ```python
-from toondb import Database, GraphOverlay
+from sochdb import Database, GraphOverlay
 
 db = Database.open("./my_db")
 graph = GraphOverlay(db, namespace="agent_memory")
@@ -308,14 +309,14 @@ package main
 
 import (
     "fmt"
-    toondb "github.com/toondb/toondb-go"
+    sochdb "github.com/sochdb/sochdb-go"
 )
 
 func main() {
-    db, _ := toondb.Open("./my_db")
+    db, _ := sochdb.Open("./my_db")
     defer db.Close()
     
-    graph := toondb.NewGraphOverlay(db, "agent_memory")
+    graph := sochdb.NewGraphOverlay(db, "agent_memory")
     
     // Build agent action graph
     graph.AddNode("action_1", map[string]interface{}{
@@ -338,7 +339,7 @@ func main() {
 #### Node.js/TypeScript
 
 ```typescript
-import { Database, GraphOverlay } from '@sushanth/toondb';
+import { Database, GraphOverlay } from '@sushanth/sochdb';
 
 const db = await Database.open('./my_db');
 const graph = new GraphOverlay(db, 'agent_memory');
@@ -369,7 +370,7 @@ await db.close();
 #### Python
 
 ```python
-from toondb import Database, CollectionConfig, DistanceMetric
+from sochdb import Database, CollectionConfig, DistanceMetric
 
 db = Database.open("./my_db")
 
@@ -390,7 +391,7 @@ with db.use_namespace("tenant_acme") as ns:
     collection.insert_multi(
         id="doc_123",
         vectors=[chunk_embedding_1, chunk_embedding_2, chunk_embedding_3],
-        metadata={"title": "ToonDB Guide", "author": "Alice"},
+        metadata={"title": "SochDB Guide", "author": "Alice"},
         chunk_texts=["Intro text", "Body text", "Conclusion"],
         aggregate="max"  # Use max score across chunks
     )
@@ -411,7 +412,7 @@ db.close()
 #### Python
 
 ```python
-from toondb import Database, ContextQuery, DeduplicationStrategy
+from sochdb import Database, ContextQuery, DeduplicationStrategy
 
 db = Database.open("./my_db")
 ns = db.namespace("tenant_acme")
@@ -444,7 +445,7 @@ db.close()
 #### Python
 
 ```python
-from toondb import VectorIndex
+from sochdb import VectorIndex
 import numpy as np
 
 # Create HNSW index
@@ -471,7 +472,7 @@ print(results)  # [{'id': '1', 'distance': 0.23}, ...]
 #### Node.js / TypeScript
 
 ```typescript
-import { VectorIndex } from '@sushanth/toondb';
+import { VectorIndex } from '@sushanth/sochdb';
 
 // Instantiate VectorIndex with path and config
 const index = new VectorIndex('./vectors', {
@@ -510,31 +511,31 @@ console.log(results);  // [{ id: 'doc1', distance: 0.23 }, ...]
 ```text
 App / Agent Runtime
    │
-   ├─ toondb-client (Rust / Python)
+   ├─ sochdb-client (Rust / Python)
    │
-   ├─ toondb-query   (planner + TOON encoder + context builder)
-   └─ toondb-kernel  (MVCC + WAL + catalog)
-        ├─ toondb-storage (columnar LSCS + mmap)
-        └─ toondb-index   (B-Tree + HNSW)
+   ├─ sochdb-query   (planner + TOON encoder + context builder)
+   └─ sochdb-kernel  (MVCC + WAL + catalog)
+        ├─ sochdb-storage (columnar LSCS + mmap)
+        └─ sochdb-index   (B-Tree + HNSW)
 ```
 
 ### Crate Overview
 
 | Crate | Description | Key Components |
 |-------|-------------|----------------|
-| `toondb-core` | Core types and TOON format | `ToonValue`, `ToonSchema`, `ToonTable`, codec |
-| `toondb-kernel` | Database kernel | WAL, MVCC, transactions, catalog |
-| `toondb-storage` | Storage engine | LSCS columnar, mmap, block checksums |
-| `toondb-index` | Index structures | B-Tree, HNSW vector index |
-| `toondb-query` | Query execution | Cost optimizer, context builder, TOON-QL |
-| `toondb-client` | Client SDK | `ToonConnection`, `PathQuery`, `BatchWriter` |
-| `toondb-plugin-logging` | Logging plugin | Structured logging, tracing |
+| `sochdb-core` | Core types and TOON format | `SochValue`, `SochSchema`, `SochTable`, codec |
+| `sochdb-kernel` | Database kernel | WAL, MVCC, transactions, catalog |
+| `sochdb-storage` | Storage engine | LSCS columnar, mmap, block checksums |
+| `sochdb-index` | Index structures | B-Tree, HNSW vector index |
+| `sochdb-query` | Query execution | Cost optimizer, context builder, SOCH-QL |
+| `sochdb-client` | Client SDK | `SochConnection`, `PathQuery`, `BatchWriter` |
+| `sochdb-plugin-logging` | Logging plugin | Structured logging, tracing |
 
 ---
 
 ## 📄 TOON Format
 
-TOON (Tabular Object-Oriented Notation) is ToonDB's compact serialization format designed specifically for LLM context windows—a token-optimized format that dramatically reduces token consumption.
+TOON (Tabular Object-Oriented Notation) is SochDB's compact serialization format designed specifically for LLM context windows—a token-optimized format that dramatically reduces token consumption.
 
 ### Format Specification
 
@@ -589,12 +590,12 @@ value        ::= null | bool | number | string | array | ref
 
 ## 🔍 Vector Search
 
-ToonDB includes an HNSW (Hierarchical Navigable Small World) index for similarity search.
+SochDB includes an HNSW (Hierarchical Navigable Small World) index for similarity search.
 
 ### Configuration
 
 ```rust
-use toondb_index::{HNSWIndex, HNSWConfig, DistanceMetric};
+use sochdb_index::{HNSWIndex, HNSWConfig, DistanceMetric};
 
 // Create index with custom parameters
 let config = HNSWConfig {
@@ -612,9 +613,9 @@ let index = HNSWIndex::with_config(config);
 ### Vector Operations
 
 ```rust
-use toondb::{ToonConnection, VectorCollection, SearchResult};
+use sochdb::{SochConnection, VectorCollection, SearchResult};
 
-let conn = ToonConnection::open("./vectors")?;
+let conn = SochConnection::open("./vectors")?;
 
 // Insert vectors
 let embedding: Vec<f32> = get_embedding("Hello world");
@@ -639,7 +640,7 @@ for result in results {
 
 ### Vector Quantization
 
-ToonDB supports optional quantization to reduce memory usage with minimal recall loss:
+SochDB supports optional quantization to reduce memory usage with minimal recall loss:
 
 | Precision | Memory | Search Latency | Use Case |
 |-----------|--------|----------------|----------|
@@ -653,7 +654,7 @@ ToonDB supports optional quantization to reduce memory usage with minimal recall
 
 ## 🔐 Transactions
 
-ToonDB provides **ACID transactions** with MVCC (Multi-Version Concurrency Control) and WAL durability.
+SochDB provides **ACID transactions** with MVCC (Multi-Version Concurrency Control) and WAL durability.
 
 ### ACID Guarantees
 
@@ -667,7 +668,7 @@ ToonDB provides **ACID transactions** with MVCC (Multi-Version Concurrency Contr
 ### Transaction Modes
 
 ```rust
-use toondb::{ToonConnection, ClientTransaction, IsolationLevel};
+use sochdb::{SochConnection, ClientTransaction, IsolationLevel};
 
 // Auto-commit (implicit transaction per operation)
 conn.put("users/1/name", b"Alice")?;
@@ -698,7 +699,7 @@ conn.commit(txn)?;
 ### WAL Sync Modes
 
 ```rust
-use toondb_kernel::SyncMode;
+use sochdb_kernel::SyncMode;
 
 let config = DatabaseConfig {
     sync_mode: SyncMode::Normal,  // Group commit (recommended)
@@ -710,7 +711,7 @@ let config = DatabaseConfig {
 
 ### Durability Presets
 
-ToonDB provides pre-configured durability settings for common use cases:
+SochDB provides pre-configured durability settings for common use cases:
 
 | Preset | Sync Mode | Group Commit | Best For |
 |--------|-----------|--------------|----------|
@@ -719,7 +720,7 @@ ToonDB provides pre-configured durability settings for common use cases:
 | `max_durability()` | Full | Disabled | Financial/critical data |
 
 ```rust
-use toondb::ConnectionConfig;
+use sochdb::ConnectionConfig;
 
 // High-throughput batch processing
 let config = ConnectionConfig::throughput_optimized();
@@ -735,7 +736,7 @@ let config = ConnectionConfig::max_durability();
 
 ## 🌳 Path API
 
-ToonDB's unique path-based API provides **O(|path|)** resolution via the Trie-Columnar Hybrid (TCH) structure.
+SochDB's unique path-based API provides **O(|path|)** resolution via the Trie-Columnar Hybrid (TCH) structure.
 
 ### Path Format
 
@@ -747,9 +748,9 @@ table/row_id/column
 ### Operations
 
 ```rust
-use toondb::{ToonConnection, PathQuery};
+use sochdb::{SochConnection, PathQuery};
 
-let conn = ToonConnection::open("./data")?;
+let conn = SochConnection::open("./data")?;
 
 // Put a value at a path
 conn.put("users/1/name", b"Alice")?;
@@ -798,10 +799,10 @@ vs    B-Tree (O(log N))
 
 ### Optional Ordered Index
 
-ToonDB's ordered index can be disabled for write-optimized workloads:
+SochDB's ordered index can be disabled for write-optimized workloads:
 
 ```rust
-use toondb::ConnectionConfig;
+use sochdb::ConnectionConfig;
 
 // Default: ordered index enabled (O(log N) prefix scans)
 let config = ConnectionConfig::default();
@@ -824,8 +825,8 @@ config.enable_ordered_index = false;
 Build LLM context with automatic token budget management.
 
 ```rust
-use toondb_query::{ContextSection, ContextSelectQuery};
-use toondb::ContextQueryBuilder;
+use sochdb_query::{ContextSection, ContextSelectQuery};
+use sochdb::ContextQueryBuilder;
 
 let context = ContextQueryBuilder::new()
     .for_session("session_123")
@@ -852,7 +853,7 @@ let context = ContextQueryBuilder::new()
         .done()
     
     .truncation(TruncationStrategy::PriorityDrop)
-    .format(ContextFormat::Toon)
+    .format(ContextFormat::Soch)
     .execute()?;
 
 println!("Tokens used: {}/{}", context.token_count, 4096);
@@ -863,7 +864,7 @@ println!("Context:\n{}", context.context);
 
 ## 🔌 Plugin System
 
-ToonDB uses a plugin architecture for extensibility without dependency bloat.
+SochDB uses a plugin architecture for extensibility without dependency bloat.
 
 ### Extension Types
 
@@ -877,7 +878,7 @@ ToonDB uses a plugin architecture for extensibility without dependency bloat.
 ### Implementing a Plugin
 
 ```rust
-use toondb_kernel::{Extension, ExtensionInfo, ObservabilityExtension};
+use sochdb_kernel::{Extension, ExtensionInfo, ObservabilityExtension};
 
 struct PrometheusMetrics { /* ... */ }
 
@@ -923,9 +924,9 @@ db.plugins().register_observability(Box::new(PrometheusMetrics::new()))?;
 High-throughput batch operations with group commit optimization.
 
 ```rust
-use toondb::{ToonConnection, BatchWriter, GroupCommitConfig};
+use sochdb::{SochConnection, BatchWriter, GroupCommitConfig};
 
-let conn = ToonConnection::open("./data")?;
+let conn = SochConnection::open("./data")?;
 
 // Batch insert with auto-commit
 let result = conn.batch()
@@ -940,13 +941,13 @@ println!("Executed: {}, Failed: {}, Duration: {}ms",
     result.ops_executed, result.ops_failed, result.duration_ms);
 
 // Bulk insert for large datasets
-let rows: Vec<Vec<(&str, ToonValue)>> = generate_rows(10_000);
+let rows: Vec<Vec<(&str, SochValue)>> = generate_rows(10_000);
 let result = conn.bulk_insert("events", rows)?;
 ```
 
 ### Group Commit Formula
 
-ToonDB calculates optimal batch size using:
+SochDB calculates optimal batch size using:
 
 ```
 N* = √(2 × L_fsync × λ / C_wait)
@@ -965,7 +966,7 @@ Where:
 
 ### Real-World Vector Search Performance
 
-We benchmarked ToonDB's HNSW index against ChromaDB and LanceDB using **real embeddings from Azure OpenAI** (not synthetic vectors). This provides realistic performance numbers for production RAG applications.
+We benchmarked SochDB's HNSW index against ChromaDB and LanceDB using **real embeddings from Azure OpenAI** (not synthetic vectors). This provides realistic performance numbers for production RAG applications.
 
 #### Test Setup
 - **Corpus**: 1,000 documents (generated technical content)
@@ -978,13 +979,13 @@ We benchmarked ToonDB's HNSW index against ChromaDB and LanceDB using **real emb
 
 | Database | Insert 1K Vectors | Insert Rate | Search p50 | Search p99 |
 |----------|-------------------|-------------|------------|------------|
-| **ToonDB** | 133.3ms | 7,502 vec/s | **0.45ms** ✅ | **0.61ms** ✅ |
+| **SochDB** | 133.3ms | 7,502 vec/s | **0.45ms** ✅ | **0.61ms** ✅ |
 | ChromaDB | 308.9ms | 3,237 vec/s | 1.37ms | 1.73ms |
 | LanceDB | 55.2ms | 18,106 vec/s | 9.86ms | 21.63ms |
 
 **Key Findings**:
-- **ToonDB search is 3x faster than ChromaDB** (0.45ms vs 1.37ms p50)
-- **ToonDB search is 22x faster than LanceDB** (0.45ms vs 9.86ms p50)
+- **SochDB search is 3x faster than ChromaDB** (0.45ms vs 1.37ms p50)
+- **SochDB search is 22x faster than LanceDB** (0.45ms vs 9.86ms p50)
 - LanceDB has fastest inserts (columnar-optimized), but slowest search
 - All databases maintain sub-25ms p99 latencies
 
@@ -993,16 +994,16 @@ We benchmarked ToonDB's HNSW index against ChromaDB and LanceDB using **real emb
 | Component | Time | % of Total |
 |-----------|------|------------|
 | **Embedding API (Azure OpenAI)** | 59.5s | **99.7%** |
-| ToonDB Insert (1K vectors) | 0.133s | 0.2% |
-| ToonDB Search (100 queries) | 0.046s | 0.1% |
+| SochDB Insert (1K vectors) | 0.133s | 0.2% |
+| SochDB Search (100 queries) | 0.046s | 0.1% |
 
-> 🎯 **The embedding API is 333x slower than ToonDB operations.** In production RAG systems, the database is never the bottleneck—your LLM API calls are.
+> 🎯 **The embedding API is 333x slower than SochDB operations.** In production RAG systems, the database is never the bottleneck—your LLM API calls are.
 
 ---
 
 ### Recall Benchmarks (Search Quality)
 
-ToonDB's HNSW index achieves **>98% recall@10** with sub-millisecond latency using real Azure OpenAI embeddings.
+SochDB's HNSW index achieves **>98% recall@10** with sub-millisecond latency using real Azure OpenAI embeddings.
 
 #### Test Methodology
 - Ground truth computed via brute-force cosine similarity
@@ -1048,7 +1049,7 @@ ToonDB's HNSW index achieves **>98% recall@10** with sub-millisecond latency usi
 
 ### I/O Reduction (Columnar Storage)
 
-| Query | Row Store | ToonDB Columnar | Reduction |
+| Query | Row Store | SochDB Columnar | Reduction |
 |-------|-----------|-----------------|-----------| 
 | SELECT 2 of 10 cols | 100% | 20% | **80%** |
 | SELECT 1 of 20 cols | 100% | 5% | **95%** |
@@ -1057,14 +1058,14 @@ ToonDB's HNSW index achieves **>98% recall@10** with sub-millisecond latency usi
 
 ### KV Performance (vs SQLite)
 
-> **Methodology**: ToonDB vs SQLite under similar durability settings (`WAL` mode, `synchronous=NORMAL`). Results on Apple M-series hardware, 100k records.
+> **Methodology**: SochDB vs SQLite under similar durability settings (`WAL` mode, `synchronous=NORMAL`). Results on Apple M-series hardware, 100k records.
 
 | Database | Mode | Insert Rate | Notes |
 |----------|------|-------------|-------|
 | **SQLite** | File (WAL) | ~1.16M ops/sec | Industry standard |
-| **ToonDB** | Embedded (WAL) | ~760k ops/sec | Group commit disabled |
-| **ToonDB** | put_raw | ~1.30M ops/sec | Direct storage layer |
-| **ToonDB** | insert_row_slice | ~1.29M ops/sec | Zero-allocation API |
+| **SochDB** | Embedded (WAL) | ~760k ops/sec | Group commit disabled |
+| **SochDB** | put_raw | ~1.30M ops/sec | Direct storage layer |
+| **SochDB** | insert_row_slice | ~1.29M ops/sec | Zero-allocation API |
 
 ---
 
@@ -1078,22 +1079,22 @@ source .venv312/bin/activate
 
 # Install dependencies
 pip install chromadb lancedb python-dotenv requests numpy
-pip install -e toondb-python-sdk/
+pip install -e sochdb-python-sdk/
 
-# Build ToonDB release library
+# Build SochDB release library
 cargo build --release
 
 # Run real embedding benchmark (requires Azure OpenAI credentials in .env)
-TOONDB_LIB_PATH=target/release python3 benchmarks/real_embedding_benchmark.py
+SOCHDB_LIB_PATH=target/release python3 benchmarks/real_embedding_benchmark.py
 
 # Run recall benchmark
-TOONDB_LIB_PATH=target/release python3 benchmarks/recall_benchmark.py
+SOCHDB_LIB_PATH=target/release python3 benchmarks/recall_benchmark.py
 
-# Run Rust benchmarks (ToonDB vs SQLite)
+# Run Rust benchmarks (SochDB vs SQLite)
 cargo run -p benchmarks --release
 ```
 
-> **Note**: Performance varies by workload. ToonDB excels in LLM context assembly scenarios (token-efficient output, vector search, context budget management). SQLite remains the gold standard for general-purpose relational workloads.
+> **Note**: Performance varies by workload. SochDB excels in LLM context assembly scenarios (token-efficient output, vector search, context budget management). SQLite remains the gold standard for general-purpose relational workloads.
 
 ---
 
@@ -1151,11 +1152,11 @@ pub struct HNSWConfig {
 
 ## 📚 API Reference
 
-### ToonConnection
+### SochConnection
 
 | Method | Description | Returns |
 |--------|-------------|---------|
-| `open(path)` | Open/create database | `Result<ToonConnection>` |
+| `open(path)` | Open/create database | `Result<SochConnection>` |
 | `create_table(schema)` | Create a new table | `Result<CreateResult>` |
 | `drop_table(name)` | Drop a table | `Result<DropResult>` |
 | `batch()` | Start a batch writer | `BatchWriter` |
@@ -1188,7 +1189,7 @@ pub struct HNSWConfig {
 | `execute()` | Execute query | `Result<QueryResult>` |
 | `execute_toon()` | Execute and return TOON | `Result<String>` |
 
-### ToonValue
+### SochValue
 
 | Variant | Rust Type | Description |
 |---------|-----------|-------------|
@@ -1199,11 +1200,11 @@ pub struct HNSWConfig {
 | `Float(f64)` | `f64` | 64-bit float |
 | `Text(String)` | `String` | UTF-8 string |
 | `Binary(Vec<u8>)` | `Vec<u8>` | Binary data |
-| `Array(Vec<ToonValue>)` | `Vec<ToonValue>` | Array of values |
-| `Object(HashMap<String, ToonValue>)` | `HashMap` | Key-value object |
+| `Array(Vec<SochValue>)` | `Vec<SochValue>` | Array of values |
+| `Object(HashMap<String, SochValue>)` | `HashMap` | Key-value object |
 | `Ref { table, id }` | — | Foreign key reference |
 
-### ToonType
+### SochType
 
 | Type | Description |
 |------|-------------|
@@ -1231,8 +1232,8 @@ pub struct HNSWConfig {
 
 ```bash
 # Clone the repository
-git clone https://github.com/toondb/toondb.git
-cd toondb
+git clone https://github.com/sochdb/sochdb.git
+cd sochdb
 
 # Build all crates
 cargo build --release
@@ -1248,9 +1249,9 @@ cargo bench
 
 | Feature | Crate | Description |
 |---------|-------|-------------|
-| `simd` | toondb-client | SIMD optimizations for column access |
-| `embedded` | toondb-client | Use kernel directly (no IPC) |
-| `full` | toondb-kernel | All kernel features |
+| `simd` | sochdb-client | SIMD optimizations for column access |
+| `embedded` | sochdb-client | Use kernel directly (no IPC) |
+| `full` | sochdb-kernel | All kernel features |
 
 ---
 
@@ -1272,9 +1273,9 @@ cargo bench
 
 ---
 
-## 🤖 Vision: ToonDB as an Agentic Framework Foundation
+## 🤖 Vision: SochDB as an Agentic Framework Foundation
 
-ToonDB is designed to be the **brain, memory, and registry** for AI agents—not by embedding a programming language, but by storing agent metadata that external runtimes interpret.
+SochDB is designed to be the **brain, memory, and registry** for AI agents—not by embedding a programming language, but by storing agent metadata that external runtimes interpret.
 
 ### The Architecture
 
@@ -1284,7 +1285,7 @@ ToonDB is designed to be the **brain, memory, and registry** for AI agents—not
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐   │
-│  │ Agent Runtime│    │    ToonDB    │    │     LLM      │   │
+│  │ Agent Runtime│    │    SochDB    │    │     LLM      │   │
 │  │  (executor)  │◄──►│  (metadata)  │    │   (worker)   │   │
 │  └──────┬───────┘    └──────────────┘    └──────▲───────┘   │
 │         │                                        │           │
@@ -1297,7 +1298,7 @@ ToonDB is designed to be the **brain, memory, and registry** for AI agents—not
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### What ToonDB Stores
+### What SochDB Stores
 
 | Table | Purpose |
 |-------|---------|
@@ -1351,7 +1352,7 @@ This keeps prompts small and stable. The runtime handles control flow.
 
 | Benefit | Description |
 |---------|-------------|
-| **Separation of concerns** | ToonDB = data, Runtime = execution, LLM = reasoning |
+| **Separation of concerns** | SochDB = data, Runtime = execution, LLM = reasoning |
 | **Language-agnostic** | Rust, Python, TypeScript runtimes share the same flows |
 | **Debuggable** | Every step, state change, and decision is in the DB |
 | **Learnable** | Reflection nodes + stored feedback enable continuous improvement |
@@ -1374,12 +1375,12 @@ These ship as rows in `agent_flows` / `agent_nodes` that you can clone and custo
 
 > **Local-first success unlocks the cloud.**
 
-ToonDB is currently a **local-first, embedded database** — and it's working great! Based on the success of this MVP, I'm exploring a cloud offering:
+SochDB is currently a **local-first, embedded database** — and it's working great! Based on the success of this MVP, I'm exploring a cloud offering:
 
 | Phase | Status | Description |
 |-------|--------|-------------|
 | **Local MVP** | ✅ Live | Embedded + IPC modes, full ACID, vector search |
-| **Cloud (ToonDB Cloud)** | 🚧 On the way | Hosted, managed ToonDB with sync |
+| **Cloud (SochDB Cloud)** | 🚧 On the way | Hosted, managed SochDB with sync |
 
 **Your feedback shapes the cloud roadmap.** If you're interested in a hosted solution, let us know what you need!
 
@@ -1389,19 +1390,19 @@ ToonDB is currently a **local-first, embedded database** — and it's working gr
 
 > **This is an MVP — and your support makes it better.**
 
-ToonDB started as an experiment: *what if databases were designed for LLMs from day one?* The result is what you see here — a working, tested, and (I hope) useful database.
+SochDB started as an experiment: *what if databases were designed for LLMs from day one?* The result is what you see here — a working, tested, and (I hope) useful database.
 
-But here's the thing: **software gets better with users.** Every bug report, feature request, and "hey, this broke" message helps ToonDB become more robust. You might find rough edges. You might encounter surprises. That's expected — and fixable!
+But here's the thing: **software gets better with users.** Every bug report, feature request, and "hey, this broke" message helps SochDB become more robust. You might find rough edges. You might encounter surprises. That's expected — and fixable!
 
 **What I need from you:**
 - 🐛 **Report bugs** — even small ones
 - 💡 **Request features** — what's missing for your use case?
-- ⭐ **Star the repo** — it helps others discover ToonDB
+- ⭐ **Star the repo** — it helps others discover SochDB
 - 📣 **Share your experience** — blog posts, tweets, anything
 
-Your usage and feedback don't just help me — they help everyone building with ToonDB. Let's make this great together.
+Your usage and feedback don't just help me — they help everyone building with SochDB. Let's make this great together.
 
-> **Note:** ToonDB is a **single-person project** built over weekends and spare time. I'm the sole developer, architect, and maintainer. This means you might find rough edges, incomplete features, or areas that need polish. The good news? Your contributions can make a real impact. More hands on this project means more advanced features, better stability, and faster progress. Every PR, issue report, and suggestion directly shapes what ToonDB becomes.
+> **Note:** SochDB is a **single-person project** built over weekends and spare time. I'm the sole developer, architect, and maintainer. This means you might find rough edges, incomplete features, or areas that need polish. The good news? Your contributions can make a real impact. More hands on this project means more advanced features, better stability, and faster progress. Every PR, issue report, and suggestion directly shapes what SochDB becomes.
 
 *— Sushanth*
 
@@ -1443,10 +1444,10 @@ Apache-2.0
 - ARIES: Mohan et al., "ARIES: A Transaction Recovery Method Supporting Fine-Granularity Locking and Partial Rollbacks Using Write-Ahead Logging", ACM TODS 1992
 - SSI: Cahill et al., "Serializable Isolation for Snapshot Databases", ACM SIGMOD 2008
 - LSM-Tree: O'Neil et al., "The Log-Structured Merge-Tree (LSM-Tree)", Acta Informatica 1996
-- Toon https://github.com/toon-format/toon
+- Soch https://github.com/toon-format/toon
 
 ---
 
 **Built with ❤️ for the AI era**
 
-[GitHub](https://github.com/toondb/toondb) • [Documentation](https://docs.toondb.dev)
+[GitHub](https://github.com/sochdb/sochdb) • [Documentation](https://docs.sochdb.dev)

@@ -1,11 +1,11 @@
 # =============================================================================
-# ToonDB Node.js SDK - Azure DevOps Release Pipeline
+# SochDB Node.js SDK - Azure DevOps Release Pipeline
 # =============================================================================
 #
 # Enterprise build and deploy process for npm package.
 #
 # Required Variable Groups:
-#   - toondb-npm-secrets
+#   - sochdb-npm-secrets
 #     - NPM_TOKEN
 #
 # =============================================================================
@@ -22,7 +22,7 @@ parameters:
     default: false
 
 variables:
-  - group: toondb-npm-secrets
+  - group: sochdb-npm-secrets
   - name: NODE_VERSION
     value: '20.x'
 
@@ -44,27 +44,27 @@ stages:
             displayName: 'Install Node.js'
 
           - script: |
-              cd toondb-js
+              cd sochdb-js
               npm ci
             displayName: 'Install dependencies'
 
           - script: |
-              cd toondb-js
+              cd sochdb-js
               npm run lint
             displayName: 'Lint'
 
           - script: |
-              cd toondb-js
+              cd sochdb-js
               npm run build
             displayName: 'Build'
 
           - script: |
-              cd toondb-js
+              cd sochdb-js
               npm test
             displayName: 'Test'
 
           - script: |
-              cd toondb-js
+              cd sochdb-js
               # Verify version matches
               PACKAGE_VERSION=$(node -p "require('./package.json').version")
               if [ "$PACKAGE_VERSION" != "${{ parameters.version }}" ]; then
@@ -95,22 +95,22 @@ stages:
               echo "##vso[task.prependpath]$HOME/.cargo/bin"
             displayName: 'Install Rust'
 
-          - script: cargo build --release -p toondb-tools
-            displayName: 'Build toondb-bulk binary'
+          - script: cargo build --release -p sochdb-tools
+            displayName: 'Build sochdb-bulk binary'
 
           - script: |
-              mkdir -p toondb-js/_bin/x86_64-unknown-linux-gnu
-              cp target/release/toondb-bulk toondb-js/_bin/x86_64-unknown-linux-gnu/
-              chmod +x toondb-js/_bin/x86_64-unknown-linux-gnu/toondb-bulk
+              mkdir -p sochdb-js/_bin/x86_64-unknown-linux-gnu
+              cp target/release/sochdb-bulk sochdb-js/_bin/x86_64-unknown-linux-gnu/
+              chmod +x sochdb-js/_bin/x86_64-unknown-linux-gnu/sochdb-bulk
             displayName: 'Copy binary'
 
           - script: |
-              cd toondb-js
+              cd sochdb-js
               npm ci
               npm run build
             displayName: 'Build package'
 
-          - publish: toondb-js
+          - publish: sochdb-js
             artifact: npm-package-linux
 
       - job: BuildMacOS
@@ -129,22 +129,22 @@ stages:
 
           - script: |
               rustup target add aarch64-apple-darwin
-              cargo build --release -p toondb-tools --target aarch64-apple-darwin
-            displayName: 'Build toondb-bulk binary'
+              cargo build --release -p sochdb-tools --target aarch64-apple-darwin
+            displayName: 'Build sochdb-bulk binary'
 
           - script: |
-              mkdir -p toondb-js/_bin/aarch64-apple-darwin
-              cp target/aarch64-apple-darwin/release/toondb-bulk toondb-js/_bin/aarch64-apple-darwin/
-              chmod +x toondb-js/_bin/aarch64-apple-darwin/toondb-bulk
+              mkdir -p sochdb-js/_bin/aarch64-apple-darwin
+              cp target/aarch64-apple-darwin/release/sochdb-bulk sochdb-js/_bin/aarch64-apple-darwin/
+              chmod +x sochdb-js/_bin/aarch64-apple-darwin/sochdb-bulk
             displayName: 'Copy binary'
 
           - script: |
-              cd toondb-js
+              cd sochdb-js
               npm ci
               npm run build
             displayName: 'Build package'
 
-          - publish: toondb-js/_bin/aarch64-apple-darwin
+          - publish: sochdb-js/_bin/aarch64-apple-darwin
             artifact: npm-binary-macos
 
       - job: BuildWindows
@@ -160,21 +160,21 @@ stages:
               curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
             displayName: 'Install Rust'
 
-          - script: cargo build --release -p toondb-tools
-            displayName: 'Build toondb-bulk binary'
+          - script: cargo build --release -p sochdb-tools
+            displayName: 'Build sochdb-bulk binary'
 
           - powershell: |
-              New-Item -ItemType Directory -Force -Path toondb-js\_bin\x86_64-pc-windows-msvc
-              Copy-Item target\release\toondb-bulk.exe toondb-js\_bin\x86_64-pc-windows-msvc\
+              New-Item -ItemType Directory -Force -Path sochdb-js\_bin\x86_64-pc-windows-msvc
+              Copy-Item target\release\sochdb-bulk.exe sochdb-js\_bin\x86_64-pc-windows-msvc\
             displayName: 'Copy binary'
 
           - script: |
-              cd toondb-js
+              cd sochdb-js
               npm ci
               npm run build
             displayName: 'Build package'
 
-          - publish: toondb-js\_bin\x86_64-pc-windows-msvc
+          - publish: sochdb-js\_bin\x86_64-pc-windows-msvc
             artifact: npm-binary-windows
 
   # ===========================================================================
@@ -237,7 +237,7 @@ stages:
         steps:
           - script: |
               echo "========================================"
-              echo "🚀 ToonDB Node.js SDK Release v${{ parameters.version }}"
+              echo "🚀 SochDB Node.js SDK Release v${{ parameters.version }}"
               echo "========================================"
               echo ""
               if [ "${{ parameters.dryRun }}" = "True" ]; then
@@ -246,8 +246,8 @@ stages:
                 echo "Mode: Production Release"
               fi
               echo ""
-              echo "Package: @sushanth/toondb"
-              echo "Registry: https://www.npmjs.com/package/@sushanth/toondb"
+              echo "Package: @sushanth/sochdb"
+              echo "Registry: https://www.npmjs.com/package/@sushanth/sochdb"
               echo ""
               echo "========================================"
             displayName: 'Release summary'

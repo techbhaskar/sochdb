@@ -1,6 +1,6 @@
-# Contributing to ToonDB
+# Contributing to SochDB
 
-Thank you for your interest in contributing to ToonDB! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to SochDB! This document provides guidelines and information for contributors.
 
 ---
 
@@ -34,8 +34,8 @@ We are committed to providing a welcoming and inclusive environment. Please read
 
 ```bash
 # Clone, build, and test in one go
-git clone https://github.com/toondb/toondb.git && \
-cd toondb && \
+git clone https://github.com/sochdb/sochdb.git && \
+cd sochdb && \
 make setup
 ```
 
@@ -63,9 +63,9 @@ If you prefer manual setup or `make setup` fails:
 
 ```bash
 # 1. Fork and clone
-git clone https://github.com/YOUR_USERNAME/toondb.git
-cd toondb
-git remote add upstream https://github.com/toondb/toondb.git
+git clone https://github.com/YOUR_USERNAME/sochdb.git
+cd sochdb
+git remote add upstream https://github.com/sochdb/sochdb.git
 
 # 2. Install Rust (if needed)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -138,11 +138,11 @@ Create `.vscode/launch.json` for debugging:
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug toondb-server",
+            "name": "Debug sochdb-server",
             "cargo": {
-                "args": ["build", "--bin", "toondb-server"]
+                "args": ["build", "--bin", "sochdb-server"]
             },
-            "args": ["--config", "toondb-server-config.toml"],
+            "args": ["--config", "sochdb-server-config.toml"],
             "cwd": "${workspaceFolder}"
         }
     ]
@@ -165,7 +165,7 @@ Recommended extensions:
 
 ```bash
 # Enable debug logging
-export RUST_LOG=toondb=debug
+export RUST_LOG=sochdb=debug
 
 # Enable backtraces
 export RUST_BACKTRACE=1
@@ -181,7 +181,7 @@ RUSTFLAGS="-Z sanitizer=address" cargo +nightly test
 Understanding the codebase layout:
 
 ```
-toondb/
+sochdb/
 ├── Cargo.toml              # Workspace manifest
 ├── README.md               # Project overview
 ├── CONTRIBUTING.md         # This file
@@ -196,46 +196,46 @@ toondb/
 │   ├── tutorials/          # Learning-oriented guides
 │   └── cookbook/           # Problem-oriented recipes
 │
-├── toondb-core/            # 🧱 Core types & utilities
+├── sochdb-core/            # 🧱 Core types & utilities
 │   └── src/
-│       ├── toon.rs         # ToonValue enum
+│       ├── toon.rs         # SochValue enum
 │       ├── toon_codec.rs   # TOON format encoder/decoder
 │       ├── schema_*.rs     # Schema definitions
 │       └── path_trie.rs    # Trie-based path resolution
 │
-├── toondb-kernel/          # ⚙️ Database engine
+├── sochdb-kernel/          # ⚙️ Database engine
 │   └── src/
 │       ├── wal.rs          # Write-ahead log
 │       ├── transaction.rs  # MVCC transactions
 │       ├── plugin.rs       # Plugin system
 │       └── wasm_*.rs       # WASM runtime
 │
-├── toondb-index/           # 🔍 Index implementations
+├── sochdb-index/           # 🔍 Index implementations
 │   └── src/
 │       ├── hnsw.rs         # HNSW vector index
 │       ├── btree.rs        # B-tree index
 │       └── bloom.rs        # Bloom filters
 │
-├── toondb-query/           # 🔎 Query engine
+├── sochdb-query/           # 🔎 Query engine
 │   └── src/
 │       ├── parser.rs       # Query parsing
 │       ├── planner.rs      # Query planning
 │       └── executor.rs     # Query execution
 │
-├── toondb-client/          # 📦 Client SDK
+├── sochdb-client/          # 📦 Client SDK
 │   └── src/
 │       ├── connection.rs   # Database connection
 │       └── batch.rs        # Batch operations
 │
-├── toondb-python/          # 🐍 Python bindings (PyO3)
+├── sochdb-python/          # 🐍 Python bindings (PyO3)
 │   ├── src/lib.rs          # Rust FFI code
 │   └── python/             # Python package
 │
-├── toondb-mcp/             # 🤖 MCP server for LLMs
+├── sochdb-mcp/             # 🤖 MCP server for LLMs
 │   └── src/
 │       └── main.rs         # MCP protocol implementation
 │
-├── toondb-grpc/            # 🌐 gRPC server
+├── sochdb-grpc/            # 🌐 gRPC server
 │   ├── proto/              # Protocol buffers
 │   └── src/
 │
@@ -252,10 +252,10 @@ toondb/
 
 | File | Why It Matters |
 |------|---------------|
-| [toondb-core/src/toon.rs](toondb-core/src/toon.rs) | Core value type, start here |
-| [toondb-kernel/src/wal.rs](toondb-kernel/src/wal.rs) | Durability implementation |
-| [toondb-index/src/hnsw.rs](toondb-index/src/hnsw.rs) | Vector search algorithm |
-| [toondb-kernel/src/transaction.rs](toondb-kernel/src/transaction.rs) | MVCC implementation |
+| [sochdb-core/src/toon.rs](sochdb-core/src/toon.rs) | Core value type, start here |
+| [sochdb-kernel/src/wal.rs](sochdb-kernel/src/wal.rs) | Durability implementation |
+| [sochdb-index/src/hnsw.rs](sochdb-index/src/hnsw.rs) | Vector search algorithm |
+| [sochdb-kernel/src/transaction.rs](sochdb-kernel/src/transaction.rs) | MVCC implementation |
 
 ---
 
@@ -265,7 +265,7 @@ toondb/
 
 ```
                     ┌─────────────────┐
-                    │  toondb-client  │
+                    │  sochdb-client  │
                     │   (SDK/API)     │
                     └────────┬────────┘
                              │
@@ -273,7 +273,7 @@ toondb/
               │              │              │
               ▼              ▼              ▼
        ┌──────────┐   ┌──────────┐   ┌──────────┐
-       │ toondb-  │   │ toondb-  │   │ toondb-  │
+       │ sochdb-  │   │ sochdb-  │   │ sochdb-  │
        │  query   │   │  index   │   │  kernel  │
        └────┬─────┘   └────┬─────┘   └────┬─────┘
             │              │              │
@@ -283,7 +283,7 @@ toondb/
                     │             │
                     ▼             ▼
              ┌──────────┐  ┌──────────┐
-             │ toondb-  │  │ toondb-  │
+             │ sochdb-  │  │ sochdb-  │
              │ storage  │  │  core    │
              └──────────┘  └──────────┘
 ```
@@ -295,7 +295,7 @@ toondb/
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────┐
-│                    toondb-client                         │
+│                    sochdb-client                         │
 │  • Parse query                                          │
 │  • Validate schema                                       │
 │  • Format TOON output                                    │
@@ -303,7 +303,7 @@ toondb/
                           │
                           ▼
 ┌─────────────────────────────────────────────────────────┐
-│                    toondb-kernel                         │
+│                    sochdb-kernel                         │
 │  • Begin transaction (MVCC snapshot)                    │
 │  • Acquire locks if needed                              │
 │  • Execute operation                                     │
@@ -314,7 +314,7 @@ toondb/
             │                           │
             ▼                           ▼
 ┌───────────────────────┐   ┌───────────────────────┐
-│    toondb-index       │   │    toondb-storage     │
+│    sochdb-index       │   │    sochdb-storage     │
 │  • HNSW search        │   │  • Read/write blocks  │
 │  • B-tree lookup      │   │  • Compression        │
 │  • Bloom filter       │   │  • Memtable/SST       │
@@ -325,13 +325,13 @@ toondb/
 
 | Component | Location | Responsibility |
 |-----------|----------|----------------|
-| **ToonValue** | `toondb-core/src/toon.rs` | Core value type |
-| **TOON Codec** | `toondb-core/src/toon_codec.rs` | Serialization/parsing |
-| **WAL** | `toondb-kernel/src/wal.rs` | Write-ahead logging |
-| **MVCC** | `toondb-kernel/src/transaction.rs` | Multi-version concurrency |
-| **HNSW** | `toondb-index/src/hnsw.rs` | Vector index |
-| **LSCS** | `toondb-storage/src/lscs.rs` | Columnar storage |
-| **TCH** | `toondb-client/src/connection.rs` | Trie-Columnar Hybrid |
+| **SochValue** | `sochdb-core/src/toon.rs` | Core value type |
+| **TOON Codec** | `sochdb-core/src/toon_codec.rs` | Serialization/parsing |
+| **WAL** | `sochdb-kernel/src/wal.rs` | Write-ahead logging |
+| **MVCC** | `sochdb-kernel/src/transaction.rs` | Multi-version concurrency |
+| **HNSW** | `sochdb-index/src/hnsw.rs` | Vector index |
+| **LSCS** | `sochdb-storage/src/lscs.rs` | Columnar storage |
+| **TCH** | `sochdb-client/src/connection.rs` | Trie-Columnar Hybrid |
 
 ### Design Principles
 
@@ -419,10 +419,10 @@ crate/
 cargo test --all
 
 # Specific crate
-cargo test -p toondb-kernel
+cargo test -p sochdb-kernel
 
 # Specific test
-cargo test -p toondb-index test_hnsw_insert
+cargo test -p sochdb-index test_hnsw_insert
 
 # With coverage (requires cargo-tarpaulin)
 cargo tarpaulin --all --out Html
@@ -478,9 +478,9 @@ use proptest::prelude::*;
 
 proptest! {
     #[test]
-    fn encode_decode_roundtrip(value: ToonValue) {
+    fn encode_decode_roundtrip(value: SochValue) {
         let encoded = value.encode();
-        let decoded = ToonValue::decode(&encoded).unwrap();
+        let decoded = SochValue::decode(&encoded).unwrap();
         prop_assert_eq!(value, decoded);
     }
 }
@@ -508,7 +508,7 @@ criterion_main!(benches);
 
 Run benchmarks:
 ```bash
-cargo bench -p toondb-index
+cargo bench -p sochdb-index
 ```
 
 ---
@@ -730,7 +730,7 @@ fn compute_distance(&self, a: &[f32], b: &[f32]) -> f32 {
 //! # Examples
 //!
 //! ```
-//! use toondb::SomeType;
+//! use sochdb::SomeType;
 //! let x = SomeType::new();
 //! ```
 
@@ -812,7 +812,7 @@ See [docs/testing.md](docs/testing.md) for comprehensive testing guidelines.
 cargo test --all
 
 # Run specific crate tests
-cargo test -p toondb-kernel
+cargo test -p sochdb-kernel
 
 # Run with output
 cargo test -- --nocapture
@@ -821,7 +821,7 @@ cargo test -- --nocapture
 cargo test -- --ignored
 
 # Run benchmarks
-cargo bench -p toondb-index
+cargo bench -p sochdb-index
 
 # Coverage (requires cargo-tarpaulin)
 cargo tarpaulin --out Html --output-dir coverage/
@@ -831,9 +831,9 @@ cargo tarpaulin --out Html --output-dir coverage/
 
 | Crate | Minimum Coverage |
 |-------|------------------|
-| toondb-core | 80% |
-| toondb-kernel | 75% |
-| toondb-index | 70% |
+| sochdb-core | 80% |
+| sochdb-kernel | 75% |
+| sochdb-index | 70% |
 | Others | 60% |
 
 PRs that drop coverage below these thresholds may be rejected.
@@ -869,7 +869,7 @@ Look for issues labeled:
 
 ### Maintainers
 
-PRs require approval from at least one maintainer. Core crates (`toondb-kernel`, `toondb-core`) require two approvals.
+PRs require approval from at least one maintainer. Core crates (`sochdb-kernel`, `sochdb-core`) require two approvals.
 
 ### Release Process
 
@@ -888,6 +888,6 @@ We follow [Semantic Versioning](https://semver.org/):
 
 ---
 
-Thank you for contributing to ToonDB! 🎉
+Thank you for contributing to SochDB! 🎉
 
 *Your contribution helps make LLM-native data storage better for everyone.*

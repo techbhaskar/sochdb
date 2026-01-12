@@ -1,10 +1,10 @@
-# ToonDB Analytics
+# SochDB Analytics
 
-ToonDB includes optional, privacy-respecting analytics to help improve the database. This page explains what data is collected, how to disable analytics, and our privacy practices.
+SochDB includes optional, privacy-respecting analytics to help improve the database. This page explains what data is collected, how to disable analytics, and our privacy practices.
 
 ## What Is Collected
 
-ToonDB collects **anonymous usage metrics** to help us understand:
+SochDB collects **anonymous usage metrics** to help us understand:
 
 - Which SDK features are most used
 - Performance characteristics (latency, throughput)
@@ -45,55 +45,55 @@ To disable all analytics, set the environment variable:
 
 ```bash
 # Bash/Zsh
-export TOONDB_DISABLE_ANALYTICS=true
+export SOCHDB_DISABLE_ANALYTICS=true
 
 # Windows PowerShell
-$env:TOONDB_DISABLE_ANALYTICS = "true"
+$env:SOCHDB_DISABLE_ANALYTICS = "true"
 
 # Windows CMD
-set TOONDB_DISABLE_ANALYTICS=true
+set SOCHDB_DISABLE_ANALYTICS=true
 
 # In Python
 import os
-os.environ["TOONDB_DISABLE_ANALYTICS"] = "true"
+os.environ["SOCHDB_DISABLE_ANALYTICS"] = "true"
 
 # In Node.js
-process.env.TOONDB_DISABLE_ANALYTICS = "true";
+process.env.SOCHDB_DISABLE_ANALYTICS = "true";
 ```
 
 ### Verifying Analytics Status
 
 #### Python
 ```python
-from toondb import is_analytics_disabled
+from sochdb import is_analytics_disabled
 print(f"Analytics disabled: {is_analytics_disabled()}")
 ```
 
 #### JavaScript/TypeScript
 ```typescript
-import { isAnalyticsDisabled } from '@sushanth/toondb';
+import { isAnalyticsDisabled } from '@sushanth/sochdb';
 console.log(`Analytics disabled: ${isAnalyticsDisabled()}`);
 ```
 
 #### Rust
 ```rust
-use toondb_core::analytics::is_analytics_disabled;
+use sochdb_core::analytics::is_analytics_disabled;
 println!("Analytics disabled: {}", is_analytics_disabled());
 ```
 
 ## Analytics Provider
 
-ToonDB uses [PostHog](https://posthog.com) for analytics. PostHog is an open-source product analytics platform that respects user privacy and is GDPR compliant.
+SochDB uses [PostHog](https://posthog.com) for analytics. PostHog is an open-source product analytics platform that respects user privacy and is GDPR compliant.
 
 - **Data is sent to**: `https://us.i.posthog.com`
 - **Data retention**: Aggregated metrics only
-- **No third-party sharing**: Data is only used by ToonDB developers
+- **No third-party sharing**: Data is only used by SochDB developers
 
 ## Optional Dependency
 
 The analytics package is **optional**:
 
-- **Python**: Install with `pip install toondb-client[analytics]`
+- **Python**: Install with `pip install sochdb-client[analytics]`
 - **Node.js**: posthog-node is in `optionalDependencies`
 - **Rust**: Enable the `analytics` feature flag
 
@@ -112,10 +112,10 @@ If the analytics package is not installed, all tracking functions become no-ops.
 
 Analytics implementation is fully open source:
 
-- Python: [toondb-python-sdk/src/toondb/analytics.py](https://github.com/toondb/toondb/blob/main/toondb-python-sdk/src/toondb/analytics.py)
-- JavaScript: [toondb-js/src/analytics.ts](https://github.com/toondb/toondb/blob/main/toondb-js/src/analytics.ts)
-- Rust: [toondb-core/src/analytics.rs](https://github.com/toondb/toondb/blob/main/toondb-core/src/analytics.rs)
+- Python: [sochdb-python-sdk/src/sochdb/analytics.py](https://github.com/sochdb/sochdb/blob/main/sochdb-python-sdk/src/sochdb/analytics.py)
+- JavaScript: [sochdb-js/src/analytics.ts](https://github.com/sochdb/sochdb/blob/main/sochdb-js/src/analytics.ts)
+- Rust: [sochdb-core/src/analytics.rs](https://github.com/sochdb/sochdb/blob/main/sochdb-core/src/analytics.rs)
 
 ## Questions?
 
-If you have any questions or concerns about analytics, please [open an issue](https://github.com/toondb/toondb/issues) or email sushanth@toondb.dev.
+If you have any questions or concerns about analytics, please [open an issue](https://github.com/sochdb/sochdb/issues) or email sushanth@sochdb.dev.

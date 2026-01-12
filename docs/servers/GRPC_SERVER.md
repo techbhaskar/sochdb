@@ -1,10 +1,10 @@
-# ToonDB gRPC Server Architecture
+# SochDB gRPC Server Architecture
 
-The ToonDB gRPC Server (`toondb-grpc-server`) provides a dedicated, high-performance interface for **Vector Search** operations. While the IPC server handles general data ops, this server is optimized for high-throughput embedding ingestion and k-NN path queries.
+The SochDB gRPC Server (`sochdb-grpc-server`) provides a dedicated, high-performance interface for **Vector Search** operations. While the IPC server handles general data ops, this server is optimized for high-throughput embedding ingestion and k-NN path queries.
 
 ## Architecture
 
-The server is built on `tonic` (Rust gRPC) and wraps the `toondb-index` crate's HNSW implementation.
+The server is built on `tonic` (Rust gRPC) and wraps the `sochdb-index` crate's HNSW implementation.
 
 ### Capabilities
 
@@ -97,8 +97,8 @@ Standard gRPC health check.
 
 ```python
 import grpc
-from toondb_pb2 import CreateIndexRequest, SearchRequest, HnswConfig
-from toondb_pb2_grpc import VectorIndexServiceStub
+from sochdb_pb2 import CreateIndexRequest, SearchRequest, HnswConfig
+from sochdb_pb2_grpc import VectorIndexServiceStub
 
 # 1. Connect
 channel = grpc.insecure_channel('localhost:50051')

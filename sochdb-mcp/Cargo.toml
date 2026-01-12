@@ -1,0 +1,45 @@
+[package]
+name = "sochdb-mcp"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Minimal MCP server for SochDB - AI-native database"
+repository.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+keywords.workspace = true
+categories.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+
+[lib]
+name = "sochdb_mcp"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sochdb-mcp"
+path = "src/main.rs"
+
+[features]
+default = []
+semantic-search = ["fastembed"]
+
+[dependencies]
+# Workspace dependencies
+serde = { workspace = true }
+serde_json = "1.0"
+toon-format = "0.4"
+
+# Optional dependencies (enabled via features)
+fastembed = { version = "4", optional = true }
+
+# SochDB crates
+sochdb = { version = "0.3.3", path = "../sochdb-client", features = ["embedded"] }
+sochdb-core = { version = "0.3.3", path = "../sochdb-core" }
+sochdb-query = { version = "0.3.3", path = "../sochdb-query" }
+
+# Minimal additional deps
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+regex = "1.10"

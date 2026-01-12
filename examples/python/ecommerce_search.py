@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-E-commerce Semantic Search with ToonDB
+E-commerce Semantic Search with SochDB
 
 Demonstrates:
 - Multi-vector per product (title + description)
@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import requests
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -64,7 +64,7 @@ class EcommerceSearch:
     """E-commerce semantic search with faceted filtering."""
     
     def __init__(self):
-        from toondb import VectorIndex
+        from sochdb import VectorIndex
         
         self.dimension = 1536
         
@@ -222,7 +222,7 @@ def run_ecommerce_test():
     """Run e-commerce search test."""
     
     print("="*70)
-    print("  E-COMMERCE SEMANTIC SEARCH + TOONDB")
+    print("  E-COMMERCE SEMANTIC SEARCH + SOCHDB")
     print("  Multi-Vector + Faceted Filtering")
     print("="*70)
     

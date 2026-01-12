@@ -1,4 +1,4 @@
-# ToonDB v0.3.x End-to-End Testing Report
+# SochDB v0.3.x End-to-End Testing Report
 
 ## Summary
 
@@ -15,46 +15,46 @@ Successfully completed end-to-end testing of all [Unreleased] features from CHAN
 
 ## Fixes Applied
 
-### Main Rust Crates (toondb/)
+### Main Rust Crates (sochdb/)
 
-1. **toondb-storage/src/database.rs**
-   - Fixed: `ToonDBError::InvalidInput` → `ToonDBError::InvalidArgument`
+1. **sochdb-storage/src/database.rs**
+   - Fixed: `SochDBError::InvalidInput` → `SochDBError::InvalidArgument`
    - Issue: Error variant name mismatch for prefix validation
 
-2. **toondb-query/src/plugin_table.rs**
+2. **sochdb-query/src/plugin_table.rs**
    - Added: `SimilarTo` operator handling in match statements
    - Issue: New vector search operator wasn't handled in the query plugin
 
-3. **toondb-query/src/toon_ql_executor.rs**
+3. **sochdb-query/src/toon_ql_executor.rs**
    - Added: `SimilarTo` operator handling in expression evaluation
-   - Issue: Missing case in ToonQL expression matching
+   - Issue: Missing case in SochQL expression matching
 
-4. **toondb-client/Cargo.toml**
+4. **sochdb-client/Cargo.toml**
    - Added: `serde_json` dependency
    - Issue: Missing dependency for JSON serialization in graph module
 
-5. **toondb-client/src/lib.rs**
+5. **sochdb-client/src/lib.rs**
    - Added: `ConnectionTrait` trait with `put`, `get`, `delete`, `scan` methods
    - Issue: `Connection` was a type alias, not usable as trait bound
 
-6. **toondb-client/src/connection.rs**
-   - Implemented: `ConnectionTrait` for both `DurableConnection` and `ToonConnection`
-   - Fixed: `ToonConnection::scan` to work with memtable filtering
+6. **sochdb-client/src/connection.rs**
+   - Implemented: `ConnectionTrait` for both `DurableConnection` and `SochConnection`
+   - Fixed: `SochConnection::scan` to work with memtable filtering
 
-7. **toondb-client/src/graph.rs, policy.rs, routing.rs**
+7. **sochdb-client/src/graph.rs, policy.rs, routing.rs**
    - Updated: Changed `Connection` type to use `ConnectionTrait`
    - Fixed: Result types to use consistent error handling
 
-8. **toondb-client/tests/test_comprehensive.rs**
+8. **sochdb-client/tests/test_comprehensive.rs**
    - Fixed: Replaced `static mut` with `AtomicUsize` for thread-safe test counters
 
-9. **toondb-mcp/Cargo.toml**
+9. **sochdb-mcp/Cargo.toml**
    - Added: `regex` dependency
 
-10. **toondb-mcp/src/tools.rs**
+10. **sochdb-mcp/src/tools.rs**
     - Fixed: Type comparison and regex annotation issues
 
-### Go SDK (toondb-go/)
+### Go SDK (sochdb-go/)
 
 1. **context.go**
    - Renamed: `VectorSearchResult` → `ContextVectorSearchResult` (avoid redeclaration)
@@ -70,7 +70,7 @@ Successfully completed end-to-end testing of all [Unreleased] features from CHAN
 3. **routing.go**
    - Fixed: `Scan` calls to use `string` instead of `[]byte`
 
-### Node.js SDK (toondb-nodejs-sdk/)
+### Node.js SDK (sochdb-nodejs-sdk/)
 
 1. **src/context.ts**
    - Changed: `scanPrefix` → `scan`
@@ -83,27 +83,27 @@ Successfully completed end-to-end testing of all [Unreleased] features from CHAN
 3. **src/routing.ts**
    - Fixed: `scan(Buffer.from(...))` → `scan(string)` (2 occurrences)
 
-### Python SDK (toondb-python-sdk/)
+### Python SDK (sochdb-python-sdk/)
 
-1. **src/toondb/database.py**
+1. **src/sochdb/database.py**
    - Added: `scan_prefix_unchecked` method to Database class
    - Issue: Graph overlay needed unrestricted prefix access
 
 ## New Example Files Created
 
-### Python (`toondb-python-examples/new_features/`)
+### Python (`sochdb-python-examples/new_features/`)
 - `graph_overlay_example.py` - Graph operations, traversal, BFS/DFS
 - `policy_hooks_example.py` - Validation, redaction, access control
 - `tool_routing_example.py` - Agent registry, routing strategies
 - `context_query_example.py` - Token budgeting, hybrid search
 - `README.md` - Documentation
 
-### Go (`toondb-golang-examples/new_features/`)
+### Go (`sochdb-golang-examples/new_features/`)
 - `graph_overlay/main.go` - Graph operations demo
 - `context_query/main.go` - Context query demo
 - `README.md` - Documentation
 
-### Node.js (`toondb-nodejs-examples/new_features/`)
+### Node.js (`sochdb-nodejs-examples/new_features/`)
 - `graph-overlay.ts` - TypeScript graph operations
 - `context-query.ts` - TypeScript context query
 - `README.md` - Documentation
@@ -111,7 +111,7 @@ Successfully completed end-to-end testing of all [Unreleased] features from CHAN
 ## Pre-Existing Issues (Not Fixed)
 
 ### Rust
-- `toondb-core/src/python_sandbox.rs` test failure (sandbox initialization)
+- `sochdb-core/src/python_sandbox.rs` test failure (sandbox initialization)
 
 ### Python SDK
 - `ErrorCode.NAMESPACE_EXISTS` - Missing enum value
@@ -153,7 +153,7 @@ All features from CHANGELOG.md [Unreleased] section:
 1. **Add missing ErrorCode enum values** in Python SDK for complete error taxonomy
 2. **Fix ContextResult indexing** - implement `__getitem__` or provide `.chunks` accessor
 3. **Consider adding integration tests** that run with a local server for Go SDK examples
-4. **Update example import statements** in Python examples to use correct module name (`toondb` not `toondb_client`)
+4. **Update example import statements** in Python examples to use correct module name (`sochdb` not `sochdb_client`)
 
 ## Conclusion
 

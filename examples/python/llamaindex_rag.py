@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-LlamaIndex + ToonDB Integration Example
+LlamaIndex + SochDB Integration Example
 
 Demonstrates RAG with:
-- ToonDB as a custom VectorStore for LlamaIndex
+- SochDB as a custom VectorStore for LlamaIndex
 - Document ingestion and chunking
-- Query engine with ToonDB retrieval
+- Query engine with SochDB retrieval
 
 Usage:
     pip install llama-index llama-index-embeddings-azure-openai
@@ -23,15 +23,15 @@ import requests
 from typing import List, Any, Optional
 from dataclasses import dataclass
 
-# Add ToonDB SDK to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../toondb-python-sdk/src"))
+# Add SochDB SDK to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../sochdb-python-sdk/src"))
 
 from dotenv import load_dotenv
 load_dotenv()
 
 
 # =============================================================================
-# ToonDB Vector Store (LlamaIndex-compatible interface)
+# SochDB Vector Store (LlamaIndex-compatible interface)
 # =============================================================================
 
 @dataclass
@@ -42,16 +42,16 @@ class TextNode:
     metadata: dict
 
 
-class ToonDBVectorStore:
+class SochDBVectorStore:
     """
-    ToonDB-backed vector store with LlamaIndex-compatible interface.
+    SochDB-backed vector store with LlamaIndex-compatible interface.
     
     In production, you would implement the actual LlamaIndex VectorStore interface:
     from llama_index.core.vector_stores import VectorStore
     """
     
     def __init__(self, dimension: int = 1536):
-        from toondb import VectorIndex
+        from sochdb import VectorIndex
         
         self.dimension = dimension
         self.index = VectorIndex(dimension=dimension, max_connections=16, ef_construction=100)
@@ -120,10 +120,10 @@ def chunk_text(text: str, chunk_size: int = 512, overlap: int = 50) -> List[str]
 # RAG Query Engine
 # =============================================================================
 
-class ToonDBQueryEngine:
-    """Simple RAG query engine using ToonDB."""
+class SochDBQueryEngine:
+    """Simple RAG query engine using SochDB."""
     
-    def __init__(self, vector_store: ToonDBVectorStore):
+    def __init__(self, vector_store: SochDBVectorStore):
         self.vector_store = vector_store
         
         # Azure LLM
@@ -174,14 +174,14 @@ def run_llamaindex_example():
     """Run the LlamaIndex-style RAG example."""
     
     print("="*70)
-    print("  LLAMAINDEX-STYLE RAG + TOONDB")
+    print("  LLAMAINDEX-STYLE RAG + SOCHDB")
     print("="*70)
     
     # ==========================================================================
     # Step 1: Create vector store
     # ==========================================================================
-    print("\n1. Creating ToonDB vector store...")
-    vector_store = ToonDBVectorStore(dimension=1536)
+    print("\n1. Creating SochDB vector store...")
+    vector_store = SochDBVectorStore(dimension=1536)
     print("   ✓ Vector store initialized")
     
     # ==========================================================================
@@ -191,25 +191,25 @@ def run_llamaindex_example():
     
     # Sample documents (in production, load from files)
     documents = [
-        """ToonDB is a high-performance database specifically designed for AI agents 
+        """SochDB is a high-performance database specifically designed for AI agents 
         and Large Language Model (LLM) applications. It provides blazing-fast vector 
         search with sub-millisecond latency, making it ideal for real-time AI systems.
         The database achieves 117,000 vector inserts per second and 0.03ms search latency.""",
         
-        """ToonDB uses a Trie-Columnar Hybrid (TCH) storage engine that combines the 
+        """SochDB uses a Trie-Columnar Hybrid (TCH) storage engine that combines the 
         benefits of tries for hierarchical key access with columnar storage for analytical 
         queries. This unique architecture provides O(path) resolution time for lookups 
         and efficient range scans.""",
         
-        """ToonDB's vector search is powered by HNSW (Hierarchical Navigable Small World) 
+        """SochDB's vector search is powered by HNSW (Hierarchical Navigable Small World) 
         algorithm with SIMD acceleration. The implementation uses AVX2/AVX-512 intrinsics 
         for computing distances, achieving up to 8x speedup compared to scalar implementations.""",
         
-        """ToonDB is 24x faster than ChromaDB on vector search benchmarks. It also 
+        """SochDB is 24x faster than ChromaDB on vector search benchmarks. It also 
         outperforms SQLite by 24% on insert operations for key-value workloads. The 
         database is optimized for write-heavy, low-latency requirements of AI agents.""",
         
-        """ToonDB provides built-in support for session management, context queries, 
+        """SochDB provides built-in support for session management, context queries, 
         and token budget enforcement. It also includes MCP (Model Context Protocol) 
         integration for seamless LLM tool usage.""",
     ]
@@ -237,7 +237,7 @@ def run_llamaindex_example():
     # Step 3: Create query engine
     # ==========================================================================
     print("\n3. Creating query engine...")
-    query_engine = ToonDBQueryEngine(vector_store)
+    query_engine = SochDBQueryEngine(vector_store)
     print("   ✓ Query engine ready")
     
     # ==========================================================================
@@ -247,9 +247,9 @@ def run_llamaindex_example():
     print("-"*70)
     
     queries = [
-        "What is ToonDB and what is it designed for?",
-        "How does ToonDB's vector search work?",
-        "How does ToonDB compare to ChromaDB?",
+        "What is SochDB and what is it designed for?",
+        "How does SochDB's vector search work?",
+        "How does SochDB compare to ChromaDB?",
     ]
     
     for query in queries:
@@ -274,10 +274,10 @@ def run_llamaindex_example():
 
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.core.vector_stores import VectorStore
-from toondb import VectorIndex
+from sochdb import VectorIndex
 
-class ToonDBVectorStore(VectorStore):
-    """Custom LlamaIndex vector store using ToonDB."""
+class SochDBVectorStore(VectorStore):
+    """Custom LlamaIndex vector store using SochDB."""
     
     def __init__(self, dimension: int = 1536):
         self._index = VectorIndex(dimension=dimension)
@@ -294,13 +294,13 @@ class ToonDBVectorStore(VectorStore):
         return [self._nodes[int(idx)] for idx, _ in results]
 
 # Usage
-vector_store = ToonDBVectorStore()
+vector_store = SochDBVectorStore()
 index = VectorStoreIndex.from_documents(
     documents,
     vector_store=vector_store,
 )
 query_engine = index.as_query_engine()
-response = query_engine.query("What is ToonDB?")
+response = query_engine.query("What is SochDB?")
 '''
     
     print(example_code)

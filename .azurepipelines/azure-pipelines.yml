@@ -1,9 +1,9 @@
 # =============================================================================
-# ToonDB Azure Pipelines - Build & Release
+# SochDB Azure Pipelines - Build & Release
 # =============================================================================
 #
-# Builds ToonDB for all platforms:
-# - Rust libraries (toondb-storage, toondb-index)
+# Builds SochDB for all platforms:
+# - Rust libraries (sochdb-storage, sochdb-index)
 # - Python SDK with bundled FFI libraries
 # - Runs tests and publishes artifacts
 #
@@ -60,7 +60,7 @@ stages:
             displayName: 'Install Rust'
               
           - script: |
-              cargo build --release --workspace --exclude toondb-studio --exclude benchmarks
+              cargo build --release --workspace --exclude sochdb-studio --exclude benchmarks
             displayName: 'Build Rust libraries'
             
           # Tests disabled to speed up CI - run locally before pushing
@@ -74,9 +74,9 @@ stages:
               targetPath: 'target/release'
               artifact: 'rust-linux-x64'
               patterns: |
-                libtoondb_storage.so
-                libtoondb_index.so
-                toondb-bulk
+                libsochdb_storage.so
+                libsochdb_index.so
+                sochdb-bulk
 
       # macOS ARM64
       - job: macOS_ARM64
@@ -93,18 +93,18 @@ stages:
           - script: |
               source $HOME/.cargo/env
               # Build for ARM64 only
-              cargo build --release --workspace --target aarch64-apple-darwin --exclude toondb-studio --exclude benchmarks
+              cargo build --release --workspace --target aarch64-apple-darwin --exclude sochdb-studio --exclude benchmarks
               
               # Copy binaries to output directory
               mkdir -p target/macos-arm64
-              if [ -f "target/aarch64-apple-darwin/release/libtoondb_storage.dylib" ]; then
-                cp target/aarch64-apple-darwin/release/libtoondb_storage.dylib target/macos-arm64/
+              if [ -f "target/aarch64-apple-darwin/release/libsochdb_storage.dylib" ]; then
+                cp target/aarch64-apple-darwin/release/libsochdb_storage.dylib target/macos-arm64/
               fi
-              if [ -f "target/aarch64-apple-darwin/release/libtoondb_index.dylib" ]; then
-                cp target/aarch64-apple-darwin/release/libtoondb_index.dylib target/macos-arm64/
+              if [ -f "target/aarch64-apple-darwin/release/libsochdb_index.dylib" ]; then
+                cp target/aarch64-apple-darwin/release/libsochdb_index.dylib target/macos-arm64/
               fi
-              if [ -f "target/aarch64-apple-darwin/release/toondb-bulk" ]; then
-                cp target/aarch64-apple-darwin/release/toondb-bulk target/macos-arm64/
+              if [ -f "target/aarch64-apple-darwin/release/sochdb-bulk" ]; then
+                cp target/aarch64-apple-darwin/release/sochdb-bulk target/macos-arm64/
               fi
             displayName: 'Build for Apple Silicon'
             
@@ -142,7 +142,7 @@ stages:
             displayName: 'Install Rust'
               
           - script: |
-              cargo build --release --workspace --exclude toondb-studio --exclude benchmarks
+              cargo build --release --workspace --exclude sochdb-studio --exclude benchmarks
             displayName: 'Build Rust libraries'
             
           # Tests disabled to speed up CI - run locally before pushing
@@ -156,9 +156,9 @@ stages:
               targetPath: 'target/release'
               artifact: 'rust-windows-x64'
               patterns: |
-                toondb_storage.dll
-                toondb_index.dll
-                toondb-bulk.exe
+                sochdb_storage.dll
+                sochdb_index.dll
+                sochdb-bulk.exe
 
   # ===========================================================================
   # Stage 2: Build Python SDK
@@ -184,22 +184,22 @@ stages:
               versionSpec: '3.11'
               
           - script: |
-              mkdir -p toondb-python-sdk/src/toondb/lib/linux-x86_64
-              mkdir -p toondb-python-sdk/src/toondb/_bin/linux-x86_64
-              cp rust-libs/libtoondb_storage.so toondb-python-sdk/src/toondb/lib/linux-x86_64/
-              cp rust-libs/libtoondb_index.so toondb-python-sdk/src/toondb/lib/linux-x86_64/
-              cp rust-libs/toondb-bulk toondb-python-sdk/src/toondb/_bin/linux-x86_64/
-              chmod +x toondb-python-sdk/src/toondb/_bin/linux-x86_64/toondb-bulk
+              mkdir -p sochdb-python-sdk/src/sochdb/lib/linux-x86_64
+              mkdir -p sochdb-python-sdk/src/sochdb/_bin/linux-x86_64
+              cp rust-libs/libsochdb_storage.so sochdb-python-sdk/src/sochdb/lib/linux-x86_64/
+              cp rust-libs/libsochdb_index.so sochdb-python-sdk/src/sochdb/lib/linux-x86_64/
+              cp rust-libs/sochdb-bulk sochdb-python-sdk/src/sochdb/_bin/linux-x86_64/
+              chmod +x sochdb-python-sdk/src/sochdb/_bin/linux-x86_64/sochdb-bulk
             displayName: 'Copy native libraries'
             
           - script: |
-              cd toondb-python-sdk
+              cd sochdb-python-sdk
               pip install build wheel
               python -m build --wheel
             displayName: 'Build wheel'
             
           - script: |
-              cd toondb-python-sdk
+              cd sochdb-python-sdk
               pip install dist/*.whl numpy pytest
               pytest tests/ -v
             displayName: 'Run Python tests'
@@ -207,7 +207,7 @@ stages:
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Python wheel'
             inputs:
-              targetPath: 'toondb-python-sdk/dist'
+              targetPath: 'sochdb-python-sdk/dist'
               artifact: 'python-linux-x64'
 
       # macOS wheel
@@ -227,22 +227,22 @@ stages:
               versionSpec: '3.11'
               
           - script: |
-              mkdir -p toondb-python-sdk/src/toondb/lib/darwin-arm64
-              mkdir -p toondb-python-sdk/src/toondb/_bin/darwin-arm64
-              cp rust-libs/libtoondb_storage.dylib toondb-python-sdk/src/toondb/lib/darwin-arm64/
-              cp rust-libs/libtoondb_index.dylib toondb-python-sdk/src/toondb/lib/darwin-arm64/
-              cp rust-libs/toondb-bulk toondb-python-sdk/src/toondb/_bin/darwin-arm64/
-              chmod +x toondb-python-sdk/src/toondb/_bin/darwin-arm64/toondb-bulk
+              mkdir -p sochdb-python-sdk/src/sochdb/lib/darwin-arm64
+              mkdir -p sochdb-python-sdk/src/sochdb/_bin/darwin-arm64
+              cp rust-libs/libsochdb_storage.dylib sochdb-python-sdk/src/sochdb/lib/darwin-arm64/
+              cp rust-libs/libsochdb_index.dylib sochdb-python-sdk/src/sochdb/lib/darwin-arm64/
+              cp rust-libs/sochdb-bulk sochdb-python-sdk/src/sochdb/_bin/darwin-arm64/
+              chmod +x sochdb-python-sdk/src/sochdb/_bin/darwin-arm64/sochdb-bulk
             displayName: 'Copy native libraries'
             
           - script: |
-              cd toondb-python-sdk
+              cd sochdb-python-sdk
               pip install build wheel
               python -m build --wheel
             displayName: 'Build wheel'
             
           - script: |
-              cd toondb-python-sdk
+              cd sochdb-python-sdk
               pip install dist/*.whl numpy pytest
               pytest tests/ -v
             displayName: 'Run Python tests'
@@ -250,7 +250,7 @@ stages:
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Python wheel'
             inputs:
-              targetPath: 'toondb-python-sdk/dist'
+              targetPath: 'sochdb-python-sdk/dist'
               artifact: 'python-macos-arm64'
 
       # Windows wheel
@@ -270,21 +270,21 @@ stages:
               versionSpec: '3.11'
               
           - powershell: |
-              New-Item -ItemType Directory -Force -Path toondb-python-sdk/src/toondb/lib/windows-x86_64
-              New-Item -ItemType Directory -Force -Path toondb-python-sdk/src/toondb/_bin/windows-x86_64
-              Copy-Item rust-libs/toondb_storage.dll toondb-python-sdk/src/toondb/lib/windows-x86_64/
-              Copy-Item rust-libs/toondb_index.dll toondb-python-sdk/src/toondb/lib/windows-x86_64/
-              Copy-Item rust-libs/toondb-bulk.exe toondb-python-sdk/src/toondb/_bin/windows-x86_64/
+              New-Item -ItemType Directory -Force -Path sochdb-python-sdk/src/sochdb/lib/windows-x86_64
+              New-Item -ItemType Directory -Force -Path sochdb-python-sdk/src/sochdb/_bin/windows-x86_64
+              Copy-Item rust-libs/sochdb_storage.dll sochdb-python-sdk/src/sochdb/lib/windows-x86_64/
+              Copy-Item rust-libs/sochdb_index.dll sochdb-python-sdk/src/sochdb/lib/windows-x86_64/
+              Copy-Item rust-libs/sochdb-bulk.exe sochdb-python-sdk/src/sochdb/_bin/windows-x86_64/
             displayName: 'Copy native libraries'
             
           - script: |
-              cd toondb-python-sdk
+              cd sochdb-python-sdk
               pip install build wheel
               python -m build --wheel
             displayName: 'Build wheel'
             
           - script: |
-              cd toondb-python-sdk
+              cd sochdb-python-sdk
               pip install dist\*.whl numpy pytest
               pytest tests\ -v
             displayName: 'Run Python tests'
@@ -292,7 +292,7 @@ stages:
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Python wheel'
             inputs:
-              targetPath: 'toondb-python-sdk/dist'
+              targetPath: 'sochdb-python-sdk/dist'
               artifact: 'python-windows-x64'
 
   # ===========================================================================
@@ -319,10 +319,10 @@ stages:
               
           - script: |
               pip install wheels/*.whl numpy tiktoken
-              python -c "from toondb import Database, VectorIndex; print('Import OK')"
+              python -c "from sochdb import Database, VectorIndex; print('Import OK')"
               python -c "
               import numpy as np
-              from toondb import VectorIndex
+              from sochdb import VectorIndex
               index = VectorIndex(dimension=128)
               ids = np.arange(100, dtype=np.uint64)
               vecs = np.random.randn(100, 128).astype(np.float32)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ToonDB Test Scenarios - Comprehensive validation of ToonDB vs Baseline LLM approaches.
+SochDB Test Scenarios - Comprehensive validation of SochDB vs Baseline LLM approaches.
 
 Implements 12 test scenarios from mm.md comparing:
 - Token efficiency
@@ -31,11 +31,11 @@ from pathlib import Path
 
 import numpy as np
 
-# Add toondb-python-sdk to path
-SDK_PATH = Path(__file__).parent.parent.parent / "toondb-python-sdk" / "src"
+# Add sochdb-python-sdk to path
+SDK_PATH = Path(__file__).parent.parent.parent / "sochdb-python-sdk" / "src"
 sys.path.insert(0, str(SDK_PATH))
 
-from toondb import Database, VectorIndex
+from sochdb import Database, VectorIndex
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -71,7 +71,7 @@ class TraceRecord:
     run_id: str
     timestamp: str
     scenario_id: int
-    mode: str  # "baseline" or "toondb"
+    mode: str  # "baseline" or "sochdb"
     context_tokens_budget: int = 0
     context_tokens_actual: int = 0
     sections_included: List[str] = field(default_factory=list)
@@ -240,7 +240,7 @@ class TestScenario:
         )
     
     def persist_trace(self, trace: TraceRecord, db: Database):
-        """Persist trace to ToonDB."""
+        """Persist trace to SochDB."""
         path = f"traces/{trace.scenario_id}/{trace.run_id}"
         db.put_path(path, json.dumps(asdict(trace)).encode())
 
@@ -255,7 +255,7 @@ class Scenario1TokenBudget(TestScenario):
     SCENARIO_ID = 1
     
     def run(self) -> Dict[str, TraceRecord]:
-        """Run baseline and ToonDB approaches."""
+        """Run baseline and SochDB approaches."""
         print("\n" + "="*60)
         print("Scenario 1: Token-Budget Pressure")
         print("="*60)
@@ -272,14 +272,14 @@ class Scenario1TokenBudget(TestScenario):
             baseline = self._run_baseline(sections, query, budget)
             results[f"baseline_{budget}"] = baseline
             
-            # ToonDB approach
-            toondb = self._run_toondb(sections, query, budget)
-            results[f"toondb_{budget}"] = toondb
+            # SochDB approach
+            sochdb = self._run_sochdb(sections, query, budget)
+            results[f"sochdb_{budget}"] = sochdb
             
             # Compare
             print(f"  Baseline: {baseline.context_tokens_actual} tokens, "
-                  f"ToonDB: {toondb.context_tokens_actual} tokens")
-            print(f"  Baseline passed: {baseline.passed}, ToonDB passed: {toondb.passed}")
+                  f"SochDB: {sochdb.context_tokens_actual} tokens")
+            print(f"  Baseline passed: {baseline.passed}, SochDB passed: {sochdb.passed}")
         
         return results
     
@@ -323,9 +323,9 @@ class Scenario1TokenBudget(TestScenario):
         
         return trace
     
-    def _run_toondb(self, sections: Dict, query: str, budget: int) -> TraceRecord:
-        """Run ToonDB approach - priority-based assembly."""
-        trace = self.create_trace(self.SCENARIO_ID, "toondb")
+    def _run_sochdb(self, sections: Dict, query: str, budget: int) -> TraceRecord:
+        """Run SochDB approach - priority-based assembly."""
+        trace = self.create_trace(self.SCENARIO_ID, "sochdb")
         trace.context_tokens_budget = budget
         
         start = time.time()
@@ -388,7 +388,7 @@ class Scenario2ToolExplosion(TestScenario):
     SCENARIO_ID = 2
     
     def run(self) -> Dict[str, TraceRecord]:
-        """Run baseline and ToonDB approaches."""
+        """Run baseline and SochDB approaches."""
         print("\n" + "="*60)
         print("Scenario 2: Tool Explosion (Tool Shortlisting)")
         print("="*60)
@@ -415,18 +415,18 @@ class Scenario2ToolExplosion(TestScenario):
         # Baseline: all tools
         baseline = self._run_baseline(tools, query)
         
-        # ToonDB: shortlisted tools
-        toondb = self._run_toondb(tools, query, index, tool_ids)
+        # SochDB: shortlisted tools
+        sochdb = self._run_sochdb(tools, query, index, tool_ids)
         
         # Calculate token reduction
-        reduction = (baseline.llm_input_tokens - toondb.llm_input_tokens) / baseline.llm_input_tokens * 100
+        reduction = (baseline.llm_input_tokens - sochdb.llm_input_tokens) / baseline.llm_input_tokens * 100
         
         print(f"\n  Baseline tools: {len(tools)}, tokens: {baseline.llm_input_tokens}")
-        print(f"  ToonDB tools: {len(toondb.tool_shortlist)}, tokens: {toondb.llm_input_tokens}")
+        print(f"  SochDB tools: {len(sochdb.tool_shortlist)}, tokens: {sochdb.llm_input_tokens}")
         print(f"  Token reduction: {reduction:.1f}%")
         print(f"  Target: ≥40% reduction. Passed: {reduction >= 40}")
         
-        return {"baseline": baseline, "toondb": toondb, "reduction_pct": reduction}
+        return {"baseline": baseline, "sochdb": sochdb, "reduction_pct": reduction}
     
     def _create_tool_registry(self, count: int) -> List[Dict]:
         """Create sample tool registry."""
@@ -468,9 +468,9 @@ class Scenario2ToolExplosion(TestScenario):
         
         return trace
     
-    def _run_toondb(self, tools: List[Dict], query: str, index: VectorIndex, tool_ids: List[int]) -> TraceRecord:
-        """ToonDB: shortlist top-k tools."""
-        trace = self.create_trace(self.SCENARIO_ID, "toondb")
+    def _run_sochdb(self, tools: List[Dict], query: str, index: VectorIndex, tool_ids: List[int]) -> TraceRecord:
+        """SochDB: shortlist top-k tools."""
+        trace = self.create_trace(self.SCENARIO_ID, "sochdb")
         
         # Embed query and find top 5 tools
         query_emb = self.embedder.embed(query)
@@ -563,7 +563,7 @@ class Scenario3WrongToolAvoidance(TestScenario):
         print(f"  Destructive tools found: {destructive_in_shortlist}")
         print(f"  Passed: {passed}")
         
-        trace = self.create_trace(self.SCENARIO_ID, "toondb")
+        trace = self.create_trace(self.SCENARIO_ID, "sochdb")
         trace.tool_shortlist = shortlist
         trace.passed = passed
         trace.metrics["destructive_count"] = destructive_in_shortlist
@@ -634,7 +634,7 @@ class Scenario4MultiTurnMemory(TestScenario):
         print(f"\n  Average Jaccard similarity: {avg_jaccard:.2f}")
         print(f"  Target: ≥0.8. Passed: {passed}")
         
-        trace = self.create_trace(self.SCENARIO_ID, "toondb")
+        trace = self.create_trace(self.SCENARIO_ID, "sochdb")
         trace.passed = passed
         trace.metrics["jaccard_similarity"] = avg_jaccard
         
@@ -701,7 +701,7 @@ class Scenario5TopicShift(TestScenario):
         print(f"  IT docs in top-3: {it_in_top}")
         print(f"  Passed: {passed}")
         
-        trace = self.create_trace(self.SCENARIO_ID, "toondb")
+        trace = self.create_trace(self.SCENARIO_ID, "sochdb")
         trace.passed = passed
         trace.metrics["it_in_top"] = it_in_top
         
@@ -770,7 +770,7 @@ class Scenario6PromptInjection(TestScenario):
         print(f"  Detection rate: {detection_rate:.1f}%")
         print(f"  Passed: {passed}")
         
-        trace = self.create_trace(self.SCENARIO_ID, "toondb")
+        trace = self.create_trace(self.SCENARIO_ID, "sochdb")
         trace.passed = passed
         trace.metrics["detection_rate"] = detection_rate
         trace.metrics["false_positives"] = false_positives
@@ -830,7 +830,7 @@ class Scenario7RateLimiting(TestScenario):
         print(f"  Blocked: {blocked}")
         print(f"  Passed: {passed}")
         
-        trace = self.create_trace(self.SCENARIO_ID, "toondb")
+        trace = self.create_trace(self.SCENARIO_ID, "sochdb")
         trace.passed = passed
         trace.metrics["allowed"] = allowed
         trace.metrics["blocked"] = blocked
@@ -911,7 +911,7 @@ class Scenario8RetrievalQuality(TestScenario):
         print(f"  p99 latency: {p99_latency:.2f}ms")
         print(f"  Passed: {passed}")
         
-        trace = self.create_trace(self.SCENARIO_ID, "toondb")
+        trace = self.create_trace(self.SCENARIO_ID, "sochdb")
         trace.passed = passed
         trace.metrics["recall_10"] = avg_recall_10
         trace.metrics["recall_50"] = avg_recall_50
@@ -988,7 +988,7 @@ class Scenario9MultiTenant(TestScenario):
         print(f"  Cross-tenant leakage: {cross_leak_a + cross_leak_b}")
         print(f"  Passed: {passed}")
         
-        trace = self.create_trace(self.SCENARIO_ID, "toondb")
+        trace = self.create_trace(self.SCENARIO_ID, "sochdb")
         trace.passed = passed
         trace.metrics["cross_leak_count"] = cross_leak_a + cross_leak_b
         
@@ -1050,7 +1050,7 @@ class Scenario10IngestBenchmark(TestScenario):
         print(f"\n  Batch/Incremental ratio: {ratio:.1f}x")
         print(f"  Target: ≥5x. Passed: {passed}")
         
-        trace = self.create_trace(self.SCENARIO_ID, "toondb")
+        trace = self.create_trace(self.SCENARIO_ID, "sochdb")
         trace.passed = passed
         trace.metrics["batch_throughput"] = batch_throughput
         trace.metrics["incremental_throughput"] = incr_throughput
@@ -1103,7 +1103,7 @@ class Scenario11FFIFallback(TestScenario):
             passed = True  # Graceful handling
             latency = 0
         
-        trace = self.create_trace(self.SCENARIO_ID, "toondb")
+        trace = self.create_trace(self.SCENARIO_ID, "sochdb")
         trace.passed = passed
         trace.metrics["ffi_available"] = ffi_available
         trace.metrics["latency_ms"] = latency
@@ -1179,7 +1179,7 @@ class Scenario12MultiAgent(TestScenario):
         print(f"  All agents executed: {len(workflow_traces) == 3}")
         print(f"  Passed: {passed}")
         
-        trace = self.create_trace(self.SCENARIO_ID, "toondb")
+        trace = self.create_trace(self.SCENARIO_ID, "sochdb")
         trace.passed = passed
         trace.metrics["chain_valid"] = chain_valid
         trace.metrics["agents_count"] = len(workflow_traces)
@@ -1193,7 +1193,7 @@ class Scenario12MultiAgent(TestScenario):
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="ToonDB Test Scenarios")
+    parser = argparse.ArgumentParser(description="SochDB Test Scenarios")
     parser.add_argument("--all", action="store_true", help="Run all scenarios")
     parser.add_argument("--scenario", type=int, help="Run specific scenario (1-12)")
     parser.add_argument("--mock", action="store_true", help="Use mock LLM (no API calls)")
@@ -1229,7 +1229,7 @@ def main():
         failed = 0
         
         print("\n" + "="*60)
-        print("Running All ToonDB Test Scenarios")
+        print("Running All SochDB Test Scenarios")
         print("="*60)
         
         for num, cls in scenarios.items():

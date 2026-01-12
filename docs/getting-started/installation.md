@@ -4,12 +4,12 @@ sidebar_position: 2
 
 # Installation
 
-Complete installation guide for ToonDB across different platforms and use cases.
+Complete installation guide for SochDB across different platforms and use cases.
 
 ## Python SDK
 
 ```bash
-pip install toondb-client
+pip install sochdb-client
 ```
 
 **Pre-built binaries** are available for Linux (x86_64), macOS (Apple Silicon), and Windows (x86_64).
@@ -17,12 +17,12 @@ pip install toondb-client
 ### Verify Installation
 
 ```python
-from toondb import Database
+from sochdb import Database
 
 db = Database.open("./test_db")
 db.put(b"test", b"hello")
 value = db.get(b"test")
-print(f"ToonDB installed! Value: {value.decode()}")
+print(f"SochDB installed! Value: {value.decode()}")
 db.close()
 ```
 
@@ -31,18 +31,18 @@ db.close()
 ## Node.js / TypeScript SDK
 
 ```bash
-npm install @sushanth/toondb
+npm install @sushanth/sochdb
 ```
 
 ### Verify Installation
 
 ```typescript
-import { ToonDatabase } from '@sushanth/toondb';
+import { SochDatabase } from '@sushanth/sochdb';
 
-const db = new ToonDatabase('./test_db');
+const db = new SochDatabase('./test_db');
 await db.put('test', 'hello');
 const value = await db.get('test');
-console.log(`ToonDB installed! Value: ${value}`);
+console.log(`SochDB installed! Value: ${value}`);
 await db.close();
 ```
 
@@ -51,7 +51,7 @@ await db.close();
 ## Go SDK
 
 ```bash
-go get github.com/toondb/toondb-go@v0.3.1
+go get github.com/sochdb/sochdb-go@v0.3.1
 ```
 
 ### Verify Installation
@@ -61,16 +61,16 @@ package main
 
 import (
     "fmt"
-    toondb "github.com/toondb/toondb-go"
+    sochdb "github.com/sochdb/sochdb-go"
 )
 
 func main() {
-    db, _ := toondb.Open("./test_db")
+    db, _ := sochdb.Open("./test_db")
     defer db.Close()
     
     db.Put([]byte("test"), []byte("hello"))
     value, _ := db.Get([]byte("test"))
-    fmt.Printf("ToonDB installed! Value: %s\n", value)
+    fmt.Printf("SochDB installed! Value: %s\n", value)
 }
 ```
 
@@ -82,20 +82,20 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-toondb = "0.2"
+sochdb = "0.2"
 ```
 
 ### Verify Installation
 
 ```rust
-use toondb::Database;
+use sochdb::Database;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db = Database::open("./test_db")?;
     
     db.put(b"test", b"hello")?;
     if let Some(value) = db.get(b"test")? {
-        println!("ToonDB installed! Value: {}", String::from_utf8_lossy(&value));
+        println!("SochDB installed! Value: {}", String::from_utf8_lossy(&value));
     }
     Ok(())
 }
@@ -117,8 +117,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```bash
 # Clone the repository
-git clone https://github.com/toondb/toondb
-cd toondb
+git clone https://github.com/sochdb/sochdb
+cd sochdb
 
 # Build release binaries
 cargo build --release
@@ -127,13 +127,13 @@ cargo build --release
 cargo test --release
 
 # Install CLI (optional)
-cargo install --path toondb-cli
+cargo install --path sochdb-cli
 ```
 
 ### Build Python Bindings from Source
 
 ```bash
-cd toondb-python-sdk
+cd sochdb-python-sdk
 
 # Create virtual environment
 python -m venv .venv
@@ -175,7 +175,7 @@ Use PowerShell or Windows Terminal for the best experience:
 
 ```powershell
 # Install via pip
-pip install toondb-client
+pip install sochdb-client
 ```
 
 ---
@@ -185,7 +185,7 @@ pip install toondb-client
 Run the diagnostic script to verify everything is working:
 
 ```python
-from toondb import Database, VectorIndex
+from sochdb import Database, VectorIndex
 import numpy as np
 
 # Test basic operations
@@ -210,13 +210,13 @@ try:
 except Exception as e:
     print(f"⚠ Vector search not available: {e}")
 
-print("\n🎉 ToonDB is ready to use!")
+print("\n🎉 SochDB is ready to use!")
 ```
 
 ---
 
 ## Next Steps
 
-- [Quick Start Guide](/getting-started/quickstart) — Your first ToonDB application
+- [Quick Start Guide](/getting-started/quickstart) — Your first SochDB application
 - [Python SDK Guide](/guides/python-sdk) — Complete Python tutorial
 - [Vector Search](/guides/vector-search) — HNSW indexing guide

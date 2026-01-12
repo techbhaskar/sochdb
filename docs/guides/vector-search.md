@@ -1,10 +1,10 @@
-# Tutorial: Vector Search with ToonDB
+# Tutorial: Vector Search with SochDB
 
 > **🔧 Skill Level:** Intermediate  
 > **⏱️ Time Required:** 20 minutes  
 > **📦 Requirements:** Python 3.9+, numpy, sentence-transformers
 
-Learn how to build a semantic search system using ToonDB's HNSW vector index.
+Learn how to build a semantic search system using SochDB's HNSW vector index.
 
 ---
 
@@ -26,7 +26,7 @@ python -m venv venv
 source venv/bin/activate
 
 # Install dependencies
-pip install toondb-client numpy sentence-transformers
+pip install sochdb-client numpy sentence-transformers
 ```
 
 > **Note:** `sentence-transformers` provides real embedding models. For production, you might also use OpenAI, Cohere, or other embedding APIs.
@@ -139,10 +139,10 @@ python embeddings.py
 Create `search.py`:
 
 ```python
-"""Semantic search system with ToonDB."""
+"""Semantic search system with SochDB."""
 
-from toondb import Database
-from toondb.bulk import bulk_build_index, bulk_query_index
+from sochdb import Database
+from sochdb.bulk import bulk_build_index, bulk_query_index
 from embeddings import EmbeddingService
 import numpy as np
 import json
@@ -270,8 +270,8 @@ def main():
     # Add sample documents
     documents = [
         {
-            "title": "ToonDB Overview",
-            "content": "ToonDB is an LLM-native database designed for AI applications. It provides token-efficient storage and vector search capabilities."
+            "title": "SochDB Overview",
+            "content": "SochDB is an LLM-native database designed for AI applications. It provides token-efficient storage and vector search capabilities."
         },
         {
             "title": "Vector Search Basics",
@@ -283,7 +283,7 @@ def main():
         },
         {
             "title": "Database Transactions",
-            "content": "ACID transactions ensure data integrity. ToonDB supports MVCC with serializable snapshot isolation for concurrent access."
+            "content": "ACID transactions ensure data integrity. SochDB supports MVCC with serializable snapshot isolation for concurrent access."
         },
         {
             "title": "Machine Learning Models",
@@ -297,7 +297,7 @@ def main():
     print("\n" + "="*60)
     
     queries = [
-        "How does ToonDB handle AI workloads?",
+        "How does SochDB handle AI workloads?",
         "What is HNSW algorithm?",
         "How to ensure data consistency?",
     ]
@@ -333,10 +333,10 @@ Index built: 5 vectors
 
 ============================================================
 
-🔍 Query: How does ToonDB handle AI workloads?
+🔍 Query: How does SochDB handle AI workloads?
 ----------------------------------------
-1. [0.842] ToonDB Overview
-   ToonDB is an LLM-native database designed for AI applications...
+1. [0.842] SochDB Overview
+   SochDB is an LLM-native database designed for AI applications...
 2. [0.534] Machine Learning Models
    Embedding models convert text to vectors...
 3. [0.423] Vector Search Basics
@@ -346,8 +346,8 @@ Index built: 5 vectors
 ----------------------------------------
 1. [0.756] Vector Search Basics
    Vector search uses embeddings to find semantically similar documents...
-2. [0.412] ToonDB Overview
-   ToonDB is an LLM-native database designed for AI applications...
+2. [0.412] SochDB Overview
+   SochDB is an LLM-native database designed for AI applications...
 3. [0.389] Machine Learning Models
    Embedding models convert text to vectors...
 
@@ -355,8 +355,8 @@ Index built: 5 vectors
 ----------------------------------------
 1. [0.698] Database Transactions
    ACID transactions ensure data integrity...
-2. [0.312] ToonDB Overview
-   ToonDB is an LLM-native database designed for AI applications...
+2. [0.312] SochDB Overview
+   SochDB is an LLM-native database designed for AI applications...
 3. [0.287] Vector Search Basics
    Vector search uses embeddings to find semantically similar documents...
 ```
@@ -434,7 +434,7 @@ def add_documents_batched(self, documents, batch_size=1000):
 | **Embeddings** | Converted text to vectors using sentence-transformers |
 | **HNSW indexing** | Built fast approximate nearest neighbor index |
 | **Semantic search** | Found similar documents by meaning, not keywords |
-| **ToonDB integration** | Stored documents and vectors together |
+| **SochDB integration** | Stored documents and vectors together |
 
 ---
 
@@ -449,5 +449,5 @@ def add_documents_batched(self, documents, batch_size=1000):
 
 ---
 
-*Tutorial completed! You've built a working semantic search system with ToonDB.* 🎉
+*Tutorial completed! You've built a working semantic search system with SochDB.* 🎉
 

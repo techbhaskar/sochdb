@@ -1,6 +1,6 @@
 # Graph Overlay for Agent Memory
 
-ToonDB provides a lightweight graph layer on top of its KV storage for modeling
+SochDB provides a lightweight graph layer on top of its KV storage for modeling
 agent memory relationships. This is NOT a full graph database - it's optimized
 for typical agent memory patterns.
 
@@ -27,8 +27,8 @@ This enables O(1) node/edge operations and O(degree) traversals.
 ### Python
 
 ```python
-from toondb import Database
-from toondb.graph import GraphOverlay
+from sochdb import Database
+from sochdb.graph import GraphOverlay
 
 db = Database.open("./agent_memory")
 graph = GraphOverlay(db, namespace="agent_001")
@@ -55,8 +55,8 @@ reachable = graph.bfs("user_1", max_depth=2)
 ### Go
 
 ```go
-db, _ := toondb.Open("./agent_memory")
-graph := toondb.NewGraphOverlay(db, "agent_001")
+db, _ := sochdb.Open("./agent_memory")
+graph := sochdb.NewGraphOverlay(db, "agent_001")
 
 // Create nodes
 graph.AddNode("user_1", "User", map[string]interface{}{"name": "Alice"})
@@ -80,7 +80,7 @@ path, _ := graph.ShortestPath("user_1", "msg_1", 10, nil)
 ### TypeScript/Node.js
 
 ```typescript
-import { Database, GraphOverlay, EdgeDirection } from '@sushanth/toondb';
+import { Database, GraphOverlay, EdgeDirection } from '@sushanth/sochdb';
 
 const db = await Database.open('./agent_memory');
 const graph = new GraphOverlay(db, 'agent_001');
@@ -107,7 +107,7 @@ const path = await graph.shortestPath('user_1', 'msg_1');
 ### Rust
 
 ```rust
-use toondb_client::graph::{GraphOverlay, EdgeDirection};
+use sochdb_client::graph::{GraphOverlay, EdgeDirection};
 use std::collections::HashMap;
 
 let conn = Connection::open("./agent_memory")?;

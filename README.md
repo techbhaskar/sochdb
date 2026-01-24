@@ -1,4 +1,6 @@
-# 🎬 SochDB
+# <p align="center">
+    <img src="https://github.com/sochdb/sochdb/raw/main/sochdbicon.png" alt="SochDB icon" width="72" height="72" />
+</p> SochDB
 
 ## What is SochDB?
 

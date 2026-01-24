@@ -1,0 +1,157 @@
+# =============================================================================
+# SochDB Production Docker Compose Configuration
+# =============================================================================
+#
+# Production-ready configuration with:
+# - High availability (3 replicas)
+# - Load balancing via Traefik
+# - Monitoring stack (Prometheus + Grafana)
+# - TLS termination
+#
+# Usage:
+#   docker compose -f docker-compose.production.yml up -d
+#
+# Copyright 2025 Sushanth (https://github.com/sushanthpy)
+# Licensed under the Apache License, Version 2.0
+
+services:
+  # ===========================================================================
+  # Traefik Load Balancer
+  # ===========================================================================
+  traefik:
+    image: traefik:v3.0
+    container_name: sochdb-traefik
+    restart: always
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.grpc.address=:50051"
+      - "--entrypoints.grpc.http2.maxConcurrentStreams=1000"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@sochdb.dev}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--metrics.prometheus=true"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "50051:50051"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certs:/letsencrypt
+    networks:
+      - sochdb-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+
+  # ===========================================================================
+  # SochDB gRPC Server (Replicated)
+  # ===========================================================================
+  sochdb:
+    image: sochdb/sochdb-grpc:${SOCHDB_VERSION:-latest}
+    restart: always
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '1'
+          memory: 2G
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+    environment:
+      - RUST_LOG=info
+      - SOCHDB_DATA_DIR=/var/lib/sochdb
+    volumes:
+      - sochdb-data:/var/lib/sochdb
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:50051"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - sochdb-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.grpc.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.grpc.entrypoints=grpc"
+      - "traefik.tcp.services.grpc.loadbalancer.server.port=50051"
+
+  # ===========================================================================
+  # Prometheus (Metrics)
+  # ===========================================================================
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: sochdb-prometheus
+    restart: always
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    networks:
+      - sochdb-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.${DOMAIN:-localhost}`)"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+
+  # ===========================================================================
+  # Grafana (Dashboards)
+  # ===========================================================================
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: sochdb-grafana
+    restart: always
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-sochdb}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=https://grafana.${DOMAIN:-localhost}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - sochdb-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN:-localhost}`)"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  sochdb-network:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  sochdb-data:
+    driver: local
+  traefik-certs:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

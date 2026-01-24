@@ -198,6 +198,34 @@ Language SDKs are maintained in separate repositories with their own release cyc
 | Language | Repository | Installation |
 |----------|------------|-------------|
 | **Python** | [sochdb-python-sdk](https://github.com/sochdb/sochdb-python-sdk) | `pip install sochdb-client` |
+
+### 🐳 Docker Deployment
+
+SochDB includes a production-ready Docker setup with gRPC server:
+
+```bash
+# Quick start
+cd docker
+docker compose up -d
+
+# Or build manually
+docker build -t sochdb/sochdb-grpc:latest -f docker/Dockerfile .
+docker run -d -p 50051:50051 sochdb/sochdb-grpc:latest
+```
+
+**Features:**
+- ✅ Production & slim images (159MB / 25MB)
+- ✅ High availability setup with Traefik
+- ✅ Prometheus + Grafana monitoring
+- ✅ gRPC-Web support via Envoy
+- ✅ Comprehensive test suite included
+
+**Performance (tested on Apple M-series):**
+- Single-threaded: ~2K ops/sec
+- Concurrent (10 threads): ~10.5K ops/sec  
+- Latency p99: <2.2ms
+
+See [docker/README.md](docker/README.md) for full documentation.
 | **Node.js/TypeScript** | [sochdb-nodejs-sdk](https://github.com/sochdb/sochdb-nodejs-sdk) | `npm install @sochdb/sochdb` |
 | **Go** | [sochdb-go](https://github.com/sochdb/sochdb-go) | `go get github.com/sochdb/sochdb-go@latest` |
 | **Rust** | This repository | `cargo add sochdb` |

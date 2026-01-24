@@ -1,0 +1,21 @@
+# SochDB Docker
+sochdb-data/
+data/
+*.tar.gz
+*.log
+
+# Environment files with secrets
+.env.production
+.env.local
+
+# Certificate files
+certs/
+*.pem
+*.key
+*.crt
+
+# Grafana data
+grafana/data/
+
+# macOS
+.DS_Store

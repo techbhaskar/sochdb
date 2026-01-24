@@ -1,0 +1,53 @@
+# =============================================================================
+# Prometheus Configuration for SochDB Monitoring
+# =============================================================================
+#
+# Copyright 2025 Sushanth (https://github.com/sushanthpy)
+# Licensed under the Apache License, Version 2.0
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'sochdb-monitor'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Rule files
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # SochDB gRPC Server metrics
+  - job_name: 'sochdb'
+    static_configs:
+      - targets: ['sochdb:9100']
+    metrics_path: /metrics
+    scrape_interval: 10s
+
+  # Docker container metrics (via cAdvisor)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 30s
+
+  # Traefik metrics (production)
+  - job_name: 'traefik'
+    static_configs:
+      - targets: ['traefik:8082']
+
+  # Envoy metrics (gRPC-Web)
+  - job_name: 'envoy'
+    static_configs:
+      - targets: ['envoy:9901']
+    metrics_path: /stats/prometheus

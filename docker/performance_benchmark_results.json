@@ -1,0 +1,54 @@
+{
+  "timestamp": 1769219459.693934,
+  "server": "localhost:50051",
+  "benchmarks": [
+    {
+      "name": "KV Writes",
+      "operations": 10000,
+      "duration_sec": 5.156794786453247,
+      "throughput_ops_sec": 1939.1890532990988,
+      "latency_mean_ms": 0.5150177240371704,
+      "latency_p50_ms": 0.4031658172607422,
+      "latency_p95_ms": 1.177072525024414,
+      "latency_p99_ms": 2.1719932556152344,
+      "latency_max_ms": 18.146038055419922,
+      "success_rate": 1.0
+    },
+    {
+      "name": "KV Reads",
+      "operations": 10000,
+      "duration_sec": 5.21859884262085,
+      "throughput_ops_sec": 1916.223166710754,
+      "latency_mean_ms": 0.5211104154586792,
+      "latency_p50_ms": 0.3898143768310547,
+      "latency_p95_ms": 1.302957534790039,
+      "latency_p99_ms": 2.1822452545166016,
+      "latency_max_ms": 5.749940872192383,
+      "success_rate": 1.0
+    },
+    {
+      "name": "Concurrent Writes (10 threads)",
+      "operations": 10000,
+      "duration_sec": 0.9532589912414551,
+      "throughput_ops_sec": 10490.328538078333,
+      "latency_mean_ms": 0.9462376832962036,
+      "latency_p50_ms": 0.843048095703125,
+      "latency_p95_ms": 1.6961097717285156,
+      "latency_p99_ms": 2.1021366119384766,
+      "latency_max_ms": 6.208896636962891,
+      "success_rate": 1.0
+    },
+    {
+      "name": "Mixed Workload (80% reads)",
+      "operations": 10000,
+      "duration_sec": 5.219559192657471,
+      "throughput_ops_sec": 1915.8705995838377,
+      "latency_mean_ms": 0.5116825580596924,
+      "latency_p50_ms": 0.3867149353027344,
+      "latency_p95_ms": 1.2569427490234375,
+      "latency_p99_ms": 2.0852088928222656,
+      "latency_max_ms": 5.207061767578125,
+      "success_rate": 1.0
+    }
+  ]
+}

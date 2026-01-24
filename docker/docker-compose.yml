@@ -1,0 +1,148 @@
+# =============================================================================
+# SochDB Docker Compose Configuration
+# =============================================================================
+#
+# Usage:
+#   docker compose up -d              # Start all services
+#   docker compose logs -f sochdb     # View logs
+#   docker compose down               # Stop all services
+#
+# Copyright 2025 Sushanth (https://github.com/sushanthpy)
+# Licensed under the Apache License, Version 2.0
+
+services:
+  # ===========================================================================
+  # SochDB gRPC Server
+  # ===========================================================================
+  sochdb:
+    build:
+      context: ..
+      dockerfile: sochdb_docker/Dockerfile
+    image: sochdb/sochdb-grpc:latest
+    container_name: sochdb-grpc
+    restart: unless-stopped
+    ports:
+      - "50051:50051"
+    environment:
+      - RUST_LOG=info
+      - SOCHDB_DATA_DIR=/var/lib/sochdb
+    volumes:
+      - sochdb-data:/var/lib/sochdb
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:50051"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - sochdb-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ===========================================================================
+  # SochDB with Persistent Storage (Development)
+  # ===========================================================================
+  sochdb-dev:
+    build:
+      context: ..
+      dockerfile: sochdb_docker/Dockerfile
+    image: sochdb/sochdb-grpc:latest
+    container_name: sochdb-grpc-dev
+    profiles:
+      - dev
+    ports:
+      - "50052:50051"
+    environment:
+      - RUST_LOG=debug
+      - SOCHDB_DATA_DIR=/var/lib/sochdb
+    volumes:
+      - ./data:/var/lib/sochdb
+    networks:
+      - sochdb-network
+
+  # ===========================================================================
+  # Envoy Proxy (for gRPC-Web support)
+  # ===========================================================================
+  envoy:
+    image: envoyproxy/envoy:v1.31-latest
+    container_name: sochdb-envoy
+    profiles:
+      - web
+    ports:
+      - "8080:8080"
+      - "9901:9901"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml:ro
+    depends_on:
+      - sochdb
+    networks:
+      - sochdb-network
+
+  # ===========================================================================
+  # Prometheus (Metrics)
+  # ===========================================================================
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: sochdb-prometheus
+    profiles:
+      - monitoring
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    networks:
+      - sochdb-network
+
+  # ===========================================================================
+  # Grafana (Dashboards)
+  # ===========================================================================
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: sochdb-grafana
+    profiles:
+      - monitoring
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=sochdb
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - sochdb-network
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  sochdb-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  sochdb-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

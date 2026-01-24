@@ -1,0 +1,72 @@
+# =============================================================================
+# SochDB gRPC Server - Minimal Alpine Image
+# =============================================================================
+#
+# Ultra-minimal image using Alpine + musl (~25MB final image)
+#
+# Build: docker build -f Dockerfile.slim -t sochdb/sochdb-grpc:slim .
+# Run:   docker run -p 50051:50051 sochdb/sochdb-grpc:slim
+#
+# Copyright 2025 Sushanth (https://github.com/sushanthpy)
+# Licensed under the Apache License, Version 2.0
+
+# =============================================================================
+# Stage 1: Builder (Alpine + musl for static linking)
+# =============================================================================
+FROM rust:1.91-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache \
+    musl-dev \
+    protobuf-dev \
+    protoc \
+    pkgconfig \
+    openssl-dev \
+    openssl-libs-static
+
+WORKDIR /build
+
+# Copy workspace
+COPY Cargo.toml Cargo.lock ./
+COPY sochdb-core ./sochdb-core
+COPY sochdb-kernel ./sochdb-kernel
+COPY sochdb-storage ./sochdb-storage
+COPY sochdb-index ./sochdb-index
+COPY sochdb-query ./sochdb-query
+COPY sochdb-client ./sochdb-client
+COPY sochdb-grpc ./sochdb-grpc
+COPY sochdb-vector ./sochdb-vector
+COPY sochdb-mcp ./sochdb-mcp
+COPY sochdb-wasm ./sochdb-wasm
+COPY sochdb-tools ./sochdb-tools
+COPY sochdb-plugin-logging ./sochdb-plugin-logging
+COPY proto ./proto
+
+# Build statically linked binary
+ENV RUSTFLAGS="-C target-feature=+crt-static"
+RUN cargo build --release --package sochdb-grpc --bin sochdb-grpc-server
+
+# =============================================================================
+# Stage 2: Minimal Runtime
+# =============================================================================
+FROM alpine:3.20 AS runtime
+
+# Minimal runtime deps
+RUN apk add --no-cache ca-certificates \
+    && adduser -D -s /bin/false sochdb
+
+# Copy binary
+COPY --from=builder /build/target/release/sochdb-grpc-server /usr/local/bin/
+
+# Data directory
+RUN mkdir -p /var/lib/sochdb && chown sochdb:sochdb /var/lib/sochdb
+
+USER sochdb
+
+EXPOSE 50051
+
+ENV RUST_LOG=info
+ENV SOCHDB_DATA_DIR=/var/lib/sochdb
+
+ENTRYPOINT ["sochdb-grpc-server"]
+CMD ["--host", "0.0.0.0", "--port", "50051"]
